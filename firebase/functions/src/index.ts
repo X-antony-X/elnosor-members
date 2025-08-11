@@ -6,7 +6,7 @@ admin.initializeApp()
 // Set custom claims for user roles
 export const setUserRole = functions.https.onCall(async (data, context) => {
   // Check if request is made by an admin
-  if (!context.auth || !context.auth.token.role === "admin") {
+  if (!context.auth || context.auth.token.role !== "admin") {
     throw new functions.https.HttpsError("permission-denied", "Only admins can set user roles")
   }
 
