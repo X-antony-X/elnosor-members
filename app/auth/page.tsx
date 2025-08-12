@@ -23,18 +23,32 @@ export default function AuthPage() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle()
-      toast.success("تم تسجيل الدخول بنجاح")
+      const user = await signInWithGoogle()
+      if (user) {
+        toast.success("تم تسجيل الدخول بنجاح")
+        // Use setTimeout to ensure auth state is fully updated
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 100)
+      }
     } catch (error) {
+      console.error("Google sign-in error:", error)
       toast.error("خطأ في تسجيل الدخول")
     }
   }
 
   const handleFacebookSignIn = async () => {
     try {
-      await signInWithFacebook()
-      toast.success("تم تسجيل الدخول بنجاح")
+      const user = await signInWithFacebook()
+      if (user) {
+        toast.success("تم تسجيل الدخول بنجاح")
+        // Use setTimeout to ensure auth state is fully updated
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 100)
+      }
     } catch (error) {
+      console.error("Facebook sign-in error:", error)
       toast.error("خطأ في تسجيل الدخول")
     }
   }

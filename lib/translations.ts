@@ -3,12 +3,14 @@ export const translations = {
     // Navigation
     dashboard: "لوحة التحكم",
     members: "الأعضاء",
+    profile: "ملفي الشخصي", // Added profile translation
     attendance: "الحضور",
     notifications: "الإشعارات",
     posts: "المنشورات",
     dailyQuotes: "الآيات اليومية",
     analytics: "التقارير",
     settings: "الإعدادات",
+    about: "حول التطبيق", // Added About page translations
 
     // Authentication
     signIn: "تسجيل الدخول",
@@ -99,6 +101,11 @@ export const translations = {
     startTime: "وقت البداية",
     endTime: "وقت النهاية",
 
+    // About
+    appDescription: "تطبيق خدمة الشباب لإدارة الحضور والتفاعل",
+    contactServants: "التواصل مع الخدام",
+    groupChats: "مجموعات الدردشة",
+
     // Days of week
     sunday: "الأحد",
     monday: "الاثنين",
@@ -113,7 +120,7 @@ export const translations = {
     offlineMode: "وضع عدم الاتصال",
     syncData: "مزامنة البيانات",
   },
-}
+};
 
 export const t = (key: string): string => {
   const keys = key.split(".")

@@ -1,26 +1,43 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname } = request.nextUrl;
 
-  const adminOnlyRoutes = ["/members", "/attendance", "/notifications", "/analytics", "/settings"]
+  const adminOnlyRoutes = ["/members", "/attendance", "/posts", "/settings"];
+
+  const protectedRoutes = [
+    "/dashboard",
+    "/profile",
+    "/notifications",
+    "/about",
+  ];
 
   // Check if the current path is an admin-only route
-  const isAdminRoute = adminOnlyRoutes.some((route) => pathname.startsWith(route))
+  const isAdminRoute = adminOnlyRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+  const isProtectedRoute =
+    protectedRoutes.some((route) => pathname.startsWith(route)) || isAdminRoute;
 
-  if (isAdminRoute) {
-    // In a real app, you would verify the user's role from their JWT token
-    // For now, we'll let the client-side components handle the redirect
-    // This middleware serves as an additional security layer
-    // You can add server-side role verification here if needed
-    // const token = request.cookies.get('auth-token')
-    // if (!token || !isAdmin(token)) {
-    //   return NextResponse.redirect(new URL('/dashboard', request.url))
-    // }
+  if (isProtectedRoute) {
+    const authToken =
+      request.cookies.get("__session")?.value ||
+      request.headers.get("authorization")?.replace("Bearer ", "");
+
+    if (!authToken) {
+      // Redirect to auth page if not authenticated
+      return NextResponse.redirect(new URL("/auth", request.url));
+    }
+
+    if (isAdminRoute) {
+      const response = NextResponse.next();
+      response.headers.set("X-Admin-Required", "true");
+      return response;
+    }
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
@@ -32,7 +49,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - auth (authentication pages)
+     * - / (home page)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|auth).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|auth|$).*)",
   ],
-}
+};

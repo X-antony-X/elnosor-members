@@ -1,6 +1,7 @@
 import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
+import type { Viewport } from "next"
 import { Providers } from "./providers"
 import { Toaster } from "react-hot-toast"
 
@@ -8,8 +9,6 @@ export const metadata: Metadata = {
   title: "خدمة الشباب - إدارة الحضور والمشاركة",
   description: "تطبيق إدارة حضور ومشاركة الشباب في الكنيسة",
   manifest: "/manifest.json",
-  themeColor: "#0ea5e9",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -22,6 +21,14 @@ export const metadata: Metadata = {
     generator: 'v0.dev'
 }
 
+export const viewport: Viewport = {
+  themeColor: "#0ea5e9",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -29,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" className="rtl" suppressHydrationWarning>
-      <body className="font-arabic">
+      <body className="font-arabic" suppressHydrationWarning>
         <Providers>
           {children}
           <Toaster

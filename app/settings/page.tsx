@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Save, Palette, Calendar, Bell, Shield, Clock } from "lucide-react"
+import { Save, Palette, Calendar, Bell, Shield, Clock, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,7 +15,7 @@ import { useTheme } from "@/components/theme-provider"
 import { t } from "@/lib/translations"
 import type { UserSettings } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { useRouter } from "next/navigation"
+import { RoleGuard } from "@/components/auth/role-guard"
 import toast from "react-hot-toast"
 
 const colorOptions = [
@@ -38,8 +38,7 @@ const daysOfWeek = [
 ]
 
 export default function SettingsPage() {
-  const { role, user } = useAuth()
-  const router = useRouter()
+  const { user } = useAuth()
   const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -60,12 +59,12 @@ export default function SettingsPage() {
     updatedAt: new Date(),
   })
 
-  useEffect(() => {
-    if (role && role !== "admin") {
-      router.push("/dashboard")
-      return
-    }
-  }, [role, router])
+  const [appSettings, setAppSettings] = useState({
+    allowNewRegistrations: true,
+    dailyVersesEnabled: true,
+    autoAttendanceReminders: true,
+    requireApprovalForPosts: false,
+  })
 
   useEffect(() => {
     // Simulate loading user settings
@@ -89,10 +88,6 @@ export default function SettingsPage() {
     }, 1000)
   }, [user, theme, primaryColor])
 
-  if (role !== "admin") {
-    return null
-  }
-
   const handleSaveSettings = async () => {
     setSaving(true)
     try {
@@ -111,7 +106,7 @@ export default function SettingsPage() {
     }
   }
 
-  const handleThemeChange = (newTheme: "light" | "dark") => {
+  const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
     setSettings({ ...settings, theme: newTheme })
   }
 
@@ -139,6 +134,13 @@ export default function SettingsPage() {
     })
   }
 
+  const handleAppSettingChange = (field: string, value: boolean) => {
+    setAppSettings({
+      ...appSettings,
+      [field]: value,
+    })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -148,223 +150,294 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-      >
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("settings")}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">إعدادات النظام والتخصيص</p>
-        </div>
+    <RoleGuard adminOnly>
+      <div className="p-6 space-y-6 max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+        >
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("settings")}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">إعدادات النظام والتخصيص</p>
+          </div>
 
-        <Button onClick={handleSaveSettings} disabled={saving}>
-          <Save className="w-4 h-4 ml-2" />
-          {saving ? "جاري الحفظ..." : t("save")}
-        </Button>
-      </motion.div>
+          <Button onClick={handleSaveSettings} disabled={saving}>
+            <Save className="w-4 h-4 ml-2" />
+            {saving ? "جاري الحفظ..." : t("save")}
+          </Button>
+        </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Theme Settings */}
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="w-5 h-5" />
-                {t("themeSettings")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <Label>وضع العرض</Label>
-                <div className="flex gap-4">
-                  <Button
-                    variant={settings.theme === "light" ? "primary" : "outline"}
-                    size="sm"
-                    onClick={() => handleThemeChange("light")}
-                    className="flex-1"
-                  >
-                    {t("lightMode")}
-                  </Button>
-                  <Button
-                    variant={settings.theme === "dark" ? "primary" : "outline"}
-                    size="sm"
-                    onClick={() => handleThemeChange("dark")}
-                    className="flex-1"
-                  >
-                    {t("darkMode")}
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Label>{t("primaryColor")}</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color.value}
-                      onClick={() => handleColorChange(color.value)}
-                      className={`p-3 rounded-lg border-2 transition-all ${
-                        settings.primaryColor === color.value
-                          ? "border-gray-900 dark:border-white"
-                          : "border-gray-200 dark:border-gray-700"
-                      }`}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Theme Settings */}
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="w-5 h-5" />
+                  {t("themeSettings")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  <Label>وضع العرض</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={settings.theme === "light" ? "primary" : "outline"}
+                      size="sm"
+                      onClick={() => handleThemeChange("light")}
+                      className="flex-1"
                     >
-                      <div className="w-full h-8 rounded-md" style={{ backgroundColor: color.value }} />
-                      <p className="text-xs mt-2">{color.name}</p>
-                    </button>
-                  ))}
+                      {t("lightMode")}
+                    </Button>
+                    <Button
+                      variant={settings.theme === "dark" ? "primary" : "outline"}
+                      size="sm"
+                      onClick={() => handleThemeChange("dark")}
+                      className="flex-1"
+                    >
+                      {t("darkMode")}
+                    </Button>
+                    <Button
+                      variant={settings.theme === "system" ? "primary" : "outline"}
+                      size="sm"
+                      onClick={() => handleThemeChange("system")}
+                      className="flex-1"
+                    >
+                      تلقائي
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
-        {/* Meeting Schedule */}
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                {t("meetingSchedule")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t("dayOfWeek")}</Label>
-                <Select
-                  value={settings.meetingSchedule.dayOfWeek.toString()}
-                  onValueChange={(value: string) => handleMeetingScheduleChange("dayOfWeek", Number.parseInt(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {daysOfWeek.map((day) => (
-                      <SelectItem key={day.value} value={day.value.toString()}>
-                        {day.name}
-                      </SelectItem>
+                <Separator />
+
+                <div className="space-y-3">
+                  <Label>{t("primaryColor")}</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {colorOptions.map((color) => (
+                      <button
+                        key={color.value}
+                        onClick={() => handleColorChange(color.value)}
+                        className={`p-3 rounded-lg border-2 transition-all ${settings.primaryColor === color.value
+                            ? "border-gray-900 dark:border-white"
+                            : "border-gray-200 dark:border-gray-700"
+                          }`}
+                      >
+                        <div className="w-full h-8 rounded-md" style={{ backgroundColor: color.value }} />
+                        <p className="text-xs mt-2">{color.name}</p>
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-              <div className="grid grid-cols-2 gap-4">
+          {/* Meeting Schedule */}
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  {t("meetingSchedule")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>{t("startTime")}</Label>
-                  <Input
-                    type="time"
-                    value={settings.meetingSchedule.startTime}
-                    onChange={(e) => handleMeetingScheduleChange("startTime", e.target.value)}
+                  <Label>{t("dayOfWeek")}</Label>
+                  <Select
+                    value={settings.meetingSchedule.dayOfWeek.toString()}
+                    onValueChange={(value) => handleMeetingScheduleChange("dayOfWeek", Number.parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {daysOfWeek.map((day) => (
+                        <SelectItem key={day.value} value={day.value.toString()}>
+                          {day.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t("startTime")}</Label>
+                    <Input
+                      type="time"
+                      value={settings.meetingSchedule.startTime}
+                      onChange={(e) => handleMeetingScheduleChange("startTime", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("endTime")}</Label>
+                    <Input
+                      type="time"
+                      value={settings.meetingSchedule.endTime}
+                      onChange={(e) => handleMeetingScheduleChange("endTime", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-medium">الجدول الحالي</span>
+                  </div>
+                  <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                    {daysOfWeek.find((d) => d.value === settings.meetingSchedule.dayOfWeek)?.name} من{" "}
+                    {settings.meetingSchedule.startTime} إلى {settings.meetingSchedule.endTime}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Notification Settings */}
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="w-5 h-5" />
+                  إعدادات الإشعارات
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>الإشعارات الفورية</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">إشعارات المتصفح والهاتف</p>
+                  </div>
+                  <Switch
+                    checked={settings.notifications.push}
+                    onCheckedChange={(checked) => handleNotificationChange("push", checked)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>{t("endTime")}</Label>
-                  <Input
-                    type="time"
-                    value={settings.meetingSchedule.endTime}
-                    onChange={(e) => handleMeetingScheduleChange("endTime", e.target.value)}
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>إشعارات البريد الإلكتروني</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">تلقي الإشعارات عبر البريد</p>
+                  </div>
+                  <Switch
+                    checked={settings.notifications.email}
+                    onCheckedChange={(checked) => handleNotificationChange("email", checked)}
                   />
                 </div>
-              </div>
 
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm font-medium">الجدول الحالي</span>
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>الآيات اليومية</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">إرسال آية يومية تلقائياً</p>
+                  </div>
+                  <Switch
+                    checked={appSettings.dailyVersesEnabled}
+                    onCheckedChange={(checked) => handleAppSettingChange("dailyVersesEnabled", checked)}
+                  />
                 </div>
-                <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                  {daysOfWeek.find((d) => d.value === settings.meetingSchedule.dayOfWeek)?.name} من{" "}
-                  {settings.meetingSchedule.startTime} إلى {settings.meetingSchedule.endTime}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        {/* Notification Settings */}
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                إعدادات الإشعارات
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>الإشعارات الفورية</Label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">إشعارات المتصفح والهاتف</p>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="w-5 h-5" />
+                  إعدادات التطبيق
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>السماح بالتسجيل الجديد</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">السماح للمستخدمين الجدد بالتسجيل</p>
+                  </div>
+                  <Switch
+                    checked={appSettings.allowNewRegistrations}
+                    onCheckedChange={(checked) => handleAppSettingChange("allowNewRegistrations", checked)}
+                  />
                 </div>
-                <Switch
-                  checked={settings.notifications.push}
-                  onCheckedChange={(checked: boolean) => handleNotificationChange("push", checked)}
-                />
-              </div>
 
-              <Separator />
+                <Separator />
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>إشعارات البريد الإلكتروني</Label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">تلقي الإشعارات عبر البريد</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>تذكير الحضور التلقائي</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">إرسال تذكير قبل الاجتماع</p>
+                  </div>
+                  <Switch
+                    checked={appSettings.autoAttendanceReminders}
+                    onCheckedChange={(checked) => handleAppSettingChange("autoAttendanceReminders", checked)}
+                  />
                 </div>
-                <Switch
-                  checked={settings.notifications.email}
-                  onCheckedChange={(checked: boolean) => handleNotificationChange("email", checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
-        {/* System Settings */}
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                إعدادات النظام
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>معرف المستخدم</Label>
-                <Input value={user?.uid || ""} disabled className="bg-gray-50 dark:bg-gray-800" />
-              </div>
+                <Separator />
 
-              <div className="space-y-2">
-                <Label>الدور</Label>
-                <Input value={t("admin")} disabled className="bg-gray-50 dark:bg-gray-800" />
-              </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>مراجعة المنشورات</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">تتطلب موافقة الخادم قبل النشر</p>
+                  </div>
+                  <Switch
+                    checked={appSettings.requireApprovalForPosts}
+                    onCheckedChange={(checked) => handleAppSettingChange("requireApprovalForPosts", checked)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-              <div className="space-y-2">
-                <Label>آخر تحديث</Label>
-                <Input
-                  value={settings.updatedAt.toLocaleString("ar-EG")}
-                  disabled
-                  className="bg-gray-50 dark:bg-gray-800"
-                />
-              </div>
+          {/* System Settings */}
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  معلومات النظام
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>معرف المستخدم</Label>
+                  <Input value={user?.uid || ""} disabled className="bg-gray-50 dark:bg-gray-800" />
+                </div>
 
-              <Separator />
+                <div className="space-y-2">
+                  <Label>الدور</Label>
+                  <Input value={t("admin")} disabled className="bg-gray-50 dark:bg-gray-800" />
+                </div>
 
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full bg-transparent" onClick={() => window.location.reload()}>
-                  إعادة تحميل التطبيق
-                </Button>
-                <Button variant="outline" className="w-full bg-transparent">
-                  تصدير الإعدادات
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+                <div className="space-y-2">
+                  <Label>آخر تحديث</Label>
+                  <Input
+                    value={settings.updatedAt.toLocaleString("ar-EG")}
+                    disabled
+                    className="bg-gray-50 dark:bg-gray-800"
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Button variant="outline" className="w-full bg-transparent" onClick={() => window.location.reload()}>
+                    إعادة تحميل التطبيق
+                  </Button>
+                  <Button variant="outline" className="w-full bg-transparent">
+                    تصدير الإعدادات
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </RoleGuard>
   )
 }

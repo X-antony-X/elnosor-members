@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
-import { Home, Users, Calendar, Bell, FileText, BookOpen, BarChart3, Settings, Menu, X } from "lucide-react"
+import { Home, Users, Calendar, Bell, FileText, Settings, Menu, X, User, Info } from "lucide-react"
 import { useAuth } from "@/app/providers"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/translations"
@@ -14,11 +14,17 @@ const navigationItems = [
   { href: "/dashboard", icon: Home, label: "dashboard" },
   { href: "/members", icon: Users, label: "members", adminOnly: true },
   { href: "/attendance", icon: Calendar, label: "attendance", adminOnly: true },
-  { href: "/notifications", icon: Bell, label: "notifications", adminOnly: true },
-  { href: "/posts", icon: FileText, label: "posts" },
-  { href: "/daily-quotes", icon: BookOpen, label: "dailyQuotes" },
-  { href: "/analytics", icon: BarChart3, label: "analytics", adminOnly: true },
+  { href: "/posts", icon: FileText, label: "posts", adminOnly: true },
+  { href: "/notifications", icon: Bell, label: "notifications" },
   { href: "/settings", icon: Settings, label: "settings", adminOnly: true },
+  { href: "/about", icon: Info, label: "about" },
+]
+
+const memberNavigationItems = [
+  { href: "/dashboard", icon: Home, label: "dashboard" },
+  { href: "/profile", icon: User, label: "profile" },
+  { href: "/notifications", icon: Bell, label: "notifications" },
+  { href: "/about", icon: Info, label: "about" },
 ]
 
 export function Navigation() {
@@ -26,12 +32,7 @@ export function Navigation() {
   const pathname = usePathname()
   const { role } = useAuth()
 
-  const filteredItems = navigationItems.filter((item) => {
-    if (item.adminOnly && role !== "admin") {
-      return false
-    }
-    return true
-  })
+  const items = role === "admin" ? navigationItems : memberNavigationItems
 
   return (
     <>
@@ -45,7 +46,7 @@ export function Navigation() {
       {/* Sidebar */}
       <motion.aside
         initial={{ x: -300 }}
-        animate={{ x: isOpen || window.innerWidth >= 1024 ? 0 : -300 }}
+        animate={{ x: isOpen || (typeof window !== "undefined" && window.innerWidth >= 1024) ? 0 : -300 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
           "fixed inset-y-0 right-0 z-40 w-64 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-lg lg:relative lg:translate-x-0",
@@ -55,10 +56,11 @@ export function Navigation() {
         <div className="flex flex-col h-full">
           <div className="p-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">خدمة الشباب</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{role === "admin" ? "خادم" : "مخدوم"}</p>
           </div>
 
           <nav className="flex-1 px-4 space-y-2">
-            {filteredItems.map((item) => {
+            {items.map((item) => {
               const isActive = pathname === item.href
               const Icon = item.icon
 

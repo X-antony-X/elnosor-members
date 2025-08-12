@@ -3,10 +3,17 @@
   "version": "1.0.1",
   "private": true,
   "scripts": {
-    "build": "next build",
     "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "next lint",
-    "start": "next start"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:deploy": "firebase deploy",
+    "seed:quotes": "node scripts/seed-quotes.js",
+    "seed:members": "node scripts/seed-members.js",
+    "set-admin": "node scripts/set-admin.js"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
@@ -31,7 +38,7 @@
     "@radix-ui/react-select": "2.1.4",
     "@radix-ui/react-separator": "1.1.1",
     "@radix-ui/react-slider": "1.2.2",
-    "@radix-ui/react-slot": "1.1.1",
+    "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-switch": "1.1.2",
     "@radix-ui/react-tabs": "1.1.2",
     "@radix-ui/react-toast": "1.2.4",
