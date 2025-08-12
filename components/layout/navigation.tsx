@@ -12,13 +12,13 @@ import { cn } from "@/lib/utils"
 
 const navigationItems = [
   { href: "/dashboard", icon: Home, label: "dashboard" },
-  { href: "/members", icon: Users, label: "members" },
-  { href: "/attendance", icon: Calendar, label: "attendance" },
+  { href: "/members", icon: Users, label: "members", adminOnly: true },
+  { href: "/attendance", icon: Calendar, label: "attendance", adminOnly: true },
   { href: "/notifications", icon: Bell, label: "notifications", adminOnly: true },
   { href: "/posts", icon: FileText, label: "posts" },
   { href: "/daily-quotes", icon: BookOpen, label: "dailyQuotes" },
   { href: "/analytics", icon: BarChart3, label: "analytics", adminOnly: true },
-  { href: "/settings", icon: Settings, label: "settings" },
+  { href: "/settings", icon: Settings, label: "settings", adminOnly: true },
 ]
 
 export function Navigation() {
@@ -26,7 +26,12 @@ export function Navigation() {
   const pathname = usePathname()
   const { role } = useAuth()
 
-  const filteredItems = navigationItems.filter((item) => !item.adminOnly || role === "admin")
+  const filteredItems = navigationItems.filter((item) => {
+    if (item.adminOnly && role !== "admin") {
+      return false
+    }
+    return true
+  })
 
   return (
     <>

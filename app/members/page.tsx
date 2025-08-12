@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Plus, Search, Download, Upload } from "lucide-react"
+import { Plus, Search, Download, Upload, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,12 +10,21 @@ import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
 import type { Member } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { useRouter } from "next/navigation"
 
 export default function MembersPage() {
   const { role } = useAuth()
+  const router = useRouter()
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+
+  useEffect(() => {
+    if (role && role !== "admin") {
+      router.push("/dashboard")
+      return
+    }
+  }, [role, router])
 
   useEffect(() => {
     // Simulate loading members
@@ -47,7 +56,15 @@ export default function MembersPage() {
     }, 1000)
   }, [])
 
+  if (role !== "admin") {
+    return null
+  }
+
   const filteredMembers = members.filter((member) => member.fullName.toLowerCase().includes(searchTerm.toLowerCase()))
+
+  const handleMemberClick = (memberId: string) => {
+    router.push(`/members/${memberId}`)
+  }
 
   if (loading) {
     return (
@@ -69,22 +86,20 @@ export default function MembersPage() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">إدارة أعضاء خدمة الشباب</p>
         </div>
 
-        {role === "admin" && (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Upload className="w-4 h-4 ml-2" />
-              استيراد
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 ml-2" />
-              تصدير
-            </Button>
-            <Button>
-              <Plus className="w-4 h-4 ml-2" />
-              {t("addMember")}
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Upload className="w-4 h-4 ml-2" />
+            استيراد
+          </Button>
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 ml-2" />
+            تصدير
+          </Button>
+          <Button>
+            <Plus className="w-4 h-4 ml-2" />
+            {t("addMember")}
+          </Button>
+        </div>
       </motion.div>
 
       <motion.div
@@ -105,46 +120,68 @@ export default function MembersPage() {
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMembers.map((member, index) => (
-          <motion.div
-            key={member.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="text-lg">{member.fullName}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">الهاتف:</span> {member.phonePrimary}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">العنوان:</span> {member.address.addressString}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">المرحلة:</span> {t(member.classStage)}
-                  {member.universityYear && ` - السنة ${member.universityYear}`}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">أب الاعتراف:</span> {member.confessorName}
-                </p>
+        {filteredMembers.map((member, index) => {
+          if (!member.id) return null
+          return (
+            <motion.div
+              key={member.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleMemberClick(member.id)}
+              >
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    {member.fullName}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">الهاتف:</span> {member.phonePrimary}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">العنوان:</span> {member.address.addressString}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">المرحلة:</span> {t(member.classStage)}
+                    {member.universityYear && ` - السنة ${member.universityYear}`}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">أب الاعتراف:</span> {member.confessorName}
+                  </p>
 
-                {role === "admin" && (
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline" size="sm" className="flex-1 bg-transparent">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 bg-transparent"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // Handle edit action
+                      }}
+                    >
                       تعديل
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // Handle QR generation
+                      }}
+                    >
                       QR
                     </Button>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )
+        })}
       </div>
 
       {filteredMembers.length === 0 && (
