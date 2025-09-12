@@ -15,6 +15,7 @@ import { t } from "@/lib/translations"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Fingerprint, Shield, Smartphone, Key, AlertCircle, CheckCircle } from "lucide-react"
 import toast from "react-hot-toast"
+import { useDebugAuthRedirect } from "@/debug-auth-redirect"
 
 export default function AuthPage() {
   const { user, loading } = useAuth()
@@ -23,6 +24,8 @@ export default function AuthPage() {
   const [platformAuthAvailable, setPlatformAuthAvailable] = useState(false)
   const [webauthnLoading, setWebauthnLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("social")
+
+  useDebugAuthRedirect()
 
   useEffect(() => {
     if (user && !loading) {

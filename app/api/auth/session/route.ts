@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/firebase-admin"
+import { adminAuth as auth } from "@/lib/firebase-admin"
 import { cookies } from "next/headers"
 
 export async function POST(request: NextRequest) {
@@ -11,7 +11,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the ID token
-    const decodedToken = await auth.verifyIdToken(idToken)
+    let decodedToken
+    try {
+      decodedToken = await auth.verifyIdToken(idToken)
+    } catch (verifyError) {
+      console.error("Token verification failed:", verifyError)
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    }
 
     // Set the session cookie
     const expiresIn = 60 * 60 * 24 * 5 * 1000 // 5 days
