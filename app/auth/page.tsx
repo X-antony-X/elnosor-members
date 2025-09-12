@@ -47,8 +47,23 @@ export default function AuthPage() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle()
-      toast.success("تم تسجيل الدخول بنجاح")
+      const user = await signInWithGoogle()
+      if (user) {
+        // Get ID token
+        const idToken = await user.getIdToken()
+
+        // Call API to set session cookie
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idToken }),
+        })
+
+        toast.success("تم تسجيل الدخول بنجاح")
+        router.push("/dashboard")
+      }
     } catch (error) {
       toast.error("خطأ في تسجيل الدخول")
     }
@@ -56,8 +71,21 @@ export default function AuthPage() {
 
   const handleFacebookSignIn = async () => {
     try {
-      await signInWithFacebook()
-      toast.success("تم تسجيل الدخول بنجاح")
+      const user = await signInWithFacebook()
+      if (user) {
+        const idToken = await user.getIdToken()
+
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idToken }),
+        })
+
+        toast.success("تم تسجيل الدخول بنجاح")
+        router.push("/dashboard")
+      }
     } catch (error) {
       toast.error("خطأ في تسجيل الدخول")
     }
