@@ -7,9 +7,12 @@ import { OfflineDetector } from "@/components/error/offline-detector"
 import { InstallPrompt } from "@/components/pwa/install-prompt"
 
 export const metadata: Metadata = {
-  title: "خدمة الشباب - إدارة الحضور والمشاركة",
+  metadataBase: new URL("https://member-elnosor.vercel.app"),
+  title: "Shabab Alnosor",
   description: "تطبيق إدارة حضور ومشاركة الشباب في الكنيسة",
   manifest: "/manifest.json",
+  authors: [{ name: 'Peter Eshak Abdo', url: 'https://member-elnosor.vercel.app' }],
+  creator: 'Peter Eshak Abdo',
   themeColor: "#0ea5e9",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   appleWebApp: {
@@ -18,10 +21,31 @@ export const metadata: Metadata = {
     title: "خدمة الشباب",
   },
   icons: {
-    icon: "/icons/icon-192x192.png",
-    apple: "/icons/icon-192x192.png",
+    icon: "/icons/android/android-launchericon-192-192.png",
+    apple: "/icons/ios/192.png",
   },
-    generator: 'v0.app'
+  generator: 'Tofa7a',
+  openGraph: {
+    title: 'شباب النسور',
+    description: "تطبيق إدارة حضور ومشاركة الشباب في الكنيسة",
+    url: 'https://member-elnosor.vercel.app',
+    siteName: 'Elnosor Members',
+    // images: [
+    //   {
+    //     url: '/images/icons/favicon.ico',
+    //     width: 1200,
+    //     height: 630,
+    //     alt: 'أبونا فلتاؤس السرياني',
+    //   },
+    // ],
+    locale: 'ar_EG',
+    type: 'website',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+
 }
 
 export default function RootLayout({
