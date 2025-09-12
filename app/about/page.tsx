@@ -141,7 +141,7 @@ export default function AboutPage() {
                     {group.platform} • {group.members} عضو
                   </p>
                 </div>
-                <Button asChild={true} variant="outline" size="sm">
+                <Button asChild variant="outline" size="sm">
                   <Link href={group.link} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="w-4 h-4 ml-2" />
                     انضمام

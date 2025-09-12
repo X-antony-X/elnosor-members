@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, SetStateAction } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Plus, Heart, MessageCircle, Edit, Trash2, Send, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,120 +13,119 @@ import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
 import type { Post, Comment } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { usePosts, firestoreHelpers } from "@/hooks/use-firestore"
+import { toast } from "@/components/ui/use-toast"
 
 export default function PostsPage() {
   const { user, role } = useAuth()
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
+  const { posts, loading, error } = usePosts()
   const [newPostContent, setNewPostContent] = useState("")
   const [newPostImage, setNewPostImage] = useState<File | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({})
 
-  useEffect(() => {
-    // Simulate loading posts
-    setTimeout(() => {
-      setPosts([
-        {
-          id: "1",
-          content: "مرحباً بكم في اجتماع الشباب هذا الأسبوع! سنتحدث عن أهمية الصلاة في حياتنا اليومية.",
-          authorId: "admin1",
-          authorName: "أبونا يوسف",
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-          likes: ["user1", "user2"],
-          comments: [
-            {
-              id: "c1",
-              content: "شكراً لك أبونا، موضوع مهم جداً",
-              authorId: "user1",
-              authorName: "مينا جورج",
-              createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
-            },
-          ],
-        },
-        {
-          id: "2",
-          content: "تذكير: اجتماع الشباب غداً الجمعة الساعة 7 مساءً. لا تنسوا إحضار الكتاب المقدس.",
-          imageUrl: "/placeholder.svg?height=300&width=500",
-          authorId: "admin1",
-          authorName: "أبونا مرقس",
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-          likes: ["user1", "user2", "user3"],
-          comments: [],
-        },
-      ])
-      setLoading(false)
-    }, 1000)
-  }, [])
-
   const handleCreatePost = async () => {
     if (!newPostContent.trim() || !user) return
 
-    const newPost: Post = {
-      id: Date.now().toString(),
-      content: newPostContent,
-      imageUrl: newPostImage ? URL.createObjectURL(newPostImage) : undefined,
-      authorId: user.uid,
-      authorName: user.displayName || "مستخدم",
-      createdAt: new Date(),
-      likes: [],
-      comments: [],
-    }
+    try {
+      await firestoreHelpers.addPost({
+        content: newPostContent,
+        imageUrl: newPostImage ? URL.createObjectURL(newPostImage) : undefined,
+        authorId: user.uid,
+        authorName: user.displayName || "مستخدم",
+        likes: [],
+        comments: [],
+      })
 
-    setPosts([newPost, ...posts])
-    setNewPostContent("")
-    setNewPostImage(null)
+      setNewPostContent("")
+      setNewPostImage(null)
+      toast({ description: "تم نشر المنشور بنجاح", variant: "default" })
+      // toast({ description: "تم نشر المنشور بنجاح", variant: "success" })
+    } catch (error) {
+      console.error("Error creating post:", error)
+      toast({ description: "خطأ في نشر المنشور", variant: "destructive" })
+    }
   }
 
   const handleEditPost = async (postId: string, newContent: string) => {
-    setPosts(posts.map((post) => (post.id === postId ? { ...post, content: newContent } : post)))
-    setEditingPost(null)
+    try {
+      await firestoreHelpers.updatePost(postId, { content: newContent })
+      setEditingPost(null)
+      toast({ description: "تم تحديث المنشور بنجاح", variant: "default" })
+      // toast({ description: "تم تحديث المنشور بنجاح", variant: "success" })
+    } catch (error) {
+      console.error("Error updating post:", error)
+      toast({ description: "خطأ في تحديث المنشور", variant: "destructive" })
+    }
   }
 
   const handleDeletePost = async (postId: string) => {
-    setPosts(posts.filter((post) => post.id !== postId))
+    try {
+      await firestoreHelpers.deletePost(postId)
+      toast({ description: "تم حذف المنشور بنجاح", variant: "default" })
+      // toast({ description: "تم حذف المنشور بنجاح", variant: "success" })
+    } catch (error) {
+      console.error("Error deleting post:", error)
+      toast({ description: "خطأ في حذف المنشور", variant: "destructive" })
+    }
   }
 
   const handleLikePost = async (postId: string) => {
     if (!user) return
 
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          const isLiked = post.likes.includes(user.uid)
-          return {
-            ...post,
-            likes: isLiked ? post.likes.filter((uid) => uid !== user.uid) : [...post.likes, user.uid],
-          }
-        }
-        return post
-      }),
-    )
+    try {
+      const post = posts.find((p) => p.id === postId)
+      if (!post) return
+
+      const isLiked = post.likes.includes(user.uid)
+      const newLikes = isLiked ? post.likes.filter((uid) => uid !== user.uid) : [...post.likes, user.uid]
+
+      await firestoreHelpers.updatePost(postId, { likes: newLikes })
+    } catch (error) {
+      console.error("Error updating like:", error)
+      toast({ description: "خطأ في تحديث الإعجاب", variant: "destructive" })
+    }
   }
 
   const handleAddComment = async (postId: string) => {
     const commentText = commentInputs[postId]?.trim()
     if (!commentText || !user) return
 
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      content: commentText,
-      authorId: user.uid,
-      authorName: user.displayName || "مستخدم",
-      createdAt: new Date(),
+    try {
+      const post = posts.find((p) => p.id === postId)
+      if (!post) return
+
+      const newComment: Comment = {
+        id: Date.now().toString(),
+        content: commentText,
+        authorId: user.uid,
+        authorName: user.displayName || "مستخدم",
+        createdAt: new Date(),
+      }
+
+      const updatedComments = [...post.comments, newComment]
+      await firestoreHelpers.updatePost(postId, { comments: updatedComments })
+
+      setCommentInputs({ ...commentInputs, [postId]: "" })
+      toast({ description: "تم إضافة التعليق بنجاح", variant: "default" })
+      // toast({ description: "تم إضافة التعليق بنجاح", variant: "success" })
+    } catch (error) {
+      console.error("Error adding comment:", error)
+      toast({ description: "خطأ في إضافة التعليق", variant: "destructive" })
     }
-
-    setPosts(posts.map((post) => (post.id === postId ? { ...post, comments: [...post.comments, newComment] } : post)))
-
-    setCommentInputs({ ...commentInputs, [postId]: "" })
   }
 
   const handleDeleteComment = async (postId: string, commentId: string) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === postId ? { ...post, comments: post.comments.filter((comment) => comment.id !== commentId) } : post,
-      ),
-    )
+    try {
+      const post = posts.find((p) => p.id === postId)
+      if (!post) return
+
+      const updatedComments = post.comments.filter((comment) => comment.id !== commentId)
+      await firestoreHelpers.updatePost(postId, { comments: updatedComments })
+    } catch (error) {
+      console.error("Error deleting comment:", error)
+      toast({ description: "خطأ في حذف التعليق", variant: "destructive" })
+    }
   }
 
   const canEditPost = (post: Post) => {
@@ -145,6 +144,17 @@ export default function PostsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>إعادة المحاولة</Button>
+        </div>
       </div>
     )
   }
@@ -177,7 +187,7 @@ export default function PostsPage() {
                 <Textarea
                   placeholder={t("postContent")}
                   value={newPostContent}
-                  onChange={(e: { target: { value: SetStateAction<string> } }) => setNewPostContent(e.target.value)}
+                  onChange={(e) => setNewPostContent(e.target.value)}
                   rows={4}
                 />
                 <Input type="file" accept="image/*" onChange={(e) => setNewPostImage(e.target.files?.[0] || null)} />
@@ -359,7 +369,7 @@ export default function PostsPage() {
             <div className="space-y-4">
               <Textarea
                 value={editingPost.content}
-                onChange={(e: { target: { value: any } }) => setEditingPost({ ...editingPost, content: e.target.value })}
+                onChange={(e) => setEditingPost({ ...editingPost, content: e.target.value })}
                 rows={4}
               />
               <div className="flex gap-2 justify-end">

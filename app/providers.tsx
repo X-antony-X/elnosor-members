@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "firebase/auth"
 import { auth } from "@/lib/firebase"
@@ -27,16 +28,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [role, setRole] = useState<"admin" | "member" | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isClient, setIsClient] = useState(false)
-
-  // Handle client-side only rendering to prevent hydration mismatches
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
 
   useEffect(() => {
-    if (!isClient) return
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
 
@@ -51,16 +44,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     })
 
     return () => unsubscribe()
-  }, [isClient])
-
-  // Prevent server-side rendering of the main content to avoid hydration issues
-  if (!isClient) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
+  }, [])
 
   if (loading) {
     return (

@@ -1,0 +1,122 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { Camera } from "lucide-react"
+
+interface QRScannerProps {
+  onScan: (data: string) => void
+  onError?: (error: string) => void
+}
+
+export function QRScanner({ onScan, onError }: QRScannerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isScanning, setIsScanning] = useState(false)
+  const [stream, setStream] = useState<MediaStream | null>(null)
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    startCamera()
+    return () => {
+      stopCamera()
+    }
+  }, [])
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment", // Use back camera
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
+      })
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
+        setStream(mediaStream)
+        setIsScanning(true)
+
+        // Start scanning for QR codes
+        scanIntervalRef.current = setInterval(scanForQR, 500)
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error)
+      onError?.("لا يمكن الوصول للكاميرا")
+    }
+  }
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop())
+      setStream(null)
+    }
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current)
+    }
+    setIsScanning(false)
+  }
+
+  const scanForQR = () => {
+    if (!videoRef.current || !canvasRef.current || !isScanning) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const context = canvas.getContext("2d")
+
+    if (!context || video.readyState !== video.HAVE_ENOUGH_DATA) return
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+
+    // Simple QR detection (in production, use a proper QR library like jsQR)
+    try {
+      // This is a placeholder - in real implementation, use jsQR library
+      // const code = jsQR(imageData.data, imageData.width, imageData.height)
+      // if (code) {
+      //   onScan(code.data)
+      //   stopCamera()
+      // }
+
+      // For demo purposes, simulate QR detection after 3 seconds
+      setTimeout(() => {
+        if (isScanning) {
+          const mockQRData = JSON.stringify({
+            memberId: "1",
+            meetingId: "meeting-1",
+            timestamp: Date.now(),
+          })
+          onScan(mockQRData)
+          stopCamera()
+        }
+      }, 3000)
+    } catch (error) {
+      console.error("QR scanning error:", error)
+    }
+  }
+
+  return (
+    <div className="relative">
+      <video ref={videoRef} autoPlay playsInline muted className="w-full h-64 bg-black rounded-lg object-cover" />
+      <canvas ref={canvasRef} className="hidden" />
+
+      {/* Scanning overlay */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-48 h-48 border-2 border-white border-dashed rounded-lg flex items-center justify-center">
+          <div className="text-white text-center">
+            <Camera className="w-8 h-8 mx-auto mb-2" />
+            <p className="text-sm">وجه الكاميرا نحو كود QR</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Scanning indicator */}
+      {isScanning && (
+        <div className="absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-xs">جاري المسح...</div>
+      )}
+    </div>
+  )
+}

@@ -77,7 +77,7 @@ async function sendNotification(notificationId: string, notificationData: any) {
     }
 
     if (tokens.length > 0) {
-      await adminMessaging.sendEachForMulticast({
+      await adminMessaging.sendMulticast({
         ...message,
         tokens,
       })

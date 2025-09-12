@@ -100,7 +100,6 @@ export function ImageUpload({
         onChange={handleFileInput}
         className="hidden"
         disabled={uploading}
-        title="رفع صورة"
       />
 
       <AnimatePresence mode="wait">
@@ -122,7 +121,7 @@ export function ImageUpload({
                   className="w-full h-48 object-cover"
                 />
                 {onRemove && (
-                  <Button variant="ghost" size="sm" className="absolute top-2 right-2" onClick={onRemove}>
+                  <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={onRemove}>
                     <X className="w-4 h-4" />
                   </Button>
                 )}

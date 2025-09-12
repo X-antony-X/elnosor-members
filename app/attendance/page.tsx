@@ -2,29 +2,44 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import { QrCode, UserCheck, Clock, Calendar, Search, Download } from "lucide-react"
+import { QrCode, UserCheck, Clock, Calendar, Search, Download, Camera, X, FileSpreadsheet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
 import type { Member, AttendanceLog, Meeting } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import QRCode from "react-qr-code"
+import { QRScanner } from "@/components/qr-scanner"
+import { ExcelService } from "@/lib/excel-utils"
+import toast from "react-hot-toast"
+import { useMembers, useAttendance, firestoreHelpers } from "@/hooks/use-firestore"
+import { useOfflineStorage } from "@/hooks/use-offline-storage"
 
 export default function AttendancePage() {
   const { role } = useAuth()
   const router = useRouter()
-  const [members, setMembers] = useState<Member[]>([])
-  const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>([])
+  const { members, loading: membersLoading } = useMembers()
+  const { attendanceLogs, meetings, loading: attendanceLoading } = useAttendance()
+  const { isOffline, addOfflineAttendance, getOfflineMembers, getOfflineAttendance } = useOfflineStorage()
   const [currentMeeting, setCurrentMeeting] = useState<Meeting | null>(null)
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [showQRScanner, setShowQRScanner] = useState(false)
+  const [scannerLoading, setScannerLoading] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [exportDateRange, setExportDateRange] = useState({
+    startDate: "",
+    endDate: "",
+    reportType: "detailed" as "detailed" | "summary" | "comprehensive",
+  })
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -34,91 +49,177 @@ export default function AttendancePage() {
     }
   }, [role, router])
 
+  const loading = membersLoading || attendanceLoading
+
+  const displayMembers = isOffline ? getOfflineMembers() : members
+  const displayAttendanceLogs = isOffline ? getOfflineAttendance() : attendanceLogs
+
   useEffect(() => {
-    // Simulate loading data
-    setTimeout(() => {
-      setMembers([
-        {
-          id: "1",
-          fullName: "مينا جورج",
-          phonePrimary: "01234567890",
-          address: { addressString: "شارع الجمهورية، القاهرة" },
-          classStage: "university",
-          universityYear: 2,
-          confessorName: "أبونا يوسف",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "2",
-          fullName: "مريم سمير",
-          phonePrimary: "01123456789",
-          address: { addressString: "مدينة نصر، القاهرة" },
-          classStage: "secondary",
-          confessorName: "أبونا مرقس",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ])
+    if (meetings.length > 0) {
+      const today = new Date()
+      const todaysMeeting = meetings.find((meeting) => meeting.date.toDateString() === today.toDateString())
+      setCurrentMeeting(todaysMeeting || meetings[0])
+    }
+  }, [meetings])
 
-      setCurrentMeeting({
-        id: "meeting-1",
-        date: new Date(),
-        startTime: new Date(new Date().setHours(19, 0, 0, 0)),
-        endTime: new Date(new Date().setHours(21, 0, 0, 0)),
-        title: "اجتماع الجمعة",
-        description: "اجتماع أسبوعي للشباب",
-        createdAt: new Date(),
-      })
-
-      setAttendanceLogs([
-        {
-          id: "1",
-          memberId: "1",
-          meetingId: "meeting-1",
-          checkInTimestamp: new Date(new Date().setHours(19, 15, 0, 0)),
-          checkOutTimestamp: new Date(new Date().setHours(20, 45, 0, 0)),
-          checkInMethod: "qr",
-          lateness: 15,
-        },
-      ])
-
-      setLoading(false)
-    }, 1000)
-  }, [])
-
-  if (role !== "admin") {
-    return null
-  }
-
-  const filteredMembers = members.filter((member) => member.fullName.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredMembers = displayMembers.filter((member) =>
+    member.fullName.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
 
   const handleManualCheckIn = async (memberId: string) => {
     if (!currentMeeting) return
 
-    const newLog: AttendanceLog = {
-      id: Date.now().toString(),
-      memberId,
-      meetingId: currentMeeting.id!,
-      checkInTimestamp: new Date(),
-      checkInMethod: "manual",
-      lateness: Math.max(0, Math.floor((new Date().getTime() - currentMeeting.startTime.getTime()) / 60000)),
-    }
+    try {
+      const existingLog = displayAttendanceLogs.find(
+        (log) => log.memberId === memberId && log.meetingId === currentMeeting.id,
+      )
 
-    setAttendanceLogs([...attendanceLogs, newLog])
+      if (existingLog) {
+        toast.error("العضو مسجل حضوره بالفعل")
+        return
+      }
+
+      const lateness =
+        currentMeeting && currentMeeting.startTime
+          ? Math.max(0, Math.floor((new Date().getTime() - currentMeeting.startTime.getTime()) / 60000))
+          : 0
+
+      const newLog: AttendanceLog = {
+        id: Date.now().toString(),
+        memberId,
+        meetingId: currentMeeting && currentMeeting.id ? currentMeeting.id : "",
+        checkInTimestamp: new Date(),
+        checkInMethod: "manual",
+        lateness,
+      }
+
+      if (isOffline) {
+        addOfflineAttendance(newLog)
+        toast.success("تم تسجيل الحضور بدون اتصال - سيتم المزامنة عند الاتصال")
+      } else {
+        await firestoreHelpers.addAttendanceLog(newLog)
+        toast.success("تم تسجيل الحضور بنجاح")
+      }
+    } catch (error) {
+      console.error("Error checking in:", error)
+      toast.error("خطأ في تسجيل الحضور")
+    }
+  }
+
+  const handleQRScan = async (qrData: string) => {
+    try {
+      setScannerLoading(true)
+      const data = JSON.parse(qrData)
+
+      if (!data.memberId || !data.meetingId || data.meetingId !== currentMeeting?.id) {
+        toast.error("كود QR غير صالح أو منتهي الصلاحية")
+        return
+      }
+
+      const existingLog = displayAttendanceLogs.find(
+        (log) => log.memberId === data.memberId && log.meetingId === currentMeeting?.id,
+      )
+
+      if (existingLog) {
+        toast.error("العضو مسجل حضوره بالفعل")
+        return
+      }
+
+      const member = displayMembers.find((m) => m.id === data.memberId)
+      if (!member) {
+        toast.error("عضو غير موجود")
+        return
+      }
+
+      const lateness = Math.max(0, Math.floor((new Date().getTime() - currentMeeting!.startTime.getTime()) / 60000))
+
+      const newLog: AttendanceLog = {
+        id: Date.now().toString(),
+        memberId: data.memberId,
+        meetingId: currentMeeting!.id!,
+        checkInTimestamp: new Date(),
+        checkInMethod: "qr",
+        lateness,
+      }
+
+      if (isOffline) {
+        addOfflineAttendance(newLog)
+        toast.success(`تم تسجيل حضور ${member.fullName} بدون اتصال - سيتم المزامنة عند الاتصال`)
+      } else {
+        await firestoreHelpers.addAttendanceLog(newLog)
+        toast.success(`تم تسجيل حضور ${member.fullName} بنجاح`)
+      }
+
+      setShowQRScanner(false)
+    } catch (error) {
+      console.error("Error processing QR scan:", error)
+      toast.error("خطأ في قراءة كود QR")
+    } finally {
+      setScannerLoading(false)
+    }
   }
 
   const handleCheckOut = async (logId: string) => {
-    setAttendanceLogs(attendanceLogs.map((log) => (log.id === logId ? { ...log, checkOutTimestamp: new Date() } : log)))
+    try {
+      if (isOffline) {
+        toast.error("تسجيل الخروج غير متاح بدون اتصال")
+        return
+      }
+
+      await firestoreHelpers.updateAttendanceLog(logId, {
+        checkOutTimestamp: new Date(),
+      })
+      toast.success("تم تسجيل الخروج بنجاح")
+    } catch (error) {
+      console.error("Error checking out:", error)
+      toast.error("خطأ في تسجيل الخروج")
+    }
   }
 
   const generateMemberQR = (memberId: string) => {
-    // In real app, this would include a secure signature
     return JSON.stringify({
       memberId,
       meetingId: currentMeeting?.id,
       timestamp: Date.now(),
     })
+  }
+
+  const handleExportAttendance = () => {
+    try {
+      const { startDate, endDate, reportType } = exportDateRange
+
+      let filteredLogs = displayAttendanceLogs
+      if (startDate || endDate) {
+        filteredLogs = displayAttendanceLogs.filter((log) => {
+          const logDate = log.checkInTimestamp
+          if (startDate && logDate < new Date(startDate)) return false
+          if (endDate && logDate > new Date(endDate)) return false
+          return true
+        })
+      }
+
+      switch (reportType) {
+        case "detailed":
+          ExcelService.exportAttendance(filteredLogs, displayMembers, meetings)
+          break
+        case "comprehensive":
+          ExcelService.exportAttendanceReport(
+            filteredLogs,
+            displayMembers,
+            meetings,
+            startDate ? new Date(startDate) : undefined,
+            endDate ? new Date(endDate) : undefined,
+          )
+          break
+        default:
+          ExcelService.exportAttendance(filteredLogs, displayMembers, meetings)
+      }
+
+      toast.success("تم تصدير تقرير الحضور بنجاح")
+      setExportDialogOpen(false)
+    } catch (error) {
+      toast.error("خطأ في تصدير التقرير")
+    }
   }
 
   const formatLateness = (minutes: number) => {
@@ -146,37 +247,106 @@ export default function AttendancePage() {
       >
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("attendance")}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">إدارة حضور الأعضاء</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            إدارة حضور الأعضاء
+            {isOffline && <span className="text-orange-600 mr-2">(وضع عدم الاتصال)</span>}
+          </p>
         </div>
 
-        {currentMeeting && (
-          <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-600" />
+        <div className="flex gap-2">
+          <Button onClick={() => setShowQRScanner(true)} className="bg-green-600 hover:bg-green-700">
+            <Camera className="w-4 h-4 ml-2" />
+            مسح QR
+          </Button>
+
+          <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+            <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
+              <Download className="w-4 h-4 ml-2" />
+              تصدير تقرير
+            </Button>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>تصدير تقرير الحضور</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
                 <div>
-                  <p className="font-medium text-blue-900 dark:text-blue-100">{currentMeeting.title}</p>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    {currentMeeting.startTime.toLocaleTimeString("ar-EG", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}{" "}
-                    -{" "}
-                    {currentMeeting.endTime.toLocaleTimeString("ar-EG", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                  <Label>نوع التقرير</Label>
+                  <Select
+                    value={exportDateRange.reportType}
+                    onValueChange={(value: any) => setExportDateRange({ ...exportDateRange, reportType: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="detailed">تفصيلي</SelectItem>
+                      <SelectItem value="comprehensive">شامل مع الإحصائيات</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>من تاريخ</Label>
+                    <Input
+                      type="date"
+                      value={exportDateRange.startDate}
+                      onChange={(e) => setExportDateRange({ ...exportDateRange, startDate: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>إلى تاريخ</Label>
+                    <Input
+                      type="date"
+                      value={exportDateRange.endDate}
+                      onChange={(e) => setExportDateRange({ ...exportDateRange, endDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
+                    إلغاء
+                  </Button>
+                  <Button onClick={handleExportAttendance}>
+                    <FileSpreadsheet className="w-4 h-4 ml-2" />
+                    تصدير
+                  </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </DialogContent>
+          </Dialog>
+
+          {currentMeeting && (
+            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                  <div>
+                    <p className="font-medium text-blue-900 dark:text-blue-100">{currentMeeting.title}</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      {currentMeeting.startTime.toLocaleTimeString("ar-EG", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      -{" "}
+                      {currentMeeting.endTime.toLocaleTimeString("ar-EG", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </motion.div>
 
       <Tabs defaultValue="check-in" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="check-in">{t("checkIn")}</TabsTrigger>
+          <TabsTrigger value="qr-scanner">مسح QR</TabsTrigger>
           <TabsTrigger value="qr-codes">أكواد QR</TabsTrigger>
           <TabsTrigger value="logs">{t("attendanceLog")}</TabsTrigger>
         </TabsList>
@@ -203,10 +373,10 @@ export default function AttendancePage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredMembers.map((member) => {
-                    const hasCheckedIn = attendanceLogs.some(
+                    const hasCheckedIn = displayAttendanceLogs.some(
                       (log) => log.memberId === member.id && log.meetingId === currentMeeting?.id,
                     )
-                    const attendanceLog = attendanceLogs.find(
+                    const attendanceLog = displayAttendanceLogs.find(
                       (log) => log.memberId === member.id && log.meetingId === currentMeeting?.id,
                     )
 
@@ -262,6 +432,30 @@ export default function AttendancePage() {
           </motion.div>
         </TabsContent>
 
+        <TabsContent value="qr-scanner" className="space-y-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  مسح كود QR للحضور
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center">
+                  <Button onClick={() => setShowQRScanner(true)} size="lg" className="bg-green-600 hover:bg-green-700">
+                    <Camera className="w-5 h-5 ml-2" />
+                    فتح الكاميرا لمسح QR
+                  </Button>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    اضغط لفتح الكاميرا ومسح كود QR الخاص بالعضو
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
         <TabsContent value="qr-codes" className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card>
@@ -299,16 +493,19 @@ export default function AttendancePage() {
                     <Calendar className="w-5 h-5" />
                     {t("attendanceLog")}
                   </CardTitle>
-                  <Button variant="outline" size="sm">
-                    <Download className="w-4 h-4 ml-2" />
-                    تصدير
-                  </Button>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary">{displayAttendanceLogs.length} سجل</Badge>
+                    <Button variant="outline" size="sm" onClick={() => setExportDialogOpen(true)}>
+                      <Download className="w-4 h-4 ml-2" />
+                      تصدير تقرير
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {attendanceLogs.map((log) => {
-                    const member = members.find((m) => m.id === log.memberId)
+                  {displayAttendanceLogs.map((log) => {
+                    const member = displayMembers.find((m) => m.id === log.memberId)
                     if (!member) return null
 
                     return (
@@ -338,7 +535,7 @@ export default function AttendancePage() {
                     )
                   })}
 
-                  {attendanceLogs.length === 0 && (
+                  {displayAttendanceLogs.length === 0 && (
                     <div className="text-center py-8">
                       <p className="text-gray-500 dark:text-gray-400">لا توجد سجلات حضور لهذا الاجتماع</p>
                     </div>
@@ -349,6 +546,40 @@ export default function AttendancePage() {
           </motion.div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={showQRScanner} onOpenChange={setShowQRScanner}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="w-5 h-5" />
+              مسح كود QR
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {scannerLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <LoadingSpinner size="lg" />
+                <p className="mr-2">جاري معالجة الكود...</p>
+              </div>
+            ) : (
+              <QRScanner
+                onScan={handleQRScan}
+                onError={(error) => {
+                  console.error("QR Scanner error:", error)
+                  toast.error("خطأ في تشغيل الكاميرا")
+                }}
+              />
+            )}
+            <div className="text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">وجه الكاميرا نحو كود QR الخاص بالعضو</p>
+              <Button variant="outline" onClick={() => setShowQRScanner(false)} className="mt-2">
+                <X className="w-4 h-4 ml-2" />
+                إغلاق
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

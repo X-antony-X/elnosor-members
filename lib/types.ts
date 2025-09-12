@@ -1,5 +1,5 @@
 export interface Member {
-  id: string
+  id?: string
   uid?: string
   fullName: string
   phonePrimary: string
@@ -52,6 +52,63 @@ export interface Notification {
   createdBy: string
   createdAt: Date
   readBy?: string[]
+  isRecurring?: boolean
+  recurringPattern?: RecurringPattern
+  templateId?: string
+  priority?: "low" | "normal" | "high"
+  expiresAt?: Date
+}
+
+export interface RecurringPattern {
+  type: "daily" | "weekly" | "monthly" | "yearly"
+  interval: number // Every X days/weeks/months/years
+  daysOfWeek?: number[] // For weekly: [0,1,2,3,4,5,6] (Sunday = 0)
+  dayOfMonth?: number // For monthly: 1-31
+  endDate?: Date
+  maxOccurrences?: number
+}
+
+export interface NotificationTemplate {
+  id?: string
+  name: string
+  title: string
+  message: string
+  imageUrl?: string
+  targetAudience: "all" | "group" | "individuals"
+  category: "meeting" | "announcement" | "reminder" | "verse" | "custom"
+  variables?: string[] // Placeholders like {memberName}, {date}, etc.
+  createdBy: string
+  createdAt: Date
+  isActive: boolean
+}
+
+export interface NotificationSchedule {
+  id?: string
+  templateId: string
+  scheduledTime: Date
+  recurringPattern?: RecurringPattern
+  targetAudience: "all" | "group" | "individuals"
+  targetIds?: string[]
+  variables?: Record<string, string>
+  isActive: boolean
+  createdBy: string
+  createdAt: Date
+  lastSent?: Date
+  nextSend?: Date
+}
+
+export interface NotificationAnalytics {
+  notificationId: string
+  totalSent: number
+  totalDelivered: number
+  totalRead: number
+  totalClicked: number
+  deliveryRate: number
+  readRate: number
+  clickRate: number
+  sentAt: Date
+  deviceTypes: Record<string, number>
+  platforms: Record<string, number>
 }
 
 export interface Post {
@@ -85,7 +142,7 @@ export interface DailyQuote {
 
 export interface UserSettings {
   userId: string
-  theme: "light" | "dark" | "system"
+  theme: "light" | "dark"
   primaryColor: string
   meetingSchedule: {
     dayOfWeek: number // 0-6 (Sunday = 0)

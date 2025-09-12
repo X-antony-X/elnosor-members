@@ -56,11 +56,9 @@ export async function GET(request: NextRequest) {
         }
 
         if (tokens.length > 0) {
-          // FCM sendMulticast expects a MulticastMessage object
-          await adminMessaging.sendEachForMulticast({
+          await adminMessaging.sendMulticast({
+            ...message,
             tokens,
-            notification: message.notification,
-            data: message.data,
           })
           sentCount++
         }
