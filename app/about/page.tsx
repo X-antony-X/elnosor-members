@@ -10,43 +10,91 @@ import Link from "next/link"
 
 const servants = [
   {
-    name: "أبونا يوسف",
+    name: "أبونا فلان",
     role: "كاهن الكنيسة",
     phone: "01234567890",
     email: "abouna.youssef@church.org",
   },
   {
-    name: "مينا جرجس",
+    name: "فلان الفولاني",
     role: "رئيس خدمة الشباب",
     phone: "01123456789",
-    email: "mina.george@church.org",
+    email: "folanElfolany@church.org",
   },
   {
-    name: "مريم سمير",
+    name: "علان العلاني",
     role: "مسؤولة الأنشطة",
     phone: "01098765432",
-    email: "mariam.samir@church.org",
+    email: "folanElfolany@church.org",
   },
 ]
 
 const groupChats = [
   {
     name: "مجموعة الشباب الرئيسية",
-    platform: "WhatsApp",
+    platform: "WhatsApp0",
     link: "https://chat.whatsapp.com/example1",
-    members: 45,
+    members: 251,
   },
   {
-    name: "مجموعة الأنشطة والرحلات",
-    platform: "Telegram",
-    link: "https://t.me/example2",
-    members: 32,
+    name: "جروب الفيسبوك",
+    platform: "Facebook0",
+    link: "https://www.facebook.com/share/g/16tMybk81j/?mibextid=NSMWBT",
+    members: 232,
   },
   {
-    name: "مجموعة الدراسة الكتابية",
-    platform: "WhatsApp",
-    link: "https://chat.whatsapp.com/example3",
-    members: 28,
+    name: "المنارة يوتيوب",
+    platform: "youtube1",
+    link: "https://youtube.com/@al-manarateam?si=58nLHe3xHD3bo2zJ",
+    members: 225,
+  },
+  // {
+  //   name: "المنارة كوبتك",
+  //   platform: "Coptok1",
+  //   link: "https://coptok.page.link/xKGgze1VHvtHJ1Hw9",
+  //   members: 0,
+  // },
+  {
+    name: "المنارة انستجرام",
+    platform: "Instagram1",
+    link: "https://www.instagram.com/al.manarateam.ch?utm_source=qr&igsh=ZnRwMjRvcnBjazQ0",
+    members: 812,
+  },
+  {
+    name: "المنارة ثريد",
+    platform: "Threads1",
+    link: "https://www.threads.net/@al.manarateam.ch",
+    members: 1,
+  },
+  {
+    name: "المنارة تيكتوك",
+    platform: "TicTok1",
+    link: "https://www.tiktok.com/@almanara.team.ch?_t=ZS-8ua5KYVvtaM&_r=1",
+    members: 2971,
+  },
+  // {
+  //   name: "المنارة تويتر",
+  //   platform: "X1",
+  //   link: "https://x.com/ManaraTeam?t=CWno__QK5fqNEDy93lFoLQ&s=09",
+  //   members: 0,
+  // },
+  {
+    name: "المنارة واتساب",
+    platform: "Whatsapp1",
+    link: "https://whatsapp.com/channel/0029Vb8nliYAzNc2r4c0280o",
+    members: 44,
+  },
+  {
+    name: "المنارة ساوندكلاود",
+    platform: "SoundCloud1",
+    link: "https://on.soundcloud.com/4vq5qMtRUEvoFRqk8",
+    members: 5,
+  },
+  {
+    name: "المنارة تلجرام",
+    platform: "Telegram1",
+    link: "https://t.me/Almanarateamch",
+    members: 4,
   },
 ]
 
@@ -77,14 +125,20 @@ export default function AboutPage() {
   return (
     <div className="p-6 space-y-8 max-w-4xl mx-auto">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
-        <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6">
-          <Heart className="w-8 h-8 text-white" />
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("about")}</h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          {t("appDescription")} - منصة شاملة لإدارة خدمة الشباب والتفاعل مع الأعضاء
-        </p>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.75, y: 0 }} className="text-center space-y-4">
+        <Card>
+          <CardHeader>
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6">
+              <Heart className="w-8 h-8 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("about")}</h1>
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              {t("appDescription")} - منصة شاملة لإدارة خدمة الشباب والتفاعل مع الأعضاء
+            </p>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* App Features */}
@@ -129,7 +183,7 @@ export default function AboutPage() {
           <CardContent className="space-y-4">
             {groupChats.map((group, index) => (
               <motion.div
-                key={group.name}
+                key={group.name + index}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * index }}
@@ -214,9 +268,9 @@ export default function AboutPage() {
         className="text-center space-y-4 py-8"
       >
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          <p>تطبيق خدمة الشباب - الإصدار 1.0.0</p>
+          <p>تطبيق خدمة الشباب - الإصدار 1.0.6</p>
           <p>تم التطوير بحب لخدمة الكنيسة</p>
-          <p className="mt-2">© 2024 جميع الحقوق محفوظة</p>
+          <p className="mt-2">© 2025 جميع الحقوق محفوظة للنسور</p>
         </div>
       </motion.div>
     </div>

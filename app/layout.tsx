@@ -60,7 +60,8 @@ export default function RootLayout({
   }) {
   return (
     <html lang="ar" dir="rtl" className="rtl">
-      <body className="font-arabic">
+      <body className="font-arabic" suppressHydrationWarning={true}>
+        <div className="background-blur" />
         <Providers>
           {children}
           <OfflineDetector />
