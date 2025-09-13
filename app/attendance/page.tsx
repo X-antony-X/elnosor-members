@@ -318,7 +318,7 @@ export default function AttendancePage() {
           </Dialog>
 
           {currentMeeting && (
-            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+            <Card glassy className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-blue-600" />
@@ -353,7 +353,7 @@ export default function AttendancePage() {
 
         <TabsContent value="check-in" className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <UserCheck className="w-5 h-5" />
@@ -381,7 +381,7 @@ export default function AttendancePage() {
                     )
 
                     return (
-                      <Card key={member.id} className="relative">
+                      <Card glassy key={member.id} className="relative">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <h3 className="font-medium">{member.fullName}</h3>
@@ -434,7 +434,7 @@ export default function AttendancePage() {
 
         <TabsContent value="qr-scanner" className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Camera className="w-5 h-5" />
@@ -458,7 +458,7 @@ export default function AttendancePage() {
 
         <TabsContent value="qr-codes" className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <QrCode className="w-5 h-5" />
@@ -468,7 +468,7 @@ export default function AttendancePage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {members.map((member) => (
-                    <Card key={member.id} className="text-center">
+                    <Card glassy key={member.id} className="text-center">
                       <CardContent className="p-4">
                         <h3 className="font-medium mb-4">{member.fullName}</h3>
                         <div className="bg-white p-4 rounded-lg inline-block">
@@ -486,7 +486,7 @@ export default function AttendancePage() {
 
         <TabsContent value="logs" className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">

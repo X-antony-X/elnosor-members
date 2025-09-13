@@ -1,11 +1,16 @@
 import { type HTMLAttributes, forwardRef } from "react"
 import { cn } from "@/lib/utils"
 
-export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  glassy?: boolean
+}
+
+export const Card = forwardRef<HTMLDivElement, CardProps>(({ className, glassy, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
       "rounded-lg border border-gray-200 bg-white text-gray-950 shadow-sm dark:border-gray-800 dark:bg-gray-950 dark:text-gray-50",
+      glassy && "bg-white/10 backdrop-blur-md border-white/20 dark:bg-black/10 dark:border-white/20",
       className,
     )}
     {...props}

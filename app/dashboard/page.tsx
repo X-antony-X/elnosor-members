@@ -134,7 +134,7 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card>
+              <Card glassy>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -168,7 +168,7 @@ export default function DashboardPage() {
         <TabsContent value="attendance" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Attendance Trend */}
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
@@ -192,7 +192,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Weekly Attendance */}
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
@@ -217,7 +217,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Top Attendees */}
-          <Card>
+          <Card glassy>
             <CardHeader>
               <CardTitle>أفضل الحضور</CardTitle>
             </CardHeader>
@@ -257,7 +257,7 @@ export default function DashboardPage() {
         <TabsContent value="members" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Members by Stage */}
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <LucidePieChart className="w-5 h-5" />
@@ -288,7 +288,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Member Growth */}
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
@@ -315,7 +315,7 @@ export default function DashboardPage() {
         <TabsContent value="engagement" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Monthly Posts */}
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
@@ -336,7 +336,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Top Posts */}
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle>أكثر المنشورات تفاعلاً</CardTitle>
               </CardHeader>
@@ -369,7 +369,7 @@ export default function DashboardPage() {
 
         <TabsContent value="performance" className="space-y-6">
           {/* Meeting Performance */}
-          <Card>
+          <Card glassy>
             <CardHeader>
               <CardTitle>أداء الاجتماعات</CardTitle>
             </CardHeader>
@@ -395,23 +395,23 @@ export default function DashboardPage() {
 
       {role === "admin" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <Card>
+          <Card glassy>
             <CardHeader>
               <CardTitle>الإجراءات السريعة</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
+                <button type="button" className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
                   <h3 className="font-medium text-gray-900 dark:text-white">إضافة عضو جديد</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إضافة عضو جديد إلى الخدمة</p>
                 </button>
 
-                <button className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
+                <button type="button" className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
                   <h3 className="font-medium text-gray-900 dark:text-white">تسجيل الحضور</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">تسجيل حضور الاجتماع الحالي</p>
                 </button>
 
-                <button className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
+                <button type="button"className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
                   <h3 className="font-medium text-gray-900 dark:text-white">إرسال إشعار</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إرسال إشعار لجميع الأعضاء</p>
                 </button>

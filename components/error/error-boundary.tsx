@@ -77,7 +77,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 function DefaultErrorFallback({ error, retry }: { error: Error; retry: () => void }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card glassy className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mb-4">
             <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />

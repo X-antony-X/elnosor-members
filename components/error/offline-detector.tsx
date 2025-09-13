@@ -52,7 +52,7 @@ export function OfflineDetector() {
         exit={{ opacity: 0, y: -100 }}
         className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4"
       >
-        <Card className="bg-orange-50 dark:bg-orange-900 border-orange-200 dark:border-orange-800">
+        <Card glassy className="bg-orange-50 dark:bg-orange-900 border-orange-200 dark:border-orange-800">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2 text-orange-800 dark:text-orange-200">
               <WifiOff className="w-4 h-4" />

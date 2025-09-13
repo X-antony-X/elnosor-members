@@ -105,7 +105,7 @@ export default function MemberProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-          <Card>
+          <Card glassy>
             <CardHeader className="text-center">
               <div className="mx-auto w-32 h-32 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 mb-4">
                 {member.photoUrl ? (
@@ -134,7 +134,7 @@ export default function MemberProfilePage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <Card className="mt-4">
+              <Card glassy className="mt-4">
                 <CardHeader className="text-center">
                   <CardTitle className="text-lg">رمز الحضور الخاص بك</CardTitle>
                   <p className="text-sm text-gray-600 dark:text-gray-400">اعرض هذا الرمز للخادم لتسجيل حضورك</p>
@@ -161,7 +161,7 @@ export default function MemberProfilePage() {
           transition={{ delay: 0.2 }}
           className="lg:col-span-2"
         >
-          <Card>
+          <Card glassy>
             <CardHeader>
               <CardTitle>معلومات الاتصال</CardTitle>
             </CardHeader>
@@ -212,7 +212,7 @@ export default function MemberProfilePage() {
           transition={{ delay: 0.3 }}
           className="lg:col-span-3"
         >
-          <Card>
+          <Card glassy>
             <CardHeader>
               <CardTitle>معلومات الخدمة</CardTitle>
             </CardHeader>
@@ -244,7 +244,7 @@ export default function MemberProfilePage() {
       </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-        <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+        <Card glassy className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <QrCode className="w-6 h-6 text-blue-600 mt-1" />

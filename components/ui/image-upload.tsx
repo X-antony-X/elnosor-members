@@ -100,6 +100,7 @@ export function ImageUpload({
         onChange={handleFileInput}
         className="hidden"
         disabled={uploading}
+        title="upload"
       />
 
       <AnimatePresence mode="wait">
@@ -111,7 +112,7 @@ export function ImageUpload({
             exit={{ opacity: 0, scale: 0.9 }}
             className="relative"
           >
-            <Card className="overflow-hidden">
+            <Card glassy className="overflow-hidden">
               <CardContent className="p-0 relative">
                 <Image
                   src={currentImage || "/placeholder.svg"}
@@ -135,7 +136,7 @@ export function ImageUpload({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
           >
-            <Card
+              <Card glassy
               className={`border-2 border-dashed transition-colors cursor-pointer ${
                 dragOver
                   ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"

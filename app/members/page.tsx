@@ -259,13 +259,13 @@ export default function MembersPage() {
                   {importResults && (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
-                        <Card>
+                        <Card glassy>
                           <CardContent className="p-4 text-center">
                             <div className="text-2xl font-bold text-green-600">{importResults.success}</div>
                             <div className="text-sm text-gray-600">تم الاستيراد بنجاح</div>
                           </CardContent>
                         </Card>
-                        <Card>
+                        <Card glassy>
                           <CardContent className="p-4 text-center">
                             <div className="text-2xl font-bold text-red-600">{importResults.errors.length}</div>
                             <div className="text-sm text-gray-600">أخطاء</div>
@@ -339,7 +339,7 @@ export default function MembersPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card
+              <Card glassy
                 className="hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => member.id && handleMemberClick(member.id)}
               >

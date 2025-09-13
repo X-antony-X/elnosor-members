@@ -109,7 +109,7 @@ export default function MemberProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Card */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-            <Card>
+            <Card glassy>
               <CardHeader className="text-center">
                 <div className="mx-auto w-32 h-32 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 mb-4">
                   {member.photoUrl ? (
@@ -140,7 +140,7 @@ export default function MemberProfilePage() {
             transition={{ delay: 0.2 }}
             className="lg:col-span-2"
           >
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle>معلومات الاتصال</CardTitle>
               </CardHeader>
@@ -191,7 +191,7 @@ export default function MemberProfilePage() {
             transition={{ delay: 0.3 }}
             className="lg:col-span-3"
           >
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle>معلومات الخدمة</CardTitle>
               </CardHeader>

@@ -641,7 +641,7 @@ export default function NotificationsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card>
+                <Card glassy>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -751,7 +751,7 @@ export default function NotificationsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card>
+                  <Card glassy>
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg">{template.name}</CardTitle>
@@ -791,7 +791,7 @@ export default function NotificationsPage() {
         <TabsContent value="schedules" className="space-y-6">
           {role === "admin" && (
             <>
-              <Card>
+              <Card glassy>
                 <CardHeader>
                   <CardTitle>جدولة مجمعة</CardTitle>
                 </CardHeader>
@@ -838,6 +838,7 @@ export default function NotificationsPage() {
                           <Badge key={i} variant="secondary" className="text-xs">
                             {new Date(date).toLocaleString("ar-EG")}
                             <button
+                              type="button"
                               onClick={() =>
                                 setBulkSchedule({
                                   ...bulkSchedule,
@@ -866,7 +867,7 @@ export default function NotificationsPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                     >
-                      <Card>
+                      <Card glassy>
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
                             <div>
@@ -907,7 +908,7 @@ export default function NotificationsPage() {
 
         <TabsContent value="analytics" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
@@ -934,7 +935,7 @@ export default function NotificationsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle>معدل القراءة</CardTitle>
               </CardHeader>
@@ -953,7 +954,7 @@ export default function NotificationsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card glassy>
               <CardHeader>
                 <CardTitle>القوالب النشطة</CardTitle>
               </CardHeader>
@@ -971,7 +972,7 @@ export default function NotificationsPage() {
           {/* ... existing daily verses code ... */}
           {role === "admin" && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <Card>
+              <Card glassy>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     إعدادات الآيات اليومية
@@ -1003,7 +1004,7 @@ export default function NotificationsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-              <Card>
+              <Card glassy>
                 <CardHeader>
                   <CardTitle className="text-blue-600">{t("youthQuotes")}</CardTitle>
                 </CardHeader>
@@ -1024,7 +1025,7 @@ export default function NotificationsPage() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-              <Card>
+              <Card glassy>
                 <CardHeader>
                   <CardTitle className="text-green-600">{t("fathersQuotes")}</CardTitle>
                 </CardHeader>

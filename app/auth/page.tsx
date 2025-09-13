@@ -144,7 +144,7 @@ export default function AuthPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card>
+        <Card glassy>
           <CardHeader className="text-center">
             <motion.div
               initial={{ scale: 0 }}

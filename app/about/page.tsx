@@ -5,6 +5,7 @@ import { Heart, Users, MessageCircle, Phone, Mail, ExternalLink, Star, Calendar 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { t } from "@/lib/translations"
 import Link from "next/link"
 
@@ -13,7 +14,7 @@ const servants = [
     name: "أبونا فلان",
     role: "كاهن الكنيسة",
     phone: "01234567890",
-    email: "abouna.youssef@church.org",
+    email: "abouna.folan@church.org",
   },
   {
     name: "فلان الفولاني",
@@ -124,9 +125,10 @@ const features = [
 export default function AboutPage() {
   return (
     <div className="p-6 space-y-8 max-w-4xl mx-auto">
+      <Breadcrumbs />
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.75, y: 0 }} className="text-center space-y-4">
-        <Card>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
+        <Card glassy>
           <CardHeader>
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6">
               <Heart className="w-8 h-8 text-white" />
@@ -143,7 +145,7 @@ export default function AboutPage() {
 
       {/* App Features */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Card>
+        <Card glassy>
           <CardHeader>
             <CardTitle className="text-center">مميزات التطبيق</CardTitle>
           </CardHeader>
@@ -173,7 +175,7 @@ export default function AboutPage() {
 
       {/* Group Chats */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <Card>
+        <Card glassy>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
@@ -187,7 +189,7 @@ export default function AboutPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * index }}
-                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                className="flex items-center justify-between p-4 bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg"
               >
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900 dark:text-white">{group.name}</h3>
@@ -209,7 +211,7 @@ export default function AboutPage() {
 
       {/* Contact Servants */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-        <Card>
+        <Card glassy>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
@@ -224,7 +226,7 @@ export default function AboutPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * index }}
               >
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="p-4 bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 dark:text-white">{servant.name}</h3>
@@ -267,11 +269,18 @@ export default function AboutPage() {
         transition={{ delay: 0.4 }}
         className="text-center space-y-4 py-8"
       >
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          <p>تطبيق خدمة الشباب - الإصدار 1.0.6</p>
-          <p>تم التطوير بحب لخدمة الكنيسة</p>
-          <p className="mt-2">© 2025 جميع الحقوق محفوظة للنسور</p>
-        </div>
+        <Card glassy>
+          <CardHeader>
+            <CardTitle className="text-center mb-2">معلومات التطبيق</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              <p>تطبيق خدمة الشباب - الإصدار 1.0.6</p>
+              <p>تم التطوير بحب لخدمة الكنيسة</p>
+              <p className="mt-2">© 2025 جميع الحقوق محفوظة للنسور</p>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
     </div>
   )

@@ -159,7 +159,7 @@ export function WebAuthnSetup() {
 
   if (!webauthnSupported) {
     return (
-      <Card>
+      <Card glassy>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5" />
@@ -179,7 +179,7 @@ export function WebAuthnSetup() {
   }
 
   return (
-    <Card>
+    <Card glassy>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">

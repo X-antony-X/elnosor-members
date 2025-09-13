@@ -8,7 +8,7 @@ import Link from "next/link"
 export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card glassy className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mb-4">
             <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />

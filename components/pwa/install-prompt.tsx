@@ -78,7 +78,7 @@ export function InstallPrompt() {
         exit={{ opacity: 0, y: 100 }}
         className="fixed bottom-4 left-4 right-4 z-50 max-w-sm mx-auto"
       >
-        <Card className="bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800">
+        <Card glassy className="bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2 text-blue-800 dark:text-blue-200">
