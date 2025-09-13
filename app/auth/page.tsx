@@ -28,9 +28,27 @@ export default function AuthPage() {
   useDebugAuthRedirect()
 
   useEffect(() => {
-    if (user && !loading) {
-      router.push("/dashboard")
+    const checkProfileAndRedirect = async () => {
+      if (user && !loading) {
+        try {
+          const { doc, getDoc } = await import("firebase/firestore")
+          const { db } = await import("@/lib/firebase")
+          const docRef = doc(db, "members", user.uid)
+          const memberDoc = await getDoc(docRef)
+
+          if (memberDoc.exists()) {
+            router.push("/dashboard")
+          } else {
+            router.push("/profile/complete")
+          }
+        } catch (error) {
+          console.error("Error checking member profile:", error)
+          router.push("/dashboard")
+        }
+      }
     }
+
+    checkProfileAndRedirect()
   }, [user, loading, router])
 
   useEffect(() => {
@@ -64,8 +82,25 @@ export default function AuthPage() {
           body: JSON.stringify({ idToken }),
         })
 
-        toast.success("تم تسجيل الدخول بنجاح")
-        router.push("/dashboard")
+        // Check if user profile exists
+        const profileResponse = await fetch(`/api/members/${user.uid}`, {
+          headers: {
+            "Authorization": `Bearer ${idToken}`,
+          },
+        })
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json()
+          if (profileData && profileData.fullName) {
+            // Profile exists, redirect to dashboard
+            router.push("/dashboard")
+          } else {
+            // Profile incomplete, redirect to profile completion
+            router.push("/profile/complete")
+          }
+        } else {
+          // If error fetching profile, redirect to profile completion
+          router.push("/profile/complete")
+        }
       }
     } catch (error) {
       toast.error("خطأ في تسجيل الدخول")
@@ -86,8 +121,25 @@ export default function AuthPage() {
           body: JSON.stringify({ idToken }),
         })
 
-        toast.success("تم تسجيل الدخول بنجاح")
-        router.push("/dashboard")
+        // Check if user profile exists
+        const profileResponse = await fetch(`/api/members/${user.uid}`, {
+          headers: {
+            "Authorization": `Bearer ${idToken}`,
+          },
+        })
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json()
+          if (profileData && profileData.fullName) {
+            // Profile exists, redirect to dashboard
+            router.push("/dashboard")
+          } else {
+            // Profile incomplete, redirect to profile completion
+            router.push("/profile/complete")
+          }
+        } else {
+          // If error fetching profile, redirect to profile completion
+          router.push("/profile/complete")
+        }
       }
     } catch (error) {
       toast.error("خطأ في تسجيل الدخول")
@@ -108,6 +160,35 @@ export default function AuthPage() {
         toast.success("تم تسجيل الدخول بنجاح باستخدام البصمة")
         // Handle successful WebAuthn authentication
         // You would typically create a Firebase custom token here
+
+        // Check if user profile exists
+        // For WebAuthn, we need to get the ID token from the authenticated user
+        // Assuming result.user has uid and we can get ID token
+        const currentUser = await import("firebase/auth").then(({ getAuth }) => getAuth().currentUser)
+        if (currentUser) {
+          const idToken = await currentUser.getIdToken()
+          const profileResponse = await fetch(`/api/members/${result.user.uid}`, {
+            headers: {
+              "Authorization": `Bearer ${idToken}`,
+            },
+          })
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json()
+            if (profileData && profileData.fullName) {
+              // Profile exists, redirect to dashboard
+              router.push("/dashboard")
+            } else {
+              // Profile incomplete, redirect to profile completion
+              router.push("/profile/complete")
+            }
+          } else {
+            // If error fetching profile, redirect to profile completion
+            router.push("/profile/complete")
+          }
+        } else {
+          // If no current user, redirect to profile completion
+          router.push("/profile/complete")
+        }
       } else {
         toast.error("فشل في التحقق من الهوية")
       }

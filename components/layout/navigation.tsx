@@ -49,7 +49,7 @@ export function Navigation() {
         animate={{ x: isOpen || (typeof window !== "undefined" && window.innerWidth >= 1024) ? 0 : -300 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
-          "fixed inset-y-0 right-0 z-40 w-64 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-lg lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-lg lg:relative lg:translate-x-0",
           isOpen && "translate-x-0",
         )}
       >

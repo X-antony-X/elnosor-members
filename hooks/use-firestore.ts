@@ -9,6 +9,7 @@ import {
   where,
   doc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   Timestamp,
@@ -153,11 +154,12 @@ export const firestoreHelpers = {
   // Add new member
   addMember: async (memberData: Omit<Member, "id" | "createdAt" | "updatedAt">) => {
     const now = Timestamp.now()
-    return await addDoc(collection(db, "members"), {
+    const data = {
       ...memberData,
       createdAt: now,
       updatedAt: now,
-    })
+    }
+    return await setDoc(doc(db, "members", memberData.uid!), data)
   },
 
   // Update member

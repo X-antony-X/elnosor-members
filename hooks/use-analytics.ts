@@ -38,7 +38,8 @@ export const useAnalytics = (dateRange?: { start: Date; end: Date }) => {
 
   useEffect(() => {
     if (members.length === 0 && attendanceLogs.length === 0 && posts.length === 0) {
-      setLoading(true)
+      setLoading(false)
+      setAnalytics(null)
       return
     }
 

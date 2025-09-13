@@ -2,50 +2,64 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { User, Phone, MapPin, QrCode, Calendar, Edit } from "lucide-react"
+import { User, Phone, MapPin, QrCode, Calendar, Edit, Save, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
 import type { Member } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { generateMemberQR } from "@/lib/utils"
 import QRCode from "react-qr-code"
+import toast from "react-hot-toast"
+import { firestoreHelpers } from "@/hooks/use-firestore"
 
 export default function MemberProfilePage() {
   const { user, role } = useAuth()
   const [member, setMember] = useState<Member | null>(null)
   const [loading, setLoading] = useState(true)
   const [showQR, setShowQR] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [editData, setEditData] = useState<Partial<Member>>({})
 
   useEffect(() => {
     if (!user) return
 
-    setTimeout(() => {
-      // Mock member data - in real app, fetch from Firestore using user.uid
-      setMember({
-        id: user.uid,
-        uid: user.uid,
-        fullName: user.displayName || "مينا جورج إبراهيم",
-        phonePrimary: "01234567890",
-        phoneSecondary: "01098765432",
-        address: {
-          addressString: "شارع الجمهورية، القاهرة الجديدة",
-          lat: 30.0444,
-          lng: 31.2357,
-          mapsUrl: "https://maps.google.com/?q=30.0444,31.2357",
-        },
-        classStage: "university",
-        universityYear: 2,
-        confessorName: "أبونا يوسف الأنطوني",
-        photoUrl: user.photoURL || "/placeholder.svg?height=200&width=200",
-        notes: "عضو نشط في الخدمة، يحضر بانتظام",
-        createdAt: new Date("2023-01-15"),
-        updatedAt: new Date(),
-      })
-      setLoading(false)
-    }, 1000)
+    const fetchMemberData = async () => {
+      setLoading(true)
+      try {
+        const { doc, getDoc } = await import("firebase/firestore")
+        const { db } = await import("@/lib/firebase")
+        const docRef = doc(db, "members", user.uid)
+        const memberDoc = await getDoc(docRef)
+
+        if (memberDoc.exists()) {
+          const memberData = {
+            id: memberDoc.id,
+            ...memberDoc.data(),
+            createdAt: memberDoc.data().createdAt?.toDate() || new Date(),
+            updatedAt: memberDoc.data().updatedAt?.toDate() || new Date(),
+          } as Member
+          setMember(memberData)
+          setEditData(memberData)
+        } else {
+          toast.error("لم يتم العثور على بيانات العضو")
+        }
+      } catch (error) {
+        console.error("Error fetching member data:", error)
+        toast.error("حدث خطأ في تحميل البيانات")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMemberData()
   }, [user])
 
   if (!user) {
@@ -65,6 +79,39 @@ export default function MemberProfilePage() {
       </div>
     )
   }
+
+  const handleEdit = () => {
+    setIsEditing(true)
+    setEditData(member || {})
+  }
+
+  const handleCancel = () => {
+    setIsEditing(false)
+    setEditData(member || {})
+  }
+
+  const handleSave = async () => {
+    if (!member) return
+
+    setSaving(true)
+    try {
+      await firestoreHelpers.updateMember(member.id!, editData)
+      setMember({ ...member, ...editData, updatedAt: new Date() })
+      setIsEditing(false)
+      toast.success("تم حفظ التغييرات بنجاح")
+    } catch (error) {
+      console.error("Error updating member:", error)
+      toast.error("حدث خطأ في حفظ التغييرات")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleInputChange = (field: string, value: any) => {
+    setEditData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const canEdit = role === "admin" || role === "member"
 
   if (!member) {
     return (
@@ -93,11 +140,32 @@ export default function MemberProfilePage() {
             <QrCode className="w-4 h-4 ml-2" />
             {showQR ? "إخفاء QR" : "عرض QR"}
           </Button>
-          {role === "admin" && (
-            <Button variant="outline" size="sm">
+          {canEdit && !isEditing && (
+            <Button variant="outline" size="sm" onClick={handleEdit}>
               <Edit className="w-4 h-4 ml-2" />
               تعديل
             </Button>
+          )}
+          {isEditing && (
+            <>
+              <Button variant="outline" size="sm" onClick={handleCancel} disabled={saving}>
+                <X className="w-4 h-4 ml-2" />
+                إلغاء
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={saving}>
+                {saving ? (
+                  <>
+                    <LoadingSpinner size="sm" className="ml-2" />
+                    جاري الحفظ...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 ml-2" />
+                    حفظ
+                  </>
+                )}
+              </Button>
+            </>
           )}
         </div>
       </motion.div>
@@ -166,40 +234,83 @@ export default function MemberProfilePage() {
               <CardTitle>معلومات الاتصال</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-gray-500" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="font-medium">الهاتف الأساسي</p>
-                  <p className="text-gray-600 dark:text-gray-400">{member.phonePrimary}</p>
+                  <Label>الهاتف الأساسي</Label>
+                  {isEditing ? (
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        className="pl-10"
+                        value={editData.phonePrimary || ""}
+                        onChange={(e) => handleInputChange("phonePrimary", e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 dark:text-gray-400 mt-1 flex items-center">
+                      <Phone className="w-4 h-4 ml-2" />
+                      {member.phonePrimary}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label>الهاتف الثانوي</Label>
+                  {isEditing ? (
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        className="pl-10"
+                        value={editData.phoneSecondary || ""}
+                        onChange={(e) => handleInputChange("phoneSecondary", e.target.value)}
+                        placeholder="اختياري"
+                      />
+                    </div>
+                  ) : (
+                    member.phoneSecondary ? (
+                      <p className="text-gray-600 dark:text-gray-400 mt-1 flex items-center">
+                        <Phone className="w-4 h-4 ml-2" />
+                        {member.phoneSecondary}
+                      </p>
+                    ) : (
+                      <p className="text-gray-400 dark:text-gray-500 mt-1">غير محدد</p>
+                    )
+                  )}
                 </div>
               </div>
 
-              {member.phoneSecondary && (
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-gray-500" />
-                  <div>
-                    <p className="font-medium">الهاتف الثانوي</p>
-                    <p className="text-gray-600 dark:text-gray-400">{member.phoneSecondary}</p>
+              <div>
+                <Label>العنوان</Label>
+                {isEditing ? (
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Textarea
+                      className="pl-10 min-h-[80px]"
+                      value={editData.address?.addressString || ""}
+                      onChange={(e) => handleInputChange("address", {
+                        ...editData.address,
+                        addressString: e.target.value
+                      })}
+                    />
                   </div>
-                </div>
-              )}
-
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-500 mt-1" />
-                <div>
-                  <p className="font-medium">العنوان</p>
-                  <p className="text-gray-600 dark:text-gray-400">{member.address.addressString}</p>
-                  {member.address.mapsUrl && (
-                    <a
-                      href={member.address.mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      عرض على الخريطة
-                    </a>
-                  )}
-                </div>
+                ) : (
+                  <div className="mt-1">
+                    <p className="text-gray-600 dark:text-gray-400 flex items-start">
+                      <MapPin className="w-4 h-4 ml-2 mt-0.5" />
+                      <span>{member.address.addressString}</span>
+                    </p>
+                    {member.address.mapsUrl && (
+                      <a
+                        href={member.address.mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm mr-6"
+                      >
+                        عرض على الخريطة
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

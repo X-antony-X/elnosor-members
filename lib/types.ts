@@ -1,22 +1,22 @@
 export interface Member {
-  id?: string
-  uid?: string
-  fullName: string
-  phonePrimary: string
-  phoneSecondary?: string
+  id?: string;
+  uid?: string;
+  fullName: string;
+  phonePrimary: string;
+  phoneSecondary?: string;
   address: {
-    lat?: number
-    lng?: number
-    addressString: string
-    mapsUrl?: string
-  }
-  classStage: "secondary" | "university"
-  universityYear?: number
-  confessorName: string
-  photoUrl?: string
-  notes?: string
-  createdAt: Date
-  updatedAt: Date
+    lat?: number;
+    lng?: number;
+    addressString: string;
+    mapsUrl?: string;
+  };
+  classStage: "graduation" | "university";
+  universityYear?: number;
+  confessorName: string;
+  photoUrl?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface AttendanceLog {

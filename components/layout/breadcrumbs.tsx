@@ -59,14 +59,14 @@ export function Breadcrumbs() {
 
   const breadcrumbs = generateBreadcrumbs()
 
-  // Don't show breadcrumbs on dashboard
-  if (pathname === "/dashboard") {
+  // Don't show breadcrumbs on dashboard or auth or profile/complete
+  if (pathname === "/dashboard" || pathname === "/auth" || pathname === "/profile/complete") {
     return null
   }
 
   return (
-    <nav className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4 px-4 sm:px-6">
-      <Home className="w-4 h-4" />
+    <nav className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4 px-4 sm:px-6 mt-4">
+      <Home className="w-4 h-4 mt-4 pt-4" />
       {breadcrumbs.map((breadcrumb, index) => (
         <div key={breadcrumb.href} className="flex items-center gap-2">
           {index > 0 && <ChevronLeft className="w-4 h-4" />}
