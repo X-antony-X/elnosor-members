@@ -13,8 +13,6 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   authors: [{ name: 'Peter Eshak Abdo', url: 'https://member-elnosor.vercel.app' }],
   creator: 'Peter Eshak Abdo',
-  themeColor: "#0ea5e9",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -48,11 +46,18 @@ export const metadata: Metadata = {
 
 }
 
+export function generateViewport() {
+  return {
+    themeColor: "#0ea5e9",
+    viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+  }
+}
+
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
-}) {
+  children: React.ReactNode;
+  }) {
   return (
     <html lang="ar" dir="rtl" className="rtl">
       <body className="font-arabic">

@@ -63,7 +63,19 @@ export const createUserProfile = async (user: User) => {
 export const getUserRole = async (user: User): Promise<"admin" | "member"> => {
   try {
     const token = await user.getIdTokenResult()
-    return token.claims.role === "admin" ? "admin" : "member"
+    if (token.claims.role) {
+      return token.claims.role === "admin" ? "admin" : "member"
+    }
+
+    // If no role in custom claims, check Firestore
+    const userRef = doc(db, "users", user.uid)
+    const userSnap = await getDoc(userRef)
+    if (userSnap.exists()) {
+      const userData = userSnap.data()
+      return userData.role === "admin" ? "admin" : "member"
+    }
+
+    return "member"
   } catch (error) {
     console.error("Error getting user role:", error)
     return "member"

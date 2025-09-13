@@ -182,7 +182,7 @@ export default function DashboardPage() {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip
-                      labelFormatter={(label) => `التاريخ: ${label}`}
+                      labelFormatter={(label) => `التاريخ: ${new Date(label).toLocaleDateString("ar-EG")}`}
                       formatter={(value, name) => [value, name === "count" ? "عدد الحضور" : "معدل الحضور %"]}
                     />
                     <Area type="monotone" dataKey="count" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
@@ -230,15 +230,14 @@ export default function DashboardPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                          index === 0
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${index === 0
                             ? "bg-yellow-500"
                             : index === 1
                               ? "bg-gray-400"
                               : index === 2
                                 ? "bg-orange-600"
                                 : "bg-blue-500"
-                        }`}
+                          }`}
                       >
                         {index + 1}
                       </div>
