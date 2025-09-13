@@ -12,7 +12,6 @@ import { t } from "@/lib/translations"
 import type { Member } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RoleGuard } from "@/components/auth/role-guard"
-import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { FloatingBackButton } from "@/components/layout/floating-back-button"
 
 export default function MemberProfilePage() {
@@ -61,7 +60,6 @@ export default function MemberProfilePage() {
     return (
       <RoleGuard adminOnly>
         <div className="p-6">
-          <Breadcrumbs />
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">لم يتم العثور على العضو</p>
             <Button onClick={() => router.back()} className="mt-4">
@@ -76,7 +74,6 @@ export default function MemberProfilePage() {
   return (
     <RoleGuard adminOnly>
       <div className="p-6 space-y-6">
-        <Breadcrumbs />
         <FloatingBackButton />
 
         <motion.div

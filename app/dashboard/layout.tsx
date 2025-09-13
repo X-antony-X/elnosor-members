@@ -1,6 +1,7 @@
 import type React from "react"
 import { Navigation } from "@/components/layout/navigation"
 import { Header } from "@/components/layout/header"
+import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 
 export default function DashboardLayout({
   children,
@@ -12,7 +13,10 @@ export default function DashboardLayout({
       <Navigation />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto">
+          <Breadcrumbs />
+          {children}
+        </main>
       </div>
     </div>
   )

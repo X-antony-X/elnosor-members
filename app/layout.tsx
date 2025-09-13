@@ -5,6 +5,7 @@ import { Providers } from "./providers"
 import { Toaster } from "react-hot-toast"
 import { OfflineDetector } from "@/components/error/offline-detector"
 import { InstallPrompt } from "@/components/pwa/install-prompt"
+import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://member-elnosor.vercel.app"),
@@ -63,6 +64,7 @@ export default function RootLayout({
       <body className="font-arabic" suppressHydrationWarning={true}>
         <div className="background-blur" />
         <Providers>
+          <Breadcrumbs />
           {children}
           <OfflineDetector />
           <InstallPrompt />

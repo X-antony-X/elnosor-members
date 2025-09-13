@@ -5,7 +5,6 @@ import { Heart, Users, MessageCircle, Phone, Mail, ExternalLink, Star, Calendar 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { t } from "@/lib/translations"
 import Link from "next/link"
 
@@ -125,7 +124,6 @@ const features = [
 export default function AboutPage() {
   return (
     <div className="p-6 space-y-8 max-w-4xl mx-auto">
-      <Breadcrumbs />
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
         <Card glassy>
