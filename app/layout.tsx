@@ -8,11 +8,11 @@ import { InstallPrompt } from "@/components/pwa/install-prompt"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://member-elnosor.vercel.app"),
+  metadataBase: new URL(process.env.VERSEL_URL_FULL || 'http://localhost:3000'),
   title: "Shabab Alnosor",
   description: "تطبيق إدارة حضور ومشاركة الشباب في الكنيسة",
   manifest: "/manifest.json",
-  authors: [{ name: 'Peter Eshak Abdo', url: 'https://member-elnosor.vercel.app' }],
+  authors: [{ name: 'Peter Eshak Abdo', url: process.env.VERSEL_URL_FULL }],
   creator: 'Peter Eshak Abdo',
   appleWebApp: {
     capable: true,
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'شباب النسور',
     description: "تطبيق إدارة حضور ومشاركة الشباب في الكنيسة",
-    url: 'https://member-elnosor.vercel.app',
+    url: process.env.VERSEL_URL_FULL,
     siteName: 'Elnosor Members',
     // images: [
     //   {
