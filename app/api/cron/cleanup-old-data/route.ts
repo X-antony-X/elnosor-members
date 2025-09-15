@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { adminDb } from "@/lib/firebase-admin"
+import { adminDb, adminAuth } from "@/lib/firebase-admin"
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,12 +25,40 @@ export async function GET(request: NextRequest) {
       batch.delete(doc.ref)
     })
 
+    // Cleanup incomplete user profiles (users without members, older than 1 hour)
+    const oneHourAgo = new Date()
+    oneHourAgo.setHours(oneHourAgo.getHours() - 1)
+
+    const usersQuery = await adminDb
+      .collection("users")
+      .where("createdAt", "<", oneHourAgo)
+      .limit(100)
+      .get()
+
+    let deletedUsersCount = 0
+    for (const userDoc of usersQuery.docs) {
+      const userId = userDoc.id
+      const memberDoc = await adminDb.collection("members").doc(userId).get()
+      if (!memberDoc.exists) {
+        // Delete from users collection
+        batch.delete(userDoc.ref)
+        // Also delete from Firebase Auth if possible
+        try {
+          await adminAuth.deleteUser(userId)
+        } catch (authError) {
+          console.error(`Failed to delete user ${userId} from Auth:`, authError)
+        }
+        deletedUsersCount++
+      }
+    }
+
     await batch.commit()
 
     return NextResponse.json({
       success: true,
-      deletedCount: oldLogsQuery.docs.length,
-      message: `Deleted ${oldLogsQuery.docs.length} old attendance logs`,
+      deletedLogsCount: oldLogsQuery.docs.length,
+      deletedUsersCount,
+      message: `Deleted ${oldLogsQuery.docs.length} old attendance logs and ${deletedUsersCount} incomplete user profiles`,
     })
   } catch (error) {
     console.error("Cleanup error:", error)
