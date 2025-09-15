@@ -29,3 +29,5 @@ next-env.d.ts
 *package-lock.json
 #firebase/functions
 node_modules
+
+scripts/set-admin-role.js

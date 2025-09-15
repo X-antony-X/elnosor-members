@@ -54,8 +54,9 @@ export function Navigation() {
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">خدمة الشباب</h2>
+          <div className=" mt-20 p-6">
+            <img src="/images/logo.png" alt="Logo" className="w-25 h-25 rounded-full" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">شباب النسور</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{role === "admin" ? "خادم" : "مخدوم"}</p>
           </div>
 

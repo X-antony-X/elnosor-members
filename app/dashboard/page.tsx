@@ -107,7 +107,7 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">مرحباً، {user?.displayName}</h1>
-            <p className="text-gray-600 dark:text-gray-400">لوحة تحليلات خدمة الشباب</p>
+            <p className="text-gray-600 dark:text-gray-400">لوحة تحليلات النسور</p>
           </div>
 
           <Select value={dateRange} onValueChange={setDateRange}>

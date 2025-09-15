@@ -235,7 +235,8 @@ export default function AuthPage() {
             >
               <span className="text-2xl text-white">⛪</span>
             </motion.div>
-            <CardTitle className="text-2xl font-bold">خدمة الشباب</CardTitle>
+            <img src="/images/logo.png" alt="Logo" className="w-10 h-10 rounded-full" />
+            <CardTitle className="text-2xl font-bold">شباب النسور</CardTitle>
             <p className="text-gray-600 dark:text-gray-400 mt-2">إدارة الحضور والمشاركة</p>
           </CardHeader>
 

@@ -15,6 +15,7 @@ export interface Member {
   confessorName: string;
   photoUrl?: string;
   notes?: string;
+  role?: "member" | "admin";
   createdAt: Date;
   updatedAt: Date;
 }

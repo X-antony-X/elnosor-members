@@ -97,7 +97,7 @@ export function InstallPrompt() {
           </CardHeader>
           <CardContent className="pt-0">
             <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
-              ثبت تطبيق خدمة الشباب للوصول السريع والعمل بدون اتصال
+              ثبت تطبيق شباب النسور للوصول السريع والعمل بدون اتصال
             </p>
             <div className="flex gap-2">
               <Button size="sm" onClick={handleInstall} className="flex-1">

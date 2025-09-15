@@ -10,6 +10,17 @@ import { motion } from "framer-motion"
 import { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { OnlineStatusIndicator } from "@/components/error/offline-detector"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface HeaderProps {
   onMenuToggle?: () => void
@@ -26,6 +37,7 @@ export function Header({ onMenuToggle, showBackButton = false, title }: HeaderPr
   const handleLogout = async () => {
     try {
       await logout()
+      router.push("/auth")
     } catch (error) {
       console.error("Error logging out:", error)
     }
@@ -53,7 +65,7 @@ export function Header({ onMenuToggle, showBackButton = false, title }: HeaderPr
       "/about": "حول التطبيق",
     }
 
-    return pathMap[pathname] || "خدمة الشباب"
+    return pathMap[pathname] || "شباب النسور"
   }
 
   return (
@@ -88,7 +100,7 @@ export function Header({ onMenuToggle, showBackButton = false, title }: HeaderPr
               className="flex items-center gap-2"
             >
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm sm:text-base">ش</span>
+                <span className="text-white font-bold text-sm sm:text-base">نسور</span>
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{getPageTitle()}</h1>
@@ -163,10 +175,39 @@ export function Header({ onMenuToggle, showBackButton = false, title }: HeaderPr
               )}
             </div>
 
-            {/* Logout button */}
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-600 dark:text-gray-400">
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
+            {/* Logout button with confirmation */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400">
+                  <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>تأكيد تسجيل الخروج</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    هل أنت متأكد من أنك تريد تسجيل الخروج؟<br />
+                    <br />
+                    عند تسجيل الخروج، ستحتاج إلى إعادة المصادقة للوصول إلى التطبيق مرة أخرى. إليك الخطوات:
+                    <br />
+                    1. اضغط على "تسجيل الدخول بـ Google" أو "تسجيل الدخول بـ Facebook"
+                    <br />
+                    2. اختر حسابك من القائمة
+                    <br />
+                    3. أكمل إعداد ملفك الشخصي إذا لم يكن مكتملاً
+                    <br />
+                    <br />
+                    سيتم تسجيل خروجك بالكامل وستحتاج إلى إعادة تسجيل الدخول.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLogout}>
+                    تأكيد تسجيل الخروج
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>
