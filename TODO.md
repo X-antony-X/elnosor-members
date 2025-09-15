@@ -6,5 +6,6 @@
 - [x] Modify app/auth/page.tsx to prevent premature redirects during sign-in by adding isSigningIn state.
 
 ## Pending Steps
-- [ ] Test the changes to ensure account selection is prompted and redirect works.
-- [ ] If issues persist, add logging to debug redirect failures.
+- [x] Add check for session response success before proceeding.
+- [x] Change router.push to window.location.href for reliable navigation.
+- [ ] Test the changes to ensure redirect works.

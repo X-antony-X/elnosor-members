@@ -70,19 +70,29 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true)
     try {
+      console.log("Starting Google sign in")
       const user = await signInWithGoogle()
+      console.log("User signed in:", user)
       if (user) {
         // Get ID token
         const idToken = await user.getIdToken()
+        console.log("ID token obtained")
 
         // Call API to set session cookie
-        await fetch("/api/auth/session", {
+        const sessionResponse = await fetch("/api/auth/session", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ idToken }),
         })
+        console.log("Session response:", sessionResponse.ok)
+
+        if (!sessionResponse.ok) {
+          console.error("Failed to set session")
+          toast.error("فشل في إعداد الجلسة")
+          return
+        }
 
         // Check if user profile exists
         const profileResponse = await fetch(`/api/members/${user.uid}`, {
@@ -90,21 +100,27 @@ export default function AuthPage() {
             "Authorization": `Bearer ${idToken}`,
           },
         })
+        console.log("Profile response:", profileResponse.status)
         if (profileResponse.ok) {
           const profileData = await profileResponse.json()
+          console.log("Profile data:", profileData)
           if (profileData && profileData.fullName) {
             // Profile exists, redirect to dashboard
-            router.push("/dashboard")
+            console.log("Redirecting to dashboard")
+            window.location.href = "/dashboard"
           } else {
             // Profile incomplete, redirect to profile completion
-            router.push("/profile/complete")
+            console.log("Redirecting to profile/complete")
+            window.location.href = "/profile/complete"
           }
         } else {
           // If error fetching profile, redirect to profile completion
-          router.push("/profile/complete")
+          console.log("Profile not found, redirecting to profile/complete")
+          window.location.href = "/profile/complete"
         }
       }
     } catch (error) {
+      console.error("Error in Google sign in:", error)
       toast.error("خطأ في تسجيل الدخول")
     }
   }
