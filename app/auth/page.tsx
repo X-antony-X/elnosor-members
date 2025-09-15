@@ -231,11 +231,11 @@ export default function AuthPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
-              className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-4"
+              className="bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-4"
             >
-              <span className="text-2xl text-white">⛪</span>
+              {/* <span className="text-2xl text-white">⛪</span> */}
+              <img src="/images/logo.png" alt="Logo" className="w-30 h-30 rounded-full" />
             </motion.div>
-            <img src="/images/logo.png" alt="Logo" className="w-10 h-10 rounded-full" />
             <CardTitle className="text-2xl font-bold">شباب النسور</CardTitle>
             <p className="text-gray-600 dark:text-gray-400 mt-2">إدارة الحضور والمشاركة</p>
           </CardHeader>
