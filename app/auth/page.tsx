@@ -24,12 +24,13 @@ export default function AuthPage() {
   const [platformAuthAvailable, setPlatformAuthAvailable] = useState(false)
   const [webauthnLoading, setWebauthnLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("social")
+  const [isSigningIn, setIsSigningIn] = useState(false)
 
   useDebugAuthRedirect()
 
   useEffect(() => {
     const checkProfileAndRedirect = async () => {
-      if (user && !loading) {
+      if (user && !loading && !isSigningIn) {
         try {
           const { doc, getDoc } = await import("firebase/firestore")
           const { db } = await import("@/lib/firebase")
@@ -49,7 +50,7 @@ export default function AuthPage() {
     }
 
     checkProfileAndRedirect()
-  }, [user, loading, router])
+  }, [user, loading, router, isSigningIn])
 
   useEffect(() => {
     // Check WebAuthn support
@@ -67,6 +68,7 @@ export default function AuthPage() {
   }, [])
 
   const handleGoogleSignIn = async () => {
+    setIsSigningIn(true)
     try {
       const user = await signInWithGoogle()
       if (user) {
@@ -108,6 +110,7 @@ export default function AuthPage() {
   }
 
   const handleFacebookSignIn = async () => {
+    setIsSigningIn(true)
     try {
       const user = await signInWithFacebook()
       if (user) {
@@ -152,6 +155,7 @@ export default function AuthPage() {
       return
     }
 
+    setIsSigningIn(true)
     setWebauthnLoading(true)
     try {
       const result = await WebAuthnService.authenticate()

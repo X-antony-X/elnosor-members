@@ -4,6 +4,9 @@ import { doc, setDoc, getDoc } from "firebase/firestore"
 import { db } from "./firebase"
 
 const googleProvider = new GoogleAuthProvider()
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+})
 const facebookProvider = new FacebookAuthProvider()
 
 export const signInWithGoogle = async () => {
