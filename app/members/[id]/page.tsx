@@ -305,7 +305,7 @@ export default function MemberProfilePage() {
                 <div className="mt-2">
                   <ImageUpload
                     uploadType="member"
-                    entityId={member.id}
+                    entityId={member.id ?? ""}
                     currentImage={uploadedPhotoUrl}
                     onUpload={(url) => setUploadedPhotoUrl(url)}
                     showSourceSelector={true}

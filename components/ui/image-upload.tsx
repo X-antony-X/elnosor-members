@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import { Upload, X, ImageIcon, Camera, Image, Folder } from "lucide-react"
+import { Upload, X, ImageIcon, Camera, Image as ImageIconLucide, Folder } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -148,7 +148,7 @@ export function ImageUpload({
               </SelectItem>
               <SelectItem value="gallery">
                 <div className="flex items-center gap-2">
-                  <Image className="w-4 h-4" />
+                  <ImageIconLucide className="w-4 h-4" />
                   معرض الصور
                 </div>
               </SelectItem>
