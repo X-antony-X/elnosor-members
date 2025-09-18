@@ -10,9 +10,16 @@ import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
 import type { Member } from "@/lib/types"
+import toast from "react-hot-toast"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RoleGuard } from "@/components/auth/role-guard"
 import { FloatingBackButton } from "@/components/layout/floating-back-button"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function MemberProfilePage() {
   const { role } = useAuth()
@@ -20,6 +27,19 @@ export default function MemberProfilePage() {
   const params = useParams()
   const [member, setMember] = useState<Member | null>(null)
   const [loading, setLoading] = useState(true)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("")
+  const [editFormData, setEditFormData] = useState({
+    fullName: "",
+    phonePrimary: "",
+    phoneSecondary: "",
+    address: "",
+    confessorName: "",
+    classStage: "",
+    universityYear: "",
+    notes: "",
+  })
 
   useEffect(() => {
     // Simulate loading member data
@@ -47,6 +67,62 @@ export default function MemberProfilePage() {
       setLoading(false)
     }, 1000)
   }, [params.id])
+
+  const handleEditClick = () => {
+    if (!member) return
+
+    setEditFormData({
+      fullName: member.fullName,
+      phonePrimary: member.phonePrimary,
+      phoneSecondary: member.phoneSecondary || "",
+      address: member.address.addressString,
+      confessorName: member.confessorName,
+      classStage: member.classStage,
+      universityYear: member.universityYear?.toString() || "",
+      notes: member.notes || "",
+    })
+    setUploadedPhotoUrl(member.photoUrl || "")
+    setEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!member) return
+
+    setSaving(true)
+    try {
+      // Simulate API call to update member
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      const updatedMember = {
+        ...member,
+        fullName: editFormData.fullName,
+        phonePrimary: editFormData.phonePrimary,
+        phoneSecondary: editFormData.phoneSecondary || undefined,
+        address: {
+          addressString: editFormData.address,
+        },
+        confessorName: editFormData.confessorName,
+        classStage: editFormData.classStage as "graduation" | "university",
+        universityYear: editFormData.classStage === "university" ? parseInt(editFormData.universityYear) : undefined,
+        photoUrl: uploadedPhotoUrl || member.photoUrl,
+        notes: editFormData.notes,
+        updatedAt: new Date(),
+      }
+
+      setMember(updatedMember)
+      setEditDialogOpen(false)
+      toast.success("تم تحديث البيانات بنجاح")
+    } catch (error) {
+      console.error("Error updating member:", error)
+      toast.error("حدث خطأ في تحديث البيانات")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleEditInputChange = (field: string, value: string) => {
+    setEditFormData(prev => ({ ...prev, [field]: value }))
+  }
 
   if (loading) {
     return (
@@ -96,7 +172,7 @@ export default function MemberProfilePage() {
               <QrCode className="w-4 h-4 ml-2" />
               رمز QR
             </Button>
-            <Button>
+            <Button onClick={handleEditClick}>
               <Edit className="w-4 h-4 ml-2" />
               تعديل
             </Button>
@@ -215,6 +291,148 @@ export default function MemberProfilePage() {
             </Card>
           </motion.div>
         </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>تعديل بيانات العضو</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              {/* Profile Picture */}
+              <div>
+                <Label>الصورة الشخصية</Label>
+                <div className="mt-2">
+                  <ImageUpload
+                    uploadType="member"
+                    entityId={member.id}
+                    currentImage={uploadedPhotoUrl}
+                    onUpload={(url) => setUploadedPhotoUrl(url)}
+                    showSourceSelector={true}
+                  />
+                </div>
+              </div>
+
+              {/* Full Name */}
+              <div>
+                <Label htmlFor="edit-fullName">الاسم الكامل *</Label>
+                <Input
+                  id="edit-fullName"
+                  value={editFormData.fullName}
+                  onChange={(e) => handleEditInputChange("fullName", e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Phone Numbers */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-phonePrimary">رقم الهاتف الأساسي *</Label>
+                  <Input
+                    id="edit-phonePrimary"
+                    type="tel"
+                    value={editFormData.phonePrimary}
+                    onChange={(e) => handleEditInputChange("phonePrimary", e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-phoneSecondary">رقم الهاتف الثانوي (اختياري)</Label>
+                  <Input
+                    id="edit-phoneSecondary"
+                    type="tel"
+                    value={editFormData.phoneSecondary}
+                    onChange={(e) => handleEditInputChange("phoneSecondary", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Address */}
+              <div>
+                <Label htmlFor="edit-address">العنوان *</Label>
+                <Textarea
+                  id="edit-address"
+                  value={editFormData.address}
+                  onChange={(e) => handleEditInputChange("address", e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Confessor Name */}
+              <div>
+                <Label htmlFor="edit-confessorName">اسم الأب الروحي *</Label>
+                <Input
+                  id="edit-confessorName"
+                  value={editFormData.confessorName}
+                  onChange={(e) => handleEditInputChange("confessorName", e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Education Stage */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-classStage">المرحلة الدراسية *</Label>
+                  <Select value={editFormData.classStage} onValueChange={(value) => handleEditInputChange("classStage", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر المرحلة الدراسية" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="university">جامعي</SelectItem>
+                      <SelectItem value="graduation">خريج</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {editFormData.classStage === "university" && (
+                  <div>
+                    <Label htmlFor="edit-universityYear">السنة الجامعية *</Label>
+                    <Select value={editFormData.universityYear} onValueChange={(value) => handleEditInputChange("universityYear", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر السنة الجامعية" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">السنة الأولى</SelectItem>
+                        <SelectItem value="2">السنة الثانية</SelectItem>
+                        <SelectItem value="3">السنة الثالثة</SelectItem>
+                        <SelectItem value="4">السنة الرابعة</SelectItem>
+                        <SelectItem value="5">السنة الخامسة</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div>
+                <Label htmlFor="edit-notes">ملاحظات</Label>
+                <Textarea
+                  id="edit-notes"
+                  value={editFormData.notes}
+                  onChange={(e) => handleEditInputChange("notes", e.target.value)}
+                  placeholder="أي ملاحظات إضافية..."
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handleSaveEdit} disabled={saving} className="flex-1">
+                  {saving ? (
+                    <>
+                      <LoadingSpinner size="sm" className="ml-2" />
+                      جاري الحفظ...
+                    </>
+                  ) : (
+                    "حفظ التغييرات"
+                  )}
+                </Button>
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={saving}>
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </RoleGuard>
   )

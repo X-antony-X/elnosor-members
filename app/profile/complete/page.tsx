@@ -13,6 +13,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useAuth } from "@/app/providers"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ImageUpload } from "@/components/ui/image-upload"
 import { CalendarIcon, Upload, User, Phone, MapPin, GraduationCap } from "lucide-react"
 import { format } from "date-fns"
 import { ar } from "date-fns/locale"
@@ -28,6 +29,7 @@ export default function ProfileCompletePage() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [birthDate, setBirthDate] = useState<Date>()
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("")
   const [formData, setFormData] = useState({
     firstName: "",
     middleName: "",
@@ -97,7 +99,6 @@ export default function ProfileCompletePage() {
         duration: 6000,
         icon: "📚",
       })
-      return
     }
 
     if (age > 28) {
@@ -105,7 +106,6 @@ export default function ProfileCompletePage() {
         duration: 6000,
         icon: "⛪",
       })
-      return
     }
 
     setSaving(true)
@@ -124,7 +124,8 @@ export default function ProfileCompletePage() {
         classStage: formData.classStage as "graduation" | "university",
         ...(formData.classStage === "university" && { universityYear: parseInt(formData.universityYear) }),
         confessorName: formData.confessorName,
-        ...(user.photoURL && { photoUrl: user.photoURL }),
+        ...(uploadedPhotoUrl && { photoUrl: uploadedPhotoUrl }),
+        ...(user.photoURL && !uploadedPhotoUrl && { photoUrl: user.photoURL }),
         createdAt: new Date(),
         updatedAt: new Date(),
       }
@@ -202,7 +203,7 @@ export default function ProfileCompletePage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="lastName">اللقب *</Label>
+                    <Label htmlFor="lastName">اسم الجد *</Label>
                     <Input
                       id="lastName"
                       value={formData.lastName}
@@ -254,7 +255,7 @@ export default function ProfileCompletePage() {
                       className="pl-10 min-h-[80px]"
                       value={formData.address}
                       onChange={(e) => handleInputChange("address", e.target.value)}
-                      placeholder="شارع الجمهورية، القاهرة الجديدة"
+                      placeholder="الشارع الفولاني عند ....."
                       required
                     />
                   </div>
@@ -267,7 +268,7 @@ export default function ProfileCompletePage() {
                     id="confessorName"
                     value={formData.confessorName}
                     onChange={(e) => handleInputChange("confessorName", e.target.value)}
-                    placeholder="الأب ..."
+                    placeholder="ابونا ..."
                     required
                   />
                 </div>
@@ -298,7 +299,7 @@ export default function ProfileCompletePage() {
                           date > new Date() || date < new Date("1940-01-01")
                         }
                         captionLayout="dropdown"
-                        fromYear={1940}
+                        fromYear={1960}
                         toYear={2010}
                         initialFocus
                       />
@@ -349,33 +350,13 @@ export default function ProfileCompletePage() {
                 <div>
                   <Label>الصورة الشخصية</Label>
                   <div className="flex items-center gap-4 mt-2">
-                    {user?.photoURL ? (
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={user.photoURL}
-                          alt="Profile"
-                          className="w-16 h-16 rounded-full object-cover"
-                        />
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          سيتم استخدام صورة حسابك من Google
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                          <User className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            لا توجد صورة في حسابك
-                          </p>
-                          <Button variant="outline" size="sm" type="button">
-                            <Upload className="w-4 h-4 ml-2" />
-                            رفع صورة
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                    <ImageUpload
+                      uploadType="member"
+                      entityId={user?.uid || ""}
+                      currentImage={uploadedPhotoUrl || user?.photoURL || ""}
+                      onUpload={(url) => setUploadedPhotoUrl(url)}
+                      showSourceSelector={true}
+                    />
                   </div>
                 </div>
 
