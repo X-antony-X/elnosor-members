@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Camera } from "lucide-react"
+import jsQR from "jsqr"
 
 interface QRScannerProps {
   onScan: (data: string) => void
@@ -42,7 +43,7 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
       }
     } catch (error) {
       console.error("Error accessing camera:", error)
-      onError?.("لا يمكن الوصول للكاميرا")
+      onError?.("لا يمكن الوصول للكاميرا. تأكد من منح الإذن للوصول للكاميرا.")
     }
   }
 
@@ -72,27 +73,12 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
 
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
 
-    // Simple QR detection (in production, use a proper QR library like jsQR)
     try {
-      // This is a placeholder - in real implementation, use jsQR library
-      // const code = jsQR(imageData.data, imageData.width, imageData.height)
-      // if (code) {
-      //   onScan(code.data)
-      //   stopCamera()
-      // }
-
-      // For demo purposes, simulate QR detection after 3 seconds
-      setTimeout(() => {
-        if (isScanning) {
-          const mockQRData = JSON.stringify({
-            memberId: "1",
-            meetingId: "meeting-1",
-            timestamp: Date.now(),
-          })
-          onScan(mockQRData)
-          stopCamera()
-        }
-      }, 3000)
+      const code = jsQR(imageData.data, imageData.width, imageData.height)
+      if (code) {
+        onScan(code.data)
+        stopCamera()
+      }
     } catch (error) {
       console.error("QR scanning error:", error)
     }
@@ -106,9 +92,9 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
       {/* Scanning overlay */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-48 h-48 border-2 border-white border-dashed rounded-lg flex items-center justify-center">
-          <div className="text-white text-center">
-            <Camera className="w-8 h-8 mx-auto mb-2" />
-            <p className="text-sm">وجه الكاميرا نحو كود QR</p>
+          <div className="text-center">
+            <Camera className="w-8 h-8 mx-auto mb-2 text-white" />
+            <p className="text-sm text-white">وجه الكاميرا نحو كود QR</p>
           </div>
         </div>
       </div>

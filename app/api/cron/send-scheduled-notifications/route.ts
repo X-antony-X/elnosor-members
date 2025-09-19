@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         }
 
         if (tokens.length > 0) {
-          await adminMessaging.sendMulticast({
+          await adminMessaging.sendEachForMulticast({
             ...message,
             tokens,
           })

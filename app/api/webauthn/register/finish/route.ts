@@ -2,8 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { verifyRegistrationResponse } from "@simplewebauthn/server"
 import { adminDb } from "@/lib/firebase-admin"
 
-const rpID = process.env.NODE_ENV === "production" ? "your-domain.com" : "localhost"
-const origin = process.env.NODE_ENV === "production" ? "https://your-domain.com" : "http://localhost:3000"
+const rpID = process.env.NODE_ENV === "production" ? process.env.VERCEL_URL || "localhost" : "localhost"
+const origin = process.env.NODE_ENV === "production" ? process.env.VERCEL_URL_FULL || "https://example.com" : "http://localhost:3000"
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,13 +40,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Registration verification failed" }, { status: 400 })
     }
 
-    const { credentialID, credentialPublicKey, counter, credentialDeviceType, credentialBackedUp } =
-      verification.registrationInfo
+    const {
+      credential: { id, publicKey, counter },
+      credentialDeviceType,
+      credentialBackedUp,
+    } = verification.registrationInfo
 
     // Save the credential
     const credential = {
-      credentialID: Buffer.from(credentialID).toString("base64"),
-      publicKey: Buffer.from(credentialPublicKey).toString("base64"),
+      credentialID: Buffer.from(id).toString("base64"),
+      publicKey: Buffer.from(publicKey).toString("base64"),
       counter,
       deviceType: credentialDeviceType,
       backedUp: credentialBackedUp,
@@ -80,7 +83,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       verified: true,
       credential: {
-        id: Buffer.from(credentialID).toString("base64"),
+        id: Buffer.from(id).toString("base64"),
         type: credentialDeviceType,
         nickname: credential.nickname,
       },

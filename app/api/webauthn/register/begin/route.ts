@@ -2,9 +2,9 @@ import { type NextRequest, NextResponse } from "next/server"
 import { generateRegistrationOptions } from "@simplewebauthn/server"
 import { adminDb } from "@/lib/firebase-admin"
 
-const rpName = "خدمة الشباب"
-const rpID = process.env.NODE_ENV === "production" ? "your-domain.com" : "localhost"
-const origin = process.env.NODE_ENV === "production" ? "https://your-domain.com" : "http://localhost:3000"
+const rpName = "الشباب النسور"
+const rpID = process.env.NODE_ENV === "production" ? process.env.VERCEL_URL || "localhost" : "localhost"
+const origin = process.env.NODE_ENV === "production" ? process.env.VERCEL_URL_FULL || "https://example.com" : "http://localhost:3000"
 
 export async function POST(request: NextRequest) {
   try {

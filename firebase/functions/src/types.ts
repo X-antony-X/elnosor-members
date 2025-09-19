@@ -1,14 +1,14 @@
-import type { FirebaseFirestore } from "firebase-admin/firestore"
+import type admin from "firebase-admin"
 
 export interface AttendanceRecord {
   memberId: string
   meetingId: string
-  checkInTimestamp: FirebaseFirestore.Timestamp
-  checkOutTimestamp?: FirebaseFirestore.Timestamp | null
+  checkInTimestamp: admin.firestore.Timestamp
+  checkOutTimestamp?: admin.firestore.Timestamp | null
   checkInMethod: "manual" | "qr" | "scan"
   note?: string
   recordedBy: string
-  createdAt: FirebaseFirestore.Timestamp
+  createdAt: admin.firestore.Timestamp
 }
 
 export interface NotificationData {
@@ -17,8 +17,8 @@ export interface NotificationData {
   imageUrl?: string
   targetAudience: "all" | "group" | "individuals"
   targetIds?: string[]
-  scheduledTime?: FirebaseFirestore.Timestamp
-  sentTime?: FirebaseFirestore.Timestamp | null
+  scheduledTime?: admin.firestore.Timestamp
+  sentTime?: admin.firestore.Timestamp | null
   createdBy: string
-  createdAt: FirebaseFirestore.Timestamp
+  createdAt: admin.firestore.Timestamp
 }

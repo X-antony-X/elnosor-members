@@ -89,7 +89,7 @@ export class WebAuthnService {
       const options: PublicKeyCredentialCreationOptionsJSON = await optionsResponse.json()
 
       // Start registration with the browser
-      const registrationResponse = await startRegistration(options)
+      const registrationResponse = await startRegistration({ optionsJSON: options })
 
       // Verify registration with server
       const verificationResponse = await fetch("/api/webauthn/register/finish", {
@@ -149,7 +149,7 @@ export class WebAuthnService {
       const options: PublicKeyCredentialRequestOptionsJSON = await optionsResponse.json()
 
       // Start authentication with the browser
-      const authenticationResponse = await startAuthentication(options)
+      const authenticationResponse = await startAuthentication({ optionsJSON: options })
 
       // Verify authentication with server
       const verificationResponse = await fetch("/api/webauthn/authenticate/finish", {
@@ -244,7 +244,7 @@ export class WebAuthnService {
 
     return {
       deviceType: "unknown", // Would need to parse authenticatorData for this
-      transport: credential.response.transports || [],
+      transport: [],
       backupEligible: false, // Would need to parse authenticatorData
       backupState: false, // Would need to parse authenticatorData
     }

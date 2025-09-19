@@ -57,6 +57,9 @@ export async function POST(request: NextRequest) {
     }
 
     const meeting = meetingDoc.data()
+    if (!meeting || !meeting.startTime) {
+      return NextResponse.json({ error: "Meeting start time not found" }, { status: 400 })
+    }
     const lateness = Math.max(0, Math.floor((Date.now() - meeting.startTime.toMillis()) / 60000))
 
     // Create attendance log

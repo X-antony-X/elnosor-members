@@ -136,7 +136,7 @@ export class ExcelService {
             }
 
             // Validate class stage
-            const classStage = row["المرحلة الدراسية"] === "جامعي" ? "university" : "secondary"
+            const classStage = row["المرحلة الدراسية"] === "جامعي" ? "university" : "graduation"
 
             // Validate university year if university student
             let universityYear: number | undefined

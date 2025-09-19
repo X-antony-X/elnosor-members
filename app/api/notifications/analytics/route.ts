@@ -28,8 +28,11 @@ export async function GET(request: NextRequest) {
 
     // Get template usage
     const templatesQuery = await adminDb.collection("notificationTemplates").get()
-    const templates = templatesQuery.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-    const activeTemplates = templates.filter((t) => t.isActive).length
+    const templates = templatesQuery.docs.map((doc) => {
+      const data = doc.data() as { isActive?: boolean; [key: string]: any }
+      return { id: doc.id, ...data }
+    })
+    const activeTemplates = templates.filter((t) => t.isActive === true).length
 
     // Get recurring notifications
     const recurringNotifications = notifications.filter((n) => n.isRecurring).length
