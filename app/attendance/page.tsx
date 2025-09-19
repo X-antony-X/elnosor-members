@@ -45,7 +45,7 @@ export default function AttendancePage() {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
-    if (role && role !== "admin") {
+    if (role && role !== "admin" && role !== "member") {
       router.push("/dashboard")
       return
     }

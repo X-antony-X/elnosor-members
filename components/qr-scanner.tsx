@@ -41,9 +41,19 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
         // Start scanning for QR codes
         scanIntervalRef.current = setInterval(scanForQR, 500)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error accessing camera:", error)
-      onError?.("لا يمكن الوصول للكاميرا. تأكد من منح الإذن للوصول للكاميرا.")
+      let errorMessage = "لا يمكن الوصول للكاميرا. تأكد من منح الإذن للوصول للكاميرا."
+      if (error.name === 'NotAllowedError') {
+        errorMessage = "تم رفض إذن الوصول للكاميرا. يرجى منح الإذن من إعدادات المتصفح."
+      } else if (error.name === 'NotSupportedError') {
+        errorMessage = "الكاميرا غير مدعومة على هذا الجهاز."
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = "لم يتم العثور على كاميرا."
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = "الكاميرا مستخدمة من تطبيق آخر."
+      }
+      onError?.(errorMessage)
     }
   }
 
