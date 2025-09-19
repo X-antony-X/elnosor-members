@@ -101,9 +101,17 @@ export default function AttendancePage() {
         await firestoreHelpers.addAttendanceLog(newLog)
         toast.success(`تم تسجيل حضور ${member?.fullName} بنجاح`)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error checking in:", error)
-      toast.error("خطأ في تسجيل الحضور")
+      let errorMessage = "خطأ في تسجيل الحضور"
+      if (error?.code === 'permission-denied') {
+        errorMessage = "ليس لديك صلاحية لتسجيل الحضور"
+      } else if (error?.code === 'unavailable') {
+        errorMessage = "خدمة قاعدة البيانات غير متاحة حالياً"
+      } else if (error?.code === 'deadline-exceeded') {
+        errorMessage = "انتهت مهلة الطلب، جرب مرة أخرى"
+      }
+      toast.error(errorMessage)
     }
   }
 
@@ -157,9 +165,17 @@ export default function AttendancePage() {
       }
 
       setShowQRScanner(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error processing QR scan:", error)
-      toast.error("خطأ في قراءة كود QR")
+      let errorMessage = "خطأ في قراءة كود QR"
+      if (error?.code === 'permission-denied') {
+        errorMessage = "ليس لديك صلاحية لتسجيل الحضور"
+      } else if (error?.code === 'unavailable') {
+        errorMessage = "خدمة قاعدة البيانات غير متاحة حالياً"
+      } else if (error?.code === 'deadline-exceeded') {
+        errorMessage = "انتهت مهلة الطلب، جرب مرة أخرى"
+      }
+      toast.error(errorMessage)
     } finally {
       setScannerLoading(false)
     }
@@ -176,9 +192,17 @@ export default function AttendancePage() {
         checkOutTimestamp: new Date(),
       })
       toast.success("تم تسجيل الخروج بنجاح")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error checking out:", error)
-      toast.error("خطأ في تسجيل الخروج")
+      let errorMessage = "خطأ في تسجيل الخروج"
+      if (error?.code === 'permission-denied') {
+        errorMessage = "ليس لديك صلاحية لتسجيل الخروج"
+      } else if (error?.code === 'unavailable') {
+        errorMessage = "خدمة قاعدة البيانات غير متاحة حالياً"
+      } else if (error?.code === 'deadline-exceeded') {
+        errorMessage = "انتهت مهلة الطلب، جرب مرة أخرى"
+      }
+      toast.error(errorMessage)
     }
   }
 
@@ -575,7 +599,7 @@ export default function AttendancePage() {
                 onScan={handleQRScan}
                 onError={(error) => {
                   console.error("QR Scanner error:", error)
-                  toast.error("خطأ في تشغيل الكاميرا")
+                  toast.error(error)
                 }}
               />
             )}
