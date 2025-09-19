@@ -14,12 +14,7 @@ import toast from "react-hot-toast"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RoleGuard } from "@/components/auth/role-guard"
 import { FloatingBackButton } from "@/components/layout/floating-back-button"
-import { ImageUpload } from "@/components/ui/image-upload"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { auth } from "@/lib/firebase"
 
 export default function MemberProfilePage() {
   const { role } = useAuth()
@@ -27,101 +22,34 @@ export default function MemberProfilePage() {
   const params = useParams()
   const [member, setMember] = useState<Member | null>(null)
   const [loading, setLoading] = useState(true)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("")
-  const [editFormData, setEditFormData] = useState({
-    fullName: "",
-    phonePrimary: "",
-    phoneSecondary: "",
-    address: "",
-    confessorName: "",
-    classStage: "",
-    universityYear: "",
-    notes: "",
-  })
 
   useEffect(() => {
-    // Simulate loading member data
-    setTimeout(() => {
-      // Mock member data - in real app, fetch from Firestore
-      setMember({
-        id: params.id as string,
-        fullName: "مينا جورج إبراهيم",
-        phonePrimary: "01234567890",
-        phoneSecondary: "01098765432",
-        address: {
-          addressString: "شارع الجمهورية، القاهرة الجديدة",
-          lat: 30.0444,
-          lng: 31.2357,
-          mapsUrl: "https://maps.google.com/?q=30.0444,31.2357",
-        },
-        classStage: "university",
-        universityYear: 2,
-        confessorName: "أبونا يوسف الأنطوني",
-        photoUrl: "/placeholder.svg?height=200&width=200",
-        notes: "عضو نشط في الخدمة، يحضر بانتظام",
-        createdAt: new Date("2023-01-15"),
-        updatedAt: new Date(),
-      })
-      setLoading(false)
-    }, 1000)
+    const fetchMember = async () => {
+      setLoading(true)
+      try {
+        const token = await auth.currentUser?.getIdToken()
+        const res = await fetch(`/api/members/${params.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        if (!res.ok) {
+          throw new Error("Failed to fetch member data")
+        }
+        const data = await res.json()
+        setMember(data)
+      } catch (error) {
+        console.error("Error fetching member:", error)
+        toast.error("خطأ في جلب بيانات العضو")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMember()
   }, [params.id])
 
   const handleEditClick = () => {
-    if (!member) return
-
-    setEditFormData({
-      fullName: member.fullName,
-      phonePrimary: member.phonePrimary,
-      phoneSecondary: member.phoneSecondary || "",
-      address: member.address.addressString,
-      confessorName: member.confessorName,
-      classStage: member.classStage,
-      universityYear: member.universityYear?.toString() || "",
-      notes: member.notes || "",
-    })
-    setUploadedPhotoUrl(member.photoUrl || "")
-    setEditDialogOpen(true)
-  }
-
-  const handleSaveEdit = async () => {
-    if (!member) return
-
-    setSaving(true)
-    try {
-      // Simulate API call to update member
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      const updatedMember = {
-        ...member,
-        fullName: editFormData.fullName,
-        phonePrimary: editFormData.phonePrimary,
-        phoneSecondary: editFormData.phoneSecondary || undefined,
-        address: {
-          addressString: editFormData.address,
-        },
-        confessorName: editFormData.confessorName,
-        classStage: editFormData.classStage as "graduation" | "university",
-        universityYear: editFormData.classStage === "university" ? parseInt(editFormData.universityYear) : undefined,
-        photoUrl: uploadedPhotoUrl || member.photoUrl,
-        notes: editFormData.notes,
-        updatedAt: new Date(),
-      }
-
-      setMember(updatedMember)
-      setEditDialogOpen(false)
-      toast.success("تم تحديث البيانات بنجاح")
-    } catch (error) {
-      console.error("Error updating member:", error)
-      toast.error("حدث خطأ في تحديث البيانات")
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleEditInputChange = (field: string, value: string) => {
-    setEditFormData(prev => ({ ...prev, [field]: value }))
+    router.push(`/members/${params.id}/edit`)
   }
 
   if (loading) {
@@ -277,7 +205,7 @@ export default function MemberProfilePage() {
 
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">تاريخ الانضمام</p>
-                    <p className="text-gray-600 dark:text-gray-400">{member.createdAt.toLocaleDateString("ar-EG")}</p>
+                    <p className="text-gray-600 dark:text-gray-400">{new Date(member.createdAt).toLocaleDateString("ar-EG")}</p>
                   </div>
                 </div>
 
@@ -291,148 +219,6 @@ export default function MemberProfilePage() {
             </Card>
           </motion.div>
         </div>
-
-        {/* Edit Dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>تعديل بيانات العضو</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6">
-              {/* Profile Picture */}
-              <div>
-                <Label>الصورة الشخصية</Label>
-                <div className="mt-2">
-                  <ImageUpload
-                    uploadType="member"
-                    entityId={member.id ?? ""}
-                    currentImage={uploadedPhotoUrl}
-                    onUpload={(url) => setUploadedPhotoUrl(url)}
-                    showSourceSelector={true}
-                  />
-                </div>
-              </div>
-
-              {/* Full Name */}
-              <div>
-                <Label htmlFor="edit-fullName">الاسم الكامل *</Label>
-                <Input
-                  id="edit-fullName"
-                  value={editFormData.fullName}
-                  onChange={(e) => handleEditInputChange("fullName", e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Phone Numbers */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-phonePrimary">رقم الهاتف الأساسي *</Label>
-                  <Input
-                    id="edit-phonePrimary"
-                    type="tel"
-                    value={editFormData.phonePrimary}
-                    onChange={(e) => handleEditInputChange("phonePrimary", e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-phoneSecondary">رقم الهاتف الثانوي (اختياري)</Label>
-                  <Input
-                    id="edit-phoneSecondary"
-                    type="tel"
-                    value={editFormData.phoneSecondary}
-                    onChange={(e) => handleEditInputChange("phoneSecondary", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
-                <Label htmlFor="edit-address">العنوان *</Label>
-                <Textarea
-                  id="edit-address"
-                  value={editFormData.address}
-                  onChange={(e) => handleEditInputChange("address", e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Confessor Name */}
-              <div>
-                <Label htmlFor="edit-confessorName">اسم الأب الروحي *</Label>
-                <Input
-                  id="edit-confessorName"
-                  value={editFormData.confessorName}
-                  onChange={(e) => handleEditInputChange("confessorName", e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Education Stage */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-classStage">المرحلة الدراسية *</Label>
-                  <Select value={editFormData.classStage} onValueChange={(value) => handleEditInputChange("classStage", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر المرحلة الدراسية" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="university">جامعي</SelectItem>
-                      <SelectItem value="graduation">خريج</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {editFormData.classStage === "university" && (
-                  <div>
-                    <Label htmlFor="edit-universityYear">السنة الجامعية *</Label>
-                    <Select value={editFormData.universityYear} onValueChange={(value) => handleEditInputChange("universityYear", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر السنة الجامعية" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">السنة الأولى</SelectItem>
-                        <SelectItem value="2">السنة الثانية</SelectItem>
-                        <SelectItem value="3">السنة الثالثة</SelectItem>
-                        <SelectItem value="4">السنة الرابعة</SelectItem>
-                        <SelectItem value="5">السنة الخامسة</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-
-              {/* Notes */}
-              <div>
-                <Label htmlFor="edit-notes">ملاحظات</Label>
-                <Textarea
-                  id="edit-notes"
-                  value={editFormData.notes}
-                  onChange={(e) => handleEditInputChange("notes", e.target.value)}
-                  placeholder="أي ملاحظات إضافية..."
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
-                <Button onClick={handleSaveEdit} disabled={saving} className="flex-1">
-                  {saving ? (
-                    <>
-                      <LoadingSpinner size="sm" className="ml-2" />
-                      جاري الحفظ...
-                    </>
-                  ) : (
-                    "حفظ التغييرات"
-                  )}
-                </Button>
-                <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={saving}>
-                  إلغاء
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </RoleGuard>
   )
