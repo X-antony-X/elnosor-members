@@ -183,7 +183,7 @@ export default function SettingsPage() {
                   <Label>وضع العرض</Label>
                   <div className="flex gap-2">
                     <Button
-                      variant={settings.theme === "light" ? "default" : "outline"}
+                      variant={settings.theme === "light" ? "primary" : "outline"}
                       size="sm"
                       onClick={() => handleThemeChange("light")}
                       className="flex-1"
@@ -191,7 +191,7 @@ export default function SettingsPage() {
                       {t("lightMode")}
                     </Button>
                     <Button
-                      variant={settings.theme === "dark" ? "default" : "outline"}
+                      variant={settings.theme === "dark" ? "primary" : "outline"}
                       size="sm"
                       onClick={() => handleThemeChange("dark")}
                       className="flex-1"
@@ -199,7 +199,7 @@ export default function SettingsPage() {
                       {t("darkMode")}
                     </Button>
                     <Button
-                      variant={settings.theme === "system" ? "default" : "outline"}
+                      variant={settings.theme === "system" ? "primary" : "outline"}
                       size="sm"
                       onClick={() => handleThemeChange("system")}
                       className="flex-1"
@@ -218,11 +218,10 @@ export default function SettingsPage() {
                       <button
                         key={color.value}
                         onClick={() => handleColorChange(color.value)}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          settings.primaryColor === color.value
+                        className={`p-3 rounded-lg border-2 transition-all ${settings.primaryColor === color.value
                             ? "border-gray-900 dark:border-white"
                             : "border-gray-200 dark:border-gray-700"
-                        }`}
+                          }`}
                       >
                         <div className="w-full h-8 rounded-md" style={{ backgroundColor: color.value }} />
                         <p className="text-xs mt-2">{color.name}</p>
@@ -430,7 +429,10 @@ export default function SettingsPage() {
                   <Button variant="outline" className="w-full bg-transparent" onClick={() => window.location.reload()}>
                     إعادة تحميل التطبيق
                   </Button>
-                  <Button variant="outline" className="w-full bg-transparent">
+                  <Button variant="outline" className="w-full bg-transparent" onClick={() => {
+                    // TODO: Implement export settings functionality
+                    toast("سيتم تنفيذ تصدير الإعدادات قريباً")
+                  }}>
                     تصدير الإعدادات
                   </Button>
                 </div>

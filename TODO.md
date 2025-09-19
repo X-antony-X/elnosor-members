@@ -1,57 +1,43 @@
-# Image Upload Integration - TODO List
+# TODO: Wire Up Button Functions Across Pages
 
-## ✅ Completed Tasks
+## Members Page (app/members/page.tsx)
 
-### 1. ImageUpload Component
+- [x] Add onClick handler for "Add Member" button to navigate to member creation page or open add member dialog.
+- [ ] Add onClick handlers for "Edit" and "QR" buttons on member cards to perform their respective actions.
 
-- [x] Created reusable ImageUpload component with multiple upload sources
-- [x] Implemented Firebase Storage integration
-- [x] Added support for Google Photos, local file upload, and URL input
-- [x] Added proper error handling and loading states
-- [x] Added image preview and validation
+## Dashboard Page (app/dashboard/page.tsx)
 
-### 2. Profile Completion Page
+- [ ] Add onClick handler for "Add New Member" quick action button to navigate to member creation page or open add member dialog.
+- [ ] Add onClick handlers for other quick action buttons like "Register Attendance" and "Send Notification" to perform their actions.
 
-- [x] Added state for uploaded image URL (`uploadedPhotoUrl`)
-- [x] Updated member data creation to include uploaded photo URL
-- [x] Replaced profile picture section with ImageUpload component
-- [x] Added proper priority handling (uploaded photo > Google photo > default)
+## Attendance Page (app/attendance/page.tsx)
 
-### 3. Member Edit Functionality
+- [ ] Verify all buttons like "Check In", "Check Out", "Scan QR", "Export Report" have proper functions.
+- [ ] Add missing handlers if any.
 
-- [x] Added edit dialog with comprehensive form fields
-- [x] Integrated ImageUpload component in edit dialog
-- [x] Added state management for edit form data
-- [x] Implemented save functionality with proper validation
-- [x] Added loading states and error handling
-- [x] Added toast notifications for success/error feedback
+## Notifications Page (app/notifications/page.tsx)
 
-## 🔄 Current Status
+- [ ] Verify buttons for sending notifications, creating templates, scheduling, deleting, etc. have real functions.
+- [ ] Add missing handlers if any.
 
-All core functionality has been implemented and integrated into the application. The ImageUpload component is now being used in both the profile completion page and member edit dialog, providing a consistent user experience for image uploads.
+## Posts Page (app/posts/page.tsx)
 
-## 📋 Key Features Implemented
+- [ ] Verify buttons for creating, editing, deleting posts and comments have real functions.
+- [ ] Add missing handlers if any.
 
-- Multiple upload sources (Google Photos, local files, URL)
-- Firebase Storage integration
-- Image validation and preview
-- Responsive design
-- Error handling and loading states
-- Integration with existing member management system
-- Proper state management for form data
+## Settings Page (app/settings/page.tsx)
 
-## 🧪 Testing Recommendations
+- [ ] Verify save buttons and toggles have real functions.
+- [ ] Add missing handlers if any.
 
-- Test image upload from different sources
-- Verify image display in member profiles
-- Test edit functionality with image changes
-- Check responsive design on mobile devices
-- Validate error handling scenarios
+---
 
-## 🚀 Next Steps (Optional)
+# Next Steps
 
-- Add image compression for better performance
-- Implement image cropping functionality
-- Add bulk image upload for multiple members
-- Create image gallery view for admins
-- Add image backup and recovery features
+- [x] Start with Members Page - implement Add Member functionality
+- [ ] Create member creation dialog/page if needed
+- [ ] Implement member edit functionality
+- [ ] Add QR code generation for members
+- [ ] Wire up dashboard quick actions
+- [ ] Test all buttons across pages
+- [ ] Report progress and any blockers

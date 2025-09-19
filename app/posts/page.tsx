@@ -245,7 +245,10 @@ export default function PostsPage() {
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        // TODO: Implement download post functionality
+                        toast({ description: "سيتم تنفيذ تحميل المنشور قريباً", variant: "default" })
+                      }}>
                         <Download className="w-4 h-4" />
                       </Button>
                     </div>
@@ -271,11 +274,10 @@ export default function PostsPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleLikePost(post.id!)}
-                    className={`gap-2 ${
-                      post.likes.includes(user?.uid || "")
+                    className={`gap-2 ${post.likes.includes(user?.uid || "")
                         ? "text-red-600 hover:text-red-700"
                         : "text-gray-600 hover:text-gray-700"
-                    }`}
+                      }`}
                   >
                     <Heart className={`w-4 h-4 ${post.likes.includes(user?.uid || "") ? "fill-current" : ""}`} />
                     {post.likes.length}

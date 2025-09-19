@@ -209,13 +209,13 @@ export default function NotificationsPage() {
       isRecurring: newNotification.isRecurring,
       recurringPattern: newNotification.isRecurring
         ? {
-            type: newNotification.recurringPattern.type,
-            interval: newNotification.recurringPattern.interval,
-            daysOfWeek: newNotification.recurringPattern.daysOfWeek,
-            endDate: newNotification.recurringPattern.endDate
-              ? new Date(newNotification.recurringPattern.endDate)
-              : undefined,
-          }
+          type: newNotification.recurringPattern.type,
+          interval: newNotification.recurringPattern.interval,
+          daysOfWeek: newNotification.recurringPattern.daysOfWeek,
+          endDate: newNotification.recurringPattern.endDate
+            ? new Date(newNotification.recurringPattern.endDate)
+            : undefined,
+        }
         : undefined,
       createdBy: user?.uid || "admin",
       createdAt: new Date(),
@@ -944,8 +944,8 @@ export default function NotificationsPage() {
                   <div className="text-3xl font-bold text-blue-600">
                     {notifications.length > 0
                       ? Math.round(
-                          notifications.reduce((acc, n) => acc + (n.readBy?.length || 0), 0) / notifications.length,
-                        )
+                        notifications.reduce((acc, n) => acc + (n.readBy?.length || 0), 0) / notifications.length,
+                      )
                       : 0}
                     %
                   </div>
@@ -989,11 +989,11 @@ export default function NotificationsPage() {
                       : "الآيات اليومية متوقفة حالياً"}
                   </p>
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => router.push("/notifications/edit")}>
                       <Edit className="w-4 h-4 ml-2" />
                       تعديل المحتوى
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => router.push("/notifications/new")}>
                       إضافة آية جديدة
                     </Button>
                   </div>

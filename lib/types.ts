@@ -144,7 +144,7 @@ export interface DailyQuote {
 
 export interface UserSettings {
   userId: string;
-  theme: "light" | "dark";
+  theme: "light" | "dark" | "system";
   primaryColor: string;
   meetingSchedule: {
     dayOfWeek: number; // 0-6 (Sunday = 0)

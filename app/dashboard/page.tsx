@@ -459,17 +459,29 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button type="button" className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
+                <button
+                  type="button"
+                  className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => window.location.href = "/members"}
+                >
                   <h3 className="font-medium text-gray-900 dark:text-white">إضافة عضو جديد</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إضافة عضو جديد إلى الخدمة</p>
                 </button>
 
-                <button type="button" className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
+                <button
+                  type="button"
+                  className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => window.location.href = "/attendance"}
+                >
                   <h3 className="font-medium text-gray-900 dark:text-white">تسجيل الحضور</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">تسجيل حضور الاجتماع الحالي</p>
                 </button>
 
-                <button type="button" className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors">
+                <button
+                  type="button"
+                  className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => window.location.href = "/notifications"}
+                >
                   <h3 className="font-medium text-gray-900 dark:text-white">إرسال إشعار</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إرسال إشعار لجميع الأعضاء</p>
                 </button>

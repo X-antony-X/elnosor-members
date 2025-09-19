@@ -7,6 +7,9 @@ import { motion } from "framer-motion"
 import { Plus, Search, Download, Upload, User, FileSpreadsheet, AlertCircle, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -21,6 +24,7 @@ import { RoleGuard } from "@/components/auth/role-guard"
 import { ExcelService } from "@/lib/excel-utils"
 import toast from "react-hot-toast"
 import { useMembers, useFirestoreHelpers } from "@/hooks/use-firestore"
+import QRCode from "react-qr-code"
 
 export default function MembersPage() {
   const { role } = useAuth()
@@ -37,6 +41,24 @@ export default function MembersPage() {
     members: Partial<Member>[]
   } | null>(null)
   const [isImporting, setIsImporting] = useState(false)
+  const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false)
+  const [isAddingMember, setIsAddingMember] = useState(false)
+  const [newMember, setNewMember] = useState({
+    fullName: "",
+    phonePrimary: "",
+    phoneSecondary: "",
+    address: {
+      addressString: "",
+    },
+    classStage: "university" as "university" | "graduation",
+    universityYear: "",
+    confessorName: "",
+    notes: "",
+  })
+  const [editMemberDialogOpen, setEditMemberDialogOpen] = useState(false)
+  const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [isEditingMember, setIsEditingMember] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   if (error) {
@@ -72,6 +94,86 @@ export default function MembersPage() {
     } catch (error) {
       toast.error("خطأ في تحميل القالب")
     }
+  }
+
+  const handleAddMember = async () => {
+    if (!newMember.fullName.trim() || !newMember.phonePrimary.trim()) {
+      toast.error("يرجى ملء الاسم والرقم الأساسي على الأقل")
+      return
+    }
+
+    setIsAddingMember(true)
+    try {
+      // Adjust newMember to match Member interface
+      const memberData: Omit<Member, "id"> = {
+        fullName: newMember.fullName,
+        phonePrimary: newMember.phonePrimary,
+        phoneSecondary: newMember.phoneSecondary,
+        address: {
+          addressString: newMember.address.addressString,
+        },
+        classStage: newMember.classStage === "university" ? "university" : "graduation",
+        universityYear: newMember.universityYear ? parseInt(newMember.universityYear) : undefined,
+        confessorName: newMember.confessorName,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+
+      await firestoreHelpers.addMember(memberData)
+      toast.success("تم إضافة العضو بنجاح")
+
+      // Reset form
+      setNewMember({
+        fullName: "",
+        phonePrimary: "",
+        phoneSecondary: "",
+        address: {
+          addressString: "",
+        },
+        classStage: "university",
+        universityYear: "",
+        confessorName: "",
+        notes: "",
+      })
+      setAddMemberDialogOpen(false)
+    } catch (error) {
+      console.error("Error adding member:", error)
+      toast.error("خطأ في إضافة العضو")
+    } finally {
+      setIsAddingMember(false)
+    }
+  }
+
+  const handleEditMember = (member: Member) => {
+    setSelectedMember(member)
+    setEditMemberDialogOpen(true)
+  }
+
+  const handleUpdateMember = async () => {
+    if (!selectedMember) return
+
+    setIsEditingMember(true)
+    try {
+      const updatedData = {
+        ...selectedMember,
+        updatedAt: new Date(),
+      }
+
+      await firestoreHelpers.updateMember(selectedMember.id!, updatedData)
+      toast.success("تم تحديث بيانات العضو بنجاح")
+      setEditMemberDialogOpen(false)
+      setSelectedMember(null)
+    } catch (error) {
+      console.error("Error updating member:", error)
+      toast.error("خطأ في تحديث بيانات العضو")
+    } finally {
+      setIsEditingMember(false)
+    }
+  }
+
+  const handleShowQR = (member: Member) => {
+    setSelectedMember(member)
+    setQrDialogOpen(true)
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -304,10 +406,135 @@ export default function MembersPage() {
               <Download className="w-4 h-4 ml-2" />
               تصدير
             </Button>
-            <Button>
-              <Plus className="w-4 h-4 ml-2" />
-              {t("addMember")}
-            </Button>
+            <Dialog open={addMemberDialogOpen} onOpenChange={setAddMemberDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setAddMemberDialogOpen(true)}>
+                  <Plus className="w-4 h-4 ml-2" />
+                  {t("addMember")}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>إضافة عضو جديد</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>الاسم الكامل *</Label>
+                    <Input
+                      value={newMember.fullName}
+                      onChange={(e) => setNewMember({ ...newMember, fullName: e.target.value })}
+                      placeholder="أدخل الاسم الكامل"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>رقم الهاتف الأساسي *</Label>
+                      <Input
+                        value={newMember.phonePrimary}
+                        onChange={(e) => setNewMember({ ...newMember, phonePrimary: e.target.value })}
+                        placeholder="01xxxxxxxxx"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>رقم الهاتف الثانوي</Label>
+                      <Input
+                        value={newMember.phoneSecondary}
+                        onChange={(e) => setNewMember({ ...newMember, phoneSecondary: e.target.value })}
+                        placeholder="01xxxxxxxxx"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>العنوان</Label>
+                    <Textarea
+                      value={newMember.address.addressString}
+                      onChange={(e) => setNewMember({
+                        ...newMember,
+                        address: { ...newMember.address, addressString: e.target.value }
+                      })}
+                      placeholder="أدخل العنوان الكامل"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>المرحلة التعليمية</Label>
+                      <Select
+                        value={newMember.classStage}
+                        onValueChange={(value: "university" | "graduation") =>
+                          setNewMember({ ...newMember, classStage: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="university">جامعة</SelectItem>
+                          <SelectItem value="graduation">تخرج</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {newMember.classStage === "university" && (
+                      <div className="space-y-2">
+                        <Label>السنة الجامعية</Label>
+                        <Select
+                          value={newMember.universityYear}
+                          onValueChange={(value) => setNewMember({ ...newMember, universityYear: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر السنة" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">الأولى</SelectItem>
+                            <SelectItem value="2">الثانية</SelectItem>
+                            <SelectItem value="3">الثالثة</SelectItem>
+                            <SelectItem value="4">الرابعة</SelectItem>
+                            <SelectItem value="5">الخامسة</SelectItem>
+                            <SelectItem value="6">السادسة</SelectItem>
+                            <SelectItem value="7">السابعة</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>أب الاعتراف</Label>
+                    <Input
+                      value={newMember.confessorName}
+                      onChange={(e) => setNewMember({ ...newMember, confessorName: e.target.value })}
+                      placeholder="اسم أب الاعتراف"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>ملاحظات</Label>
+                    <Textarea
+                      value={newMember.notes || ""}
+                      onChange={(e) => setNewMember({ ...newMember, notes: e.target.value })}
+                      placeholder="ملاحظات إضافية"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="flex gap-2 justify-end pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setAddMemberDialogOpen(false)}
+                      disabled={isAddingMember}
+                    >
+                      إلغاء
+                    </Button>
+                    <Button onClick={handleAddMember} disabled={isAddingMember}>
+                      {isAddingMember ? "جاري الإضافة..." : "إضافة العضو"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </motion.div>
 
@@ -371,7 +598,7 @@ export default function MembersPage() {
                       className="flex-1 bg-transparent"
                       onClick={(e) => {
                         e.stopPropagation()
-                        // Handle edit action
+                        member.id && handleEditMember(member as Member)
                       }}
                     >
                       تعديل
@@ -381,7 +608,7 @@ export default function MembersPage() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation()
-                        // Handle QR generation
+                        member.id && handleShowQR(member as Member)
                       }}
                     >
                       QR
@@ -398,6 +625,184 @@ export default function MembersPage() {
             <p className="text-gray-500 dark:text-gray-400">لا توجد أعضاء مطابقة لبحثك</p>
           </motion.div>
         )}
+
+        {/* Edit Member Dialog */}
+        <Dialog open={editMemberDialogOpen} onOpenChange={setEditMemberDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>تعديل بيانات العضو</DialogTitle>
+            </DialogHeader>
+            {selectedMember && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>الاسم الكامل *</Label>
+                  <Input
+                    value={selectedMember.fullName}
+                    onChange={(e) => setSelectedMember({ ...selectedMember, fullName: e.target.value })}
+                    placeholder="أدخل الاسم الكامل"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>رقم الهاتف الأساسي *</Label>
+                    <Input
+                      value={selectedMember.phonePrimary}
+                      onChange={(e) => setSelectedMember({ ...selectedMember, phonePrimary: e.target.value })}
+                      placeholder="01xxxxxxxxx"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>رقم الهاتف الثانوي</Label>
+                    <Input
+                      value={selectedMember.phoneSecondary || ""}
+                      onChange={(e) => setSelectedMember({ ...selectedMember, phoneSecondary: e.target.value })}
+                      placeholder="01xxxxxxxxx"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>العنوان</Label>
+                  <Textarea
+                    value={selectedMember.address.addressString}
+                    onChange={(e) => setSelectedMember({
+                      ...selectedMember,
+                      address: { ...selectedMember.address, addressString: e.target.value }
+                    })}
+                    placeholder="أدخل العنوان الكامل"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>المرحلة التعليمية</Label>
+                    <Select
+                      value={selectedMember.classStage}
+                      onValueChange={(value: "university" | "graduation") =>
+                        setSelectedMember({ ...selectedMember, classStage: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="university">جامعة</SelectItem>
+                        <SelectItem value="graduation">تخرج</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {selectedMember.classStage === "university" && (
+                    <div className="space-y-2">
+                      <Label>السنة الجامعية</Label>
+                      <Select
+                        value={selectedMember.universityYear?.toString() || ""}
+                        onValueChange={(value) => setSelectedMember({ ...selectedMember, universityYear: parseInt(value) })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر السنة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">الأولى</SelectItem>
+                          <SelectItem value="2">الثانية</SelectItem>
+                          <SelectItem value="3">الثالثة</SelectItem>
+                          <SelectItem value="4">الرابعة</SelectItem>
+                          <SelectItem value="5">الخامسة</SelectItem>
+                          <SelectItem value="6">السادسة</SelectItem>
+                          <SelectItem value="7">السابعة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>أب الاعتراف</Label>
+                  <Input
+                    value={selectedMember.confessorName}
+                    onChange={(e) => setSelectedMember({ ...selectedMember, confessorName: e.target.value })}
+                    placeholder="اسم أب الاعتراف"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>ملاحظات</Label>
+                  <Textarea
+                    value={selectedMember.notes || ""}
+                    onChange={(e) => setSelectedMember({ ...selectedMember, notes: e.target.value })}
+                    placeholder="ملاحظات إضافية"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="flex gap-2 justify-end pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEditMemberDialogOpen(false)
+                      setSelectedMember(null)
+                    }}
+                    disabled={isEditingMember}
+                  >
+                    إلغاء
+                  </Button>
+                  <Button onClick={handleUpdateMember} disabled={isEditingMember}>
+                    {isEditingMember ? "جاري التحديث..." : "تحديث البيانات"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* QR Code Dialog */}
+        <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>رمز QR للعضو</DialogTitle>
+            </DialogHeader>
+            {selectedMember && (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="bg-white p-4 rounded-lg inline-block">
+                    <QRCode
+                      value={JSON.stringify({
+                        id: selectedMember.id,
+                        name: selectedMember.fullName,
+                        phone: selectedMember.phonePrimary,
+                      })}
+                      size={200}
+                    />
+                  </div>
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="font-medium">{selectedMember.fullName}</p>
+                  <p className="text-sm text-gray-600">{selectedMember.phonePrimary}</p>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setQrDialogOpen(false)
+                      setSelectedMember(null)
+                    }}
+                  >
+                    إغلاق
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // TODO: Implement download QR functionality
+                      toast("سيتم تنفيذ تحميل رمز QR قريباً")
+                    }}
+                  >
+                    تحميل
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </RoleGuard>
   )
