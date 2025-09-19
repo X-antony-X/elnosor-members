@@ -29,6 +29,7 @@ export interface AttendanceLog {
   checkInMethod: "manual" | "qr" | "scan";
   note?: string;
   lateness?: number; // in minutes
+  recordedBy?: string; // UID of the user who recorded the attendance
 }
 
 export interface Meeting {

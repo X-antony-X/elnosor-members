@@ -21,10 +21,10 @@ service cloud.firestore {
     match /attendance/{logId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null &&
-        request.auth.token.role == 'admin' &&
+        (request.auth.token.role == 'admin' || request.auth.token.role == 'member') &&
         request.resource.data.recordedBy == request.auth.uid;
       allow update: if request.auth != null &&
-        request.auth.token.role == 'admin' &&
+        (request.auth.token.role == 'admin' || request.auth.token.role == 'member') &&
         resource.data.recordedBy == request.auth.uid;
     }
 

@@ -25,7 +25,7 @@ import { useMembers, useAttendance, firestoreHelpers } from "@/hooks/use-firesto
 import { useOfflineStorage } from "@/hooks/use-offline-storage"
 
 export default function AttendancePage() {
-  const { role } = useAuth()
+  const { user, role } = useAuth()
   const router = useRouter()
   const { members, loading: membersLoading } = useMembers()
   const { attendanceLogs, meetings, loading: attendanceLoading } = useAttendance()
@@ -41,6 +41,7 @@ export default function AttendancePage() {
     endDate: "",
     reportType: "detailed" as "detailed" | "summary" | "comprehensive",
   })
+  const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown')
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -48,7 +49,38 @@ export default function AttendancePage() {
       router.push("/dashboard")
       return
     }
+    checkCameraPermission()
   }, [role, router])
+
+  const checkCameraPermission = async () => {
+    if (!navigator.permissions) {
+      setCameraPermission('unknown')
+      return
+    }
+    try {
+      const result = await navigator.permissions.query({ name: 'camera' })
+      setCameraPermission(result.state)
+      result.addEventListener('change', () => {
+        setCameraPermission(result.state)
+      })
+    } catch (error) {
+      console.error('Error checking camera permission:', error)
+      setCameraPermission('unknown')
+    }
+  }
+
+  const requestCameraPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      stream.getTracks().forEach(track => track.stop()) // Stop immediately after getting permission
+      setCameraPermission('granted')
+      toast.success("تم منح إذن الوصول للكاميرا")
+    } catch (error) {
+      console.error('Error requesting camera permission:', error)
+      setCameraPermission('denied')
+      toast.error("فشل في منح إذن الوصول للكاميرا. يرجى منح الإذن يدوياً من إعدادات المتصفح.")
+    }
+  }
 
   const loading = membersLoading || attendanceLoading
 
@@ -98,6 +130,7 @@ export default function AttendancePage() {
         addOfflineAttendance(newLog)
         toast.success(`تم تسجيل حضور ${member?.fullName} بدون اتصال - سيتم المزامنة عند الاتصال`)
       } else {
+        newLog.recordedBy = user?.uid || undefined
         await firestoreHelpers.addAttendanceLog(newLog)
         toast.success(`تم تسجيل حضور ${member?.fullName} بنجاح`)
       }
@@ -160,6 +193,7 @@ export default function AttendancePage() {
         addOfflineAttendance(newLog)
         toast.success(`تم تسجيل حضور ${member.fullName} بدون اتصال - سيتم المزامنة عند الاتصال`)
       } else {
+        newLog.recordedBy = user?.uid || undefined
         await firestoreHelpers.addAttendanceLog(newLog)
         toast.success(`تم تسجيل حضور ${member.fullName} بنجاح`)
       }
@@ -438,11 +472,11 @@ export default function AttendancePage() {
                                   minute: "2-digit",
                                 })}
                               </p>
-                              <p className="text-sm">
+                              <div className="text-sm">
                                 <Badge variant={attendanceLog.lateness! > 0 ? "destructive" : "secondary"}>
                                   {formatLateness(attendanceLog.lateness || 0)}
                                 </Badge>
-                              </p>
+                              </div>
                               {!attendanceLog.checkOutTimestamp && (
                                 <Button
                                   size="sm"
@@ -476,13 +510,54 @@ export default function AttendancePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
-                  <Button onClick={() => setShowQRScanner(true)} size="lg" className="bg-green-600 hover:bg-green-700">
+                  {cameraPermission === 'denied' && (
+                    <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                      <div className="text-red-800 dark:text-red-200 text-sm">
+                        تم رفض إذن الوصول للكاميرا. يرجى منح الإذن من إعدادات المتصفح أو اضغط الزر أدناه للمحاولة مرة أخرى.
+                      </div>
+                      <Button onClick={requestCameraPermission} variant="outline" className="mt-2">
+                        طلب إذن الكاميرا
+                      </Button>
+                    </div>
+                  )}
+                  {cameraPermission === 'prompt' && (
+                    <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                      <div className="text-yellow-800 dark:text-yellow-200 text-sm">
+                        سيطلب المتصفح إذن الوصول للكاميرا عند فتح الماسح الضوئي.
+                      </div>
+                    </div>
+                  )}
+                  {cameraPermission === 'unknown' && (
+                    <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="text-blue-800 dark:text-blue-200 text-sm">
+                        لا يمكن التحقق من حالة إذن الكاميرا. تأكد من أن المتصفح يدعم هذه الميزة.
+                      </div>
+                    </div>
+                  )}
+                  <Button
+                    onClick={async () => {
+                      if (cameraPermission !== 'granted') {
+                        await requestCameraPermission()
+                      }
+                      if (cameraPermission === 'granted') {
+                        setShowQRScanner(true)
+                      }
+                    }}
+                    size="lg"
+                    className="bg-green-600 hover:bg-green-700"
+                    disabled={cameraPermission === 'denied'}
+                  >
                     <Camera className="w-5 h-5 ml-2" />
                     فتح الكاميرا لمسح QR
                   </Button>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                     اضغط لفتح الكاميرا ومسح كود QR الخاص بالعضو
                   </p>
+                  {cameraPermission !== 'granted' && (
+                    <Button onClick={requestCameraPermission} variant="outline" className="mt-2">
+                      طلب إذن الكاميرا مسبقاً
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
