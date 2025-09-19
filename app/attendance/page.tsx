@@ -93,12 +93,14 @@ export default function AttendancePage() {
         lateness,
       }
 
+      const member = displayMembers.find((m) => m.id === memberId)
+
       if (isOffline) {
         addOfflineAttendance(newLog)
-        toast.success("تم تسجيل الحضور بدون اتصال - سيتم المزامنة عند الاتصال")
+        toast.success(`تم تسجيل حضور ${member?.fullName} بدون اتصال - سيتم المزامنة عند الاتصال`)
       } else {
         await firestoreHelpers.addAttendanceLog(newLog)
-        toast.success("تم تسجيل الحضور بنجاح")
+        toast.success(`تم تسجيل حضور ${member?.fullName} بنجاح`)
       }
     } catch (error) {
       console.error("Error checking in:", error)
