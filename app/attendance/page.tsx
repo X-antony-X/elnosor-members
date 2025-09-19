@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
 import type { Member, AttendanceLog, Meeting } from "@/lib/types"
@@ -67,11 +68,9 @@ export default function AttendancePage() {
   )
 
   const handleManualCheckIn = async (memberId: string) => {
-    if (!currentMeeting) return
-
     try {
       const existingLog = displayAttendanceLogs.find(
-        (log) => log.memberId === memberId && log.meetingId === currentMeeting.id,
+        (log) => log.memberId === memberId && log.meetingId === (currentMeeting?.id || "general"),
       )
 
       if (existingLog) {
@@ -87,7 +86,7 @@ export default function AttendancePage() {
       const newLog: AttendanceLog = {
         id: Date.now().toString(),
         memberId,
-        meetingId: currentMeeting && currentMeeting.id ? currentMeeting.id : "",
+        meetingId: currentMeeting?.id || "general",
         checkInTimestamp: new Date(),
         checkInMethod: "manual",
         lateness,
@@ -113,13 +112,13 @@ export default function AttendancePage() {
       setScannerLoading(true)
       const data = JSON.parse(qrData)
 
-      if (!data.memberId || !data.meetingId || data.meetingId !== currentMeeting?.id) {
+      if (!data.memberId) {
         toast.error("كود QR غير صالح أو منتهي الصلاحية")
         return
       }
 
       const existingLog = displayAttendanceLogs.find(
-        (log) => log.memberId === data.memberId && log.meetingId === currentMeeting?.id,
+        (log) => log.memberId === data.memberId && log.meetingId === (currentMeeting?.id || "general"),
       )
 
       if (existingLog) {
@@ -133,13 +132,18 @@ export default function AttendancePage() {
         return
       }
 
-      const lateness = Math.max(0, Math.floor((new Date().getTime() - currentMeeting!.startTime.getTime()) / 60000))
+      // Get current time from server or local time
+      const now = new Date()
+
+      const lateness = currentMeeting && currentMeeting.startTime
+        ? Math.max(0, Math.floor((now.getTime() - currentMeeting.startTime.getTime()) / 60000))
+        : 0
 
       const newLog: AttendanceLog = {
         id: Date.now().toString(),
         memberId: data.memberId,
-        meetingId: currentMeeting!.id!,
-        checkInTimestamp: new Date(),
+        meetingId: currentMeeting?.id || "general",
+        checkInTimestamp: now,
         checkInMethod: "qr",
         lateness,
       }
@@ -181,8 +185,6 @@ export default function AttendancePage() {
   const generateMemberQR = (memberId: string) => {
     return JSON.stringify({
       memberId,
-      meetingId: currentMeeting?.id,
-      timestamp: Date.now(),
     })
   }
 
@@ -376,17 +378,26 @@ export default function AttendancePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredMembers.map((member) => {
                     const hasCheckedIn = displayAttendanceLogs.some(
-                      (log) => log.memberId === member.id && log.meetingId === currentMeeting?.id,
+                      (log) => log.memberId === member.id && log.meetingId === (currentMeeting?.id || "general"),
                     )
                     const attendanceLog = displayAttendanceLogs.find(
-                      (log) => log.memberId === member.id && log.meetingId === currentMeeting?.id,
+                      (log) => log.memberId === member.id && log.meetingId === (currentMeeting?.id || "general"),
                     )
 
                     return (
                       <Card glassy key={member.id} className="relative">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-medium">{member.fullName}</h3>
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={hasCheckedIn}
+                                disabled={hasCheckedIn}
+                                onCheckedChange={(checked) => {
+                                  if (checked) handleManualCheckIn(member.id!)
+                                }}
+                              />
+                              <h3 className="font-medium">{member.fullName}</h3>
+                            </div>
                             {hasCheckedIn && (
                               <Badge variant="secondary" className="bg-green-100 text-green-800">
                                 حاضر
@@ -419,11 +430,7 @@ export default function AttendancePage() {
                                 </Button>
                               )}
                             </div>
-                          ) : (
-                            <Button size="sm" onClick={() => handleManualCheckIn(member.id!)} className="w-full">
-                              {t("checkIn")}
-                            </Button>
-                          )}
+                          ) : null}
                         </CardContent>
                       </Card>
                     )

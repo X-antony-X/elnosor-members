@@ -13,12 +13,14 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 interface AuthContextType {
   user: User | null
   role: "admin" | "member" | null
+  token: string | null
   loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   role: null,
+  token: null,
   loading: true,
 })
 
@@ -27,6 +29,7 @@ export const useAuth = () => useContext(AuthContext)
 export function Providers({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [role, setRole] = useState<"admin" | "member" | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,8 +39,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
       if (user) {
         const userRole = await getUserRole(user)
         setRole(userRole)
+        const idToken = await user.getIdToken()
+        setToken(idToken)
       } else {
         setRole(null)
+        setToken(null)
       }
 
       setLoading(false)
@@ -55,7 +61,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, loading }}>
+    <AuthContext.Provider value={{ user, role, token, loading }}>
       <ThemeProvider>{children}</ThemeProvider>
     </AuthContext.Provider>
   )

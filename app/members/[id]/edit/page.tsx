@@ -71,7 +71,7 @@ export default function MemberEditPage() {
     if (!params.id) return
     setSaving(true)
     try {
-      const res = await fetch(`/api/members/${params.id}/update`, {
+      const res = await fetch(`/api/members/${params.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

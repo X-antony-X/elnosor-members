@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Save, Palette, Calendar, Bell, Shield, Clock, Globe } from "lucide-react"
+import { Save, Palette, Bell, Shield, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -27,16 +27,6 @@ const colorOptions = [
   { name: "وردي", value: "#ec4899" },
 ]
 
-const daysOfWeek = [
-  { name: t("sunday"), value: 0 },
-  { name: t("monday"), value: 1 },
-  { name: t("tuesday"), value: 2 },
-  { name: t("wednesday"), value: 3 },
-  { name: t("thursday"), value: 4 },
-  { name: t("friday"), value: 5 },
-  { name: t("saturday"), value: 6 },
-]
-
 export default function SettingsPage() {
   const { user } = useAuth()
   const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme()
@@ -47,15 +37,11 @@ export default function SettingsPage() {
     userId: user?.uid || "",
     theme: "light",
     primaryColor: "#0ea5e9",
-    meetingSchedule: {
-      dayOfWeek: 5, // Friday
-      startTime: "19:00",
-      endTime: "21:00",
-    },
     notifications: {
       push: true,
       email: false,
     },
+    meetingSchedule: { dayOfWeek: 0, startTime: "", endTime: "" }, // Add default value for meetingSchedule
     updatedAt: new Date(),
   })
 
@@ -73,15 +59,11 @@ export default function SettingsPage() {
         userId: user?.uid || "",
         theme: theme,
         primaryColor: primaryColor,
-        meetingSchedule: {
-          dayOfWeek: 5, // Friday
-          startTime: "19:00",
-          endTime: "21:00",
-        },
         notifications: {
           push: true,
           email: false,
         },
+        meetingSchedule: { dayOfWeek: 0, startTime: "", endTime: "" }, // Add default value for meetingSchedule
         updatedAt: new Date(),
       })
       setLoading(false)
@@ -114,15 +96,7 @@ export default function SettingsPage() {
     setSettings({ ...settings, primaryColor: color })
   }
 
-  const handleMeetingScheduleChange = (field: string, value: string | number) => {
-    setSettings({
-      ...settings,
-      meetingSchedule: {
-        ...settings.meetingSchedule,
-        [field]: value,
-      },
-    })
-  }
+
 
   const handleNotificationChange = (field: string, value: boolean) => {
     setSettings({
@@ -219,8 +193,8 @@ export default function SettingsPage() {
                         key={color.value}
                         onClick={() => handleColorChange(color.value)}
                         className={`p-3 rounded-lg border-2 transition-all ${settings.primaryColor === color.value
-                            ? "border-gray-900 dark:border-white"
-                            : "border-gray-200 dark:border-gray-700"
+                          ? "border-gray-900 dark:border-white"
+                          : "border-gray-200 dark:border-gray-700"
                           }`}
                       >
                         <div className="w-full h-8 rounded-md" style={{ backgroundColor: color.value }} />
@@ -233,67 +207,7 @@ export default function SettingsPage() {
             </Card>
           </motion.div>
 
-          {/* Meeting Schedule */}
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-            <Card glassy>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  {t("meetingSchedule")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>{t("dayOfWeek")}</Label>
-                  <Select
-                    value={settings.meetingSchedule.dayOfWeek.toString()}
-                    onValueChange={(value) => handleMeetingScheduleChange("dayOfWeek", Number.parseInt(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {daysOfWeek.map((day) => (
-                        <SelectItem key={day.value} value={day.value.toString()}>
-                          {day.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>{t("startTime")}</Label>
-                    <Input
-                      type="time"
-                      value={settings.meetingSchedule.startTime}
-                      onChange={(e) => handleMeetingScheduleChange("startTime", e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t("endTime")}</Label>
-                    <Input
-                      type="time"
-                      value={settings.meetingSchedule.endTime}
-                      onChange={(e) => handleMeetingScheduleChange("endTime", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-sm font-medium">الجدول الحالي</span>
-                  </div>
-                  <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                    {daysOfWeek.find((d) => d.value === settings.meetingSchedule.dayOfWeek)?.name} من{" "}
-                    {settings.meetingSchedule.startTime} إلى {settings.meetingSchedule.endTime}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
 
           {/* Notification Settings */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
