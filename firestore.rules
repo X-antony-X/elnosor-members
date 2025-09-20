@@ -17,14 +17,23 @@ service cloud.firestore {
         (request.auth.token.role == 'admin' || request.auth.uid == memberId);
     }
 
+    // Admins collection - admin profiles
+    match /admins/{adminId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null &&
+        request.auth.token.role == 'admin';
+      allow update: if request.auth != null &&
+        (request.auth.token.role == 'admin' || request.auth.uid == adminId);
+      allow delete: if request.auth != null &&
+        request.auth.token.role == 'admin';
+    }
+
     // Attendance logs
     match /attendance/{logId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null &&
-        (request.auth.token.role == 'admin' || request.auth.token.role == 'member') &&
         request.resource.data.recordedBy == request.auth.uid;
       allow update: if request.auth != null &&
-        (request.auth.token.role == 'admin' || request.auth.token.role == 'member') &&
         resource.data.recordedBy == request.auth.uid;
     }
 

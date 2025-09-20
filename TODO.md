@@ -1,43 +1,50 @@
-# TODO: Wire Up Button Functions Across Pages
+# Role Management System Migration
 
-## Members Page (app/members/page.tsx)
+## Current Issue
 
-- [x] Add onClick handler for "Add Member" button to navigate to member creation page or open add member dialog.
-- [ ] Add onClick handlers for "Edit" and "QR" buttons on member cards to perform their respective actions.
+- Users login with Google → saved in `users` collection with `role: "member"`
+- Users complete profile → saved in `members` collection
+- Admin promotion → role changes to `"admin"` in `users` collection, but data stays in `members` collection
+- This creates conflicts in role-based access control
 
-## Dashboard Page (app/dashboard/page.tsx)
+## Implementation Plan
 
-- [ ] Add onClick handler for "Add New Member" quick action button to navigate to member creation page or open add member dialog.
-- [ ] Add onClick handlers for other quick action buttons like "Register Attendance" and "Send Notification" to perform their actions.
+### Phase 1: Database Structure Updates
 
-## Attendance Page (app/attendance/page.tsx)
+- [x] Update `lib/types.ts` - Add Admin interface
+- [x] Update `firestore.rules` - Add admins collection rules
+- [ ] Create admin data structure
 
-- [ ] Verify all buttons like "Check In", "Check Out", "Scan QR", "Export Report" have proper functions.
-- [ ] Add missing handlers if any.
+### Phase 2: Authentication System Updates
 
-## Notifications Page (app/notifications/page.tsx)
+- [x] Update `lib/auth.ts` - Modify role checking logic to handle both collections
+- [ ] Update `components/auth/role-guard.tsx` - Improve role handling
+- [ ] Update authentication flow to check both collections based on role
 
-- [ ] Verify buttons for sending notifications, creating templates, scheduling, deleting, etc. have real functions.
-- [ ] Add missing handlers if any.
+### Phase 3: API Updates
 
-## Posts Page (app/posts/page.tsx)
+- [x] Update `app/api/admin/set-user-role/route.ts` - Add data migration logic
+- [ ] Create migration utilities for moving data from members to admins collection
+- [ ] Add proper error handling and rollback mechanisms
 
-- [ ] Verify buttons for creating, editing, deleting posts and comments have real functions.
-- [ ] Add missing handlers if any.
+### Phase 4: UI Updates
 
-## Settings Page (app/settings/page.tsx)
+- [ ] Update `app/members/page.tsx` - Add admin management features
+- [ ] Update `app/attendance/page.tsx` - Update role restrictions
+- [ ] Add admin management interface
 
-- [ ] Verify save buttons and toggles have real functions.
-- [ ] Add missing handlers if any.
+### Phase 5: Testing & Migration
 
----
+- [ ] Test role transitions
+- [ ] Verify data migration works correctly
+- [ ] Test authentication flow for both roles
+- [ ] Test UI components with new role system
 
-# Next Steps
+## Current Progress
 
-- [x] Start with Members Page - implement Add Member functionality
-- [ ] Create member creation dialog/page if needed
-- [ ] Implement member edit functionality
-- [ ] Add QR code generation for members
-- [ ] Wire up dashboard quick actions
-- [ ] Test all buttons across pages
-- [ ] Report progress and any blockers
+- [x] Analysis completed
+- [x] Types updated
+- [x] Firestore rules updated
+- [x] Authentication system updated
+- [x] API updates completed
+- [ ] Implementation in progress

@@ -20,6 +20,36 @@ export interface Member {
   updatedAt: Date;
 }
 
+export interface Admin {
+  id?: string;
+  uid: string;
+  fullName: string;
+  phonePrimary: string;
+  phoneSecondary?: string;
+  address: {
+    lat?: number;
+    lng?: number;
+    addressString: string;
+    mapsUrl?: string;
+  };
+  classStage: "graduation" | "university";
+  universityYear?: number;
+  confessorName: string;
+  photoUrl?: string;
+  notes?: string;
+  role: "admin";
+  permissions: {
+    canManageMembers: boolean;
+    canManageAttendance: boolean;
+    canSendNotifications: boolean;
+    canViewReports: boolean;
+    canManageSettings: boolean;
+  };
+  migratedFromMemberId?: string; // Reference to original member document
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface AttendanceLog {
   id?: string;
   memberId: string;
