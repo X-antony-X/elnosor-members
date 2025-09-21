@@ -6,7 +6,7 @@ import { Users, Calendar, TrendingUp, BarChart3, LucidePieChart, Activity, Targe
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useAuth } from "@/app/providers_old"
+import { useAuth } from "@/app/providers"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useAnalytics } from "@/hooks/use-analytics"
 import { Button } from "@/components/ui/button"

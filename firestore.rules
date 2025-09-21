@@ -19,7 +19,11 @@ service cloud.firestore {
 
     // Admins collection - admin profiles
     match /admins/{adminId} {
-      allow read: if request.auth != null;
+      // Allow users to read their own admin profile if they have admin role in users collection
+      allow read: if request.auth != null && (
+        request.auth.token.role == 'admin' ||
+        (request.auth.uid == adminId && exists(/databases/$(database)/documents/users/$(adminId)))
+      );
       allow create: if request.auth != null &&
         request.auth.token.role == 'admin';
       allow update: if request.auth != null &&

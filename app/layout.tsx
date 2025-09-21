@@ -1,11 +1,12 @@
 import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
-import { Providers } from "./providers_old"
+import { Providers } from "./providers"
 import { Toaster } from "react-hot-toast"
 import { OfflineDetector } from "@/components/error/offline-detector"
 import { InstallPrompt } from "@/components/pwa/install-prompt"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
+import { HydrationSafe } from "@/components/hydration-safe"
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.VERSEL_URL_FULL || 'http://localhost:3000'),
@@ -63,23 +64,25 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" className="rtl">
       <body className="font-arabic" suppressHydrationWarning={true}>
         <div className="background-blur" />
-        <Providers>
-          <Breadcrumbs />
-          {children}
-          <OfflineDetector />
-          <InstallPrompt />
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: "#363636",
-                color: "#fff",
-                fontFamily: "Cairo, sans-serif",
-              },
-            }}
-          />
-        </Providers>
+        <HydrationSafe>
+          <Providers>
+            <Breadcrumbs />
+            {children}
+            <OfflineDetector />
+            <InstallPrompt />
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: "#363636",
+                  color: "#fff",
+                  fontFamily: "Cairo, sans-serif",
+                },
+              }}
+            />
+          </Providers>
+        </HydrationSafe>
       </body>
     </html>
   )

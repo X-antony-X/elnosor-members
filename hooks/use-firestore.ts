@@ -192,6 +192,15 @@ export const firestoreHelpers = {
     return await setDoc(doc(db, "members", memberData.uid!), data);
   },
 
+  refreshMembers: async () => {
+    // This is a placeholder function to trigger a refresh.
+    // Since useMembers uses onSnapshot, data is real-time updated.
+    // But if needed, we can force a refresh by re-fetching members once.
+    const membersCollection = collection(db, "members");
+    const snapshot = await getDocs(membersCollection);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  },
+
   // Update member
   updateMember: async (memberId: string, updates: Partial<Member>) => {
     const memberRef = doc(db, "members", memberId);

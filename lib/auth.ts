@@ -76,7 +76,38 @@ export const getUserRole = async (user: User): Promise<"admin" | "member"> => {
 
     const token = await user.getIdTokenResult();
     if (token.claims.role) {
-      return token.claims.role === "admin" ? "admin" : "member";
+      const tokenRole = token.claims.role === "admin" ? "admin" : "member";
+
+      // If token says admin, verify admin profile exists
+      if (tokenRole === "admin") {
+        try {
+          const adminRef = doc(db, "admins", user.uid);
+          const adminSnap = await getDoc(adminRef);
+          if (adminSnap.exists()) {
+            return "admin";
+          } else {
+            // Token says admin but no admin profile - this might be a timing issue
+            // Check users collection to confirm role
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists() && userSnap.data().role === "admin") {
+              // Role is admin in users collection but profile not created yet
+              // Return admin and let the system create the profile
+              return "admin";
+            }
+          }
+        } catch (adminError) {
+          console.warn("Error checking admin profile:", adminError);
+          // If we can't read admin profile due to permissions, check users collection
+          const userRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists() && userSnap.data().role === "admin") {
+            return "admin";
+          }
+        }
+      }
+
+      return tokenRole;
     }
 
     // If no role in custom claims, check Firestore
@@ -86,15 +117,17 @@ export const getUserRole = async (user: User): Promise<"admin" | "member"> => {
       const userData = userSnap.data();
       const role = userData.role === "admin" ? "admin" : "member";
 
-      // If role is admin, check if admin profile exists
+      // If role is admin, try to check admin profile
       if (role === "admin") {
-        const adminRef = doc(db, "admins", user.uid);
-        const adminSnap = await getDoc(adminRef);
-        if (adminSnap.exists()) {
-          return "admin";
-        } else {
-          // Admin role exists in users but no admin profile - return member
-          return "member";
+        try {
+          const adminRef = doc(db, "admins", user.uid);
+          const adminSnap = await getDoc(adminRef);
+          if (adminSnap.exists()) {
+            return "admin";
+          }
+        } catch (adminError) {
+          console.warn("Error checking admin profile:", adminError);
+          // If we can't read admin profile, still return admin if users collection says so
         }
       }
 

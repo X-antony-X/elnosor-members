@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/providers_old";
+import { useAuth } from "@/app/providers";
 
 export function useDebugAuthRedirect() {
   const { user, loading } = useAuth();

@@ -2,10 +2,11 @@
 
 import type React from "react"
 
-import { useAuth } from "@/app/providers_old"
+import { useAuth } from "@/app/providers"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { adminDb } from "@/lib/firebase-admin"
 
 interface RoleGuardProps {
   children: React.ReactNode
@@ -16,27 +17,68 @@ interface RoleGuardProps {
 export function RoleGuard({ children, requiredRole, adminOnly }: RoleGuardProps) {
   const { user, role, loading } = useAuth()
   const router = useRouter()
+  const [resolvedRole, setResolvedRole] = useState<string | null>(null)
+  const [resolving, setResolving] = useState(true)
 
   useEffect(() => {
-    if (!loading) {
+    async function resolveRole() {
+      if (!user) {
+        setResolvedRole(null)
+        setResolving(false)
+        return
+      }
+
+      // If role is already admin or member, use it
+      if (role === "admin" || role === "member") {
+        setResolvedRole(role)
+        setResolving(false)
+        return
+      }
+
+      // Otherwise, fetch role from Firestore collections
+      try {
+        // Check role using the admin API endpoint
+        const response = await fetch(`/api/admin/check-role?uid=${user.uid}`)
+        const data = await response.json()
+
+        if (data.role) {
+          setResolvedRole(data.role)
+          setResolving(false)
+          return
+        }
+
+        setResolvedRole("member") // Default fallback
+      } catch (error) {
+        console.error("Error resolving role:", error)
+        setResolvedRole("member") // Default fallback on error
+      } finally {
+        setResolving(false)
+      }
+    }
+
+    resolveRole()
+  }, [user, role])
+
+  useEffect(() => {
+    if (!resolving) {
       if (!user) {
         router.push("/auth")
         return
       }
 
-      if (adminOnly && role !== "admin") {
+      if (adminOnly && resolvedRole !== "admin") {
         router.push("/dashboard")
         return
       }
 
-      if (requiredRole && role !== requiredRole) {
+      if (requiredRole && resolvedRole !== requiredRole) {
         router.push("/dashboard")
         return
       }
     }
-  }, [user, role, loading, router, requiredRole, adminOnly])
+  }, [user, resolvedRole, resolving, router, requiredRole, adminOnly])
 
-  if (loading) {
+  if (loading || resolving) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -48,7 +90,7 @@ export function RoleGuard({ children, requiredRole, adminOnly }: RoleGuardProps)
     return null
   }
 
-  if (adminOnly && role !== "admin") {
+  if (adminOnly && resolvedRole !== "admin") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -59,7 +101,7 @@ export function RoleGuard({ children, requiredRole, adminOnly }: RoleGuardProps)
     )
   }
 
-  if (requiredRole && role !== requiredRole) {
+  if (requiredRole && resolvedRole !== requiredRole) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

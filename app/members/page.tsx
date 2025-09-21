@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef } from "react"
 import { motion } from "framer-motion"
 import { Plus, Search, Download, Upload, User, FileSpreadsheet, AlertCircle, CheckCircle, Crown, UserX, Settings } from "lucide-react"
@@ -15,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/app/providers_old"
+import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
 import type { Member, Admin } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -208,8 +207,8 @@ export default function MembersPage() {
         )
         setAdminDialogOpen(false)
         setSelectedForAdmin(null)
-        // Refresh the page to show updated data
-        window.location.reload()
+        // Refresh members list without full page reload
+        await firestoreHelpers.refreshMembers()
       } else {
         const errorData = await response.json()
         throw new Error(errorData.error || "خطأ في تحديث الدور")

@@ -7,8 +7,6 @@ import type { User } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
 import { getUserRole } from "@/lib/auth"
-import { refreshUserRole } from "@/lib/auth-refresh"
-import { debugUserRole } from "@/lib/auth-debug"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
@@ -17,7 +15,6 @@ interface AuthContextType {
   role: "admin" | "member" | null
   token: string | null
   loading: boolean
-  refreshRole: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,7 +22,6 @@ const AuthContext = createContext<AuthContextType>({
   role: null,
   token: null,
   loading: true,
-  refreshRole: async () => { },
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -35,32 +31,26 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<"admin" | "member" | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-
-  const handleRefreshRole = async () => {
-    if (user) {
-      console.log("🔄 [PROVIDERS] Refreshing role for user:", user.uid);
-      const newRole = await refreshUserRole(user)
-      console.log("✅ [PROVIDERS] New role:", newRole);
-      setRole(newRole)
-      const idToken = await user.getIdToken()
-      setToken(idToken)
-    }
-  }
+  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
-    console.log("🔄 [PROVIDERS] Setting up auth state listener");
+    // Set hydrated flag after component mounts to prevent hydration mismatch
+    setIsHydrated(true)
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("📋 [PROVIDERS] Auth state changed:", user ? user.uid : "null");
       setUser(user)
 
       if (user) {
-        console.log("🔄 [PROVIDERS] Getting user role for:", user.uid);
-        const userRole = await debugUserRole(user) // Using debug version
-        console.log("✅ [PROVIDERS] Got user role:", userRole);
-        setRole(userRole)
-        const idToken = await user.getIdToken()
-        setToken(idToken)
+        try {
+          const userRole = await getUserRole(user)
+          setRole(userRole)
+          const idToken = await user.getIdToken()
+          setToken(idToken)
+        } catch (error) {
+          console.error("Error getting user role:", error)
+          setRole("member") // Default fallback
+          setToken(null)
+        }
       } else {
         setRole(null)
         setToken(null)
@@ -72,8 +62,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return () => unsubscribe()
   }, [])
 
+  // Prevent hydration mismatch by not rendering until after client-side hydration
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
   if (loading) {
-    console.log("⏳ [PROVIDERS] Loading...");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -82,7 +80,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, token, loading, refreshRole: handleRefreshRole }}>
+    <AuthContext.Provider value={{ user, role, token, loading }}>
       <ThemeProvider>{children}</ThemeProvider>
     </AuthContext.Provider>
   )
