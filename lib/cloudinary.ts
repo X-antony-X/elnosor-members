@@ -24,10 +24,37 @@ class CloudinaryService {
     this.uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "";
 
     if (!this.cloudName || !this.uploadPreset) {
-      console.warn(
-        "Cloudinary configuration missing. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET"
+      console.error(
+        "❌ Cloudinary configuration missing! Please set these environment variables:"
       );
+      console.error("   - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME");
+      console.error("   - NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET");
+      console.error("   See .env.example for details");
+    } else {
+      console.log("✅ Cloudinary configured successfully");
     }
+  }
+
+  /**
+   * Check if Cloudinary is properly configured
+   */
+  isConfigured(): boolean {
+    return !!(this.cloudName && this.uploadPreset);
+  }
+
+  /**
+   * Get configuration status
+   */
+  getConfigStatus(): { configured: boolean; missing: string[] } {
+    const missing = [];
+    if (!this.cloudName) missing.push("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME");
+    if (!this.uploadPreset)
+      missing.push("NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET");
+
+    return {
+      configured: missing.length === 0,
+      missing,
+    };
   }
 
   /**
@@ -37,8 +64,13 @@ class CloudinaryService {
     file: File,
     options: UploadOptions = {}
   ): Promise<CloudinaryUploadResult> {
-    if (!this.cloudName || !this.uploadPreset) {
-      throw new Error("Cloudinary not configured properly");
+    if (!this.isConfigured()) {
+      const status = this.getConfigStatus();
+      throw new Error(
+        `Cloudinary not configured properly. Missing: ${status.missing.join(
+          ", "
+        )}`
+      );
     }
 
     const formData = new FormData();

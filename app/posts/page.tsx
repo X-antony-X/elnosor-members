@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/app/providers_old"
 import { t } from "@/lib/translations"
 import type { Post, Comment } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -23,6 +23,8 @@ export default function PostsPage() {
   const [newPostImage, setNewPostImage] = useState<File | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({})
+  const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set())
+  const [addingComments, setAddingComments] = useState<Set<string>>(new Set())
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim() || !user) return
@@ -40,7 +42,6 @@ export default function PostsPage() {
       setNewPostContent("")
       setNewPostImage(null)
       toast({ description: "تم نشر المنشور بنجاح", variant: "default" })
-      // toast({ description: "تم نشر المنشور بنجاح", variant: "success" })
     } catch (error) {
       console.error("Error creating post:", error)
       toast({ description: "خطأ في نشر المنشور", variant: "destructive" })
@@ -52,7 +53,6 @@ export default function PostsPage() {
       await firestoreHelpers.updatePost(postId, { content: newContent })
       setEditingPost(null)
       toast({ description: "تم تحديث المنشور بنجاح", variant: "default" })
-      // toast({ description: "تم تحديث المنشور بنجاح", variant: "success" })
     } catch (error) {
       console.error("Error updating post:", error)
       toast({ description: "خطأ في تحديث المنشور", variant: "destructive" })
@@ -63,7 +63,6 @@ export default function PostsPage() {
     try {
       await firestoreHelpers.deletePost(postId)
       toast({ description: "تم حذف المنشور بنجاح", variant: "default" })
-      // toast({ description: "تم حذف المنشور بنجاح", variant: "success" })
     } catch (error) {
       console.error("Error deleting post:", error)
       toast({ description: "خطأ في حذف المنشور", variant: "destructive" })
@@ -71,9 +70,11 @@ export default function PostsPage() {
   }
 
   const handleLikePost = async (postId: string) => {
-    if (!user) return
+    if (!user || likingPosts.has(postId)) return
 
     try {
+      setLikingPosts(prev => new Set(prev).add(postId))
+
       const post = posts.find((p) => p.id === postId)
       if (!post) return
 
@@ -81,17 +82,30 @@ export default function PostsPage() {
       const newLikes = isLiked ? post.likes.filter((uid) => uid !== user.uid) : [...post.likes, user.uid]
 
       await firestoreHelpers.updatePost(postId, { likes: newLikes })
+
+      toast({
+        description: isLiked ? "تم إلغاء الإعجاب" : "تم إضافة الإعجاب",
+        variant: "default"
+      })
     } catch (error) {
       console.error("Error updating like:", error)
       toast({ description: "خطأ في تحديث الإعجاب", variant: "destructive" })
+    } finally {
+      setLikingPosts(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(postId)
+        return newSet
+      })
     }
   }
 
   const handleAddComment = async (postId: string) => {
     const commentText = commentInputs[postId]?.trim()
-    if (!commentText || !user) return
+    if (!commentText || !user || addingComments.has(postId)) return
 
     try {
+      setAddingComments(prev => new Set(prev).add(postId))
+
       const post = posts.find((p) => p.id === postId)
       if (!post) return
 
@@ -108,10 +122,15 @@ export default function PostsPage() {
 
       setCommentInputs({ ...commentInputs, [postId]: "" })
       toast({ description: "تم إضافة التعليق بنجاح", variant: "default" })
-      // toast({ description: "تم إضافة التعليق بنجاح", variant: "success" })
     } catch (error) {
       console.error("Error adding comment:", error)
       toast({ description: "خطأ في إضافة التعليق", variant: "destructive" })
+    } finally {
+      setAddingComments(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(postId)
+        return newSet
+      })
     }
   }
 
@@ -246,7 +265,6 @@ export default function PostsPage() {
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" onClick={() => {
-                        // TODO: Implement download post functionality
                         toast({ description: "سيتم تنفيذ تحميل المنشور قريباً", variant: "default" })
                       }}>
                         <Download className="w-4 h-4" />
@@ -274,13 +292,18 @@ export default function PostsPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleLikePost(post.id!)}
-                    className={`gap-2 ${post.likes.includes(user?.uid || "")
-                        ? "text-red-600 hover:text-red-700"
-                        : "text-gray-600 hover:text-gray-700"
-                      }`}
+                    disabled={likingPosts.has(post.id!)}
+                    className={`gap-2 transition-all duration-200 ${post.likes.includes(user?.uid || "")
+                      ? "text-red-600 hover:text-red-700"
+                      : "text-gray-600 hover:text-gray-700"
+                      } ${likingPosts.has(post.id!) ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
-                    <Heart className={`w-4 h-4 ${post.likes.includes(user?.uid || "") ? "fill-current" : ""}`} />
+                    <Heart className={`w-4 h-4 transition-all duration-200 ${post.likes.includes(user?.uid || "") ? "fill-current" : ""
+                      } ${likingPosts.has(post.id!) ? "animate-pulse" : ""}`} />
                     {post.likes.length}
+                    {likingPosts.has(post.id!) && (
+                      <LoadingSpinner size="sm" className="w-3 h-3" />
+                    )}
                   </Button>
 
                   <Button variant="ghost" size="sm" className="gap-2">
@@ -342,9 +365,13 @@ export default function PostsPage() {
                     <Button
                       size="sm"
                       onClick={() => handleAddComment(post.id!)}
-                      disabled={!commentInputs[post.id!]?.trim()}
+                      disabled={!commentInputs[post.id!]?.trim() || addingComments.has(post.id!)}
                     >
-                      <Send className="w-4 h-4" />
+                      {addingComments.has(post.id!) ? (
+                        <LoadingSpinner size="sm" className="w-3 h-3" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
                 </div>

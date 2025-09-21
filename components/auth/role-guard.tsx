@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/app/providers_old"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"

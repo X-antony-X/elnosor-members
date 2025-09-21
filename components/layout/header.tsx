@@ -2,7 +2,7 @@
 
 import { Bell, LogOut, User, Menu, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/app/providers_old"
 import { logout } from "@/lib/auth"
 import { t } from "@/lib/translations"
 import Image from "next/image"

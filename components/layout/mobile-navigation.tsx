@@ -3,7 +3,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Home, Users, Calendar, Bell, FileText, Settings, User, Info, X } from "lucide-react"
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/app/providers_old"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/translations"
 import { cn } from "@/lib/utils"
@@ -109,17 +109,17 @@ export function BottomNavigation() {
   const items =
     role === "admin"
       ? [
-          { href: "/dashboard", icon: Home, label: "الرئيسية" },
-          { href: "/members", icon: Users, label: "الأعضاء" },
-          { href: "/attendance", icon: Calendar, label: "الحضور" },
-          { href: "/notifications", icon: Bell, label: "الإشعارات" },
-        ]
+        { href: "/dashboard", icon: Home, label: "الرئيسية" },
+        { href: "/members", icon: Users, label: "الأعضاء" },
+        { href: "/attendance", icon: Calendar, label: "الحضور" },
+        { href: "/notifications", icon: Bell, label: "الإشعارات" },
+      ]
       : [
-          { href: "/dashboard", icon: Home, label: "الرئيسية" },
-          { href: "/profile", icon: User, label: "ملفي" },
-          { href: "/notifications", icon: Bell, label: "الإشعارات" },
-          { href: "/about", icon: Info, label: "حول" },
-        ]
+        { href: "/dashboard", icon: Home, label: "الرئيسية" },
+        { href: "/profile", icon: User, label: "ملفي" },
+        { href: "/notifications", icon: Bell, label: "الإشعارات" },
+        { href: "/about", icon: Info, label: "حول" },
+      ]
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-30 lg:hidden">

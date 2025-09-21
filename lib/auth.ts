@@ -71,6 +71,9 @@ export const createUserProfile = async (user: User) => {
 
 export const getUserRole = async (user: User): Promise<"admin" | "member"> => {
   try {
+    // Force token refresh to get latest custom claims
+    await user.getIdToken(true);
+
     const token = await user.getIdTokenResult();
     if (token.claims.role) {
       return token.claims.role === "admin" ? "admin" : "member";

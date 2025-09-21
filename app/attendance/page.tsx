@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/app/providers_old"
 import { t } from "@/lib/translations"
 import type { Member, AttendanceLog, Meeting } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"

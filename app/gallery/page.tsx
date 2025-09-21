@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/app/providers_old"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAttendance } from "@/hooks/use-firestore"

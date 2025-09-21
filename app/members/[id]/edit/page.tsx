@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import toast from "react-hot-toast"
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/app/providers_old"
 
 export default function MemberEditPage() {
   const { role, token } = useAuth()

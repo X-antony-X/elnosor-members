@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/app/providers_old"
 import { t } from "@/lib/translations"
 import type { Member, Admin } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"

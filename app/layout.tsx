@@ -1,7 +1,7 @@
 import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
-import { Providers } from "./providers"
+import { Providers } from "./providers_old"
 import { Toaster } from "react-hot-toast"
 import { OfflineDetector } from "@/components/error/offline-detector"
 import { InstallPrompt } from "@/components/pwa/install-prompt"
@@ -58,7 +58,7 @@ export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-  }) {
+}) {
   return (
     <html lang="ar" dir="rtl" className="rtl">
       <body className="font-arabic" suppressHydrationWarning={true}>
