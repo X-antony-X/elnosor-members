@@ -1,77 +1,36 @@
-# Role Management System Migration
+# File Cleanup Task
 
-## Current Issue
+## Files to Delete
 
-- Users login with Google → saved in `users` collection with `role: "member"`
-- Users complete profile → saved in `members` collection
-- Admin promotion → role changes to `"admin"` in `users` collection, but data stays in `members` collection
-- This creates conflicts in role-based access control
+### Python Project Files (GSPK 32)
 
-## Implementation Plan
+- [ ] main.py - Python/Kivy main application
+- [ ] main.kv - Kivy interface file
+- [ ] search.py - Search module
+- [ ] database.py - Database management
+- [ ] import_participants.py - Data import script
+- [ ] import_participants_fixed.py - Duplicate import script
+- [ ] run_gspk32.py - Python project runner
+- [ ] start_gspk32.bat - Windows batch file
+- [ ] requirements.txt - Python dependencies
+- [ ] .gitignore_python - Python gitignore
 
-### Phase 1: Database Structure Updates
+### Documentation Files
 
-- [x] Update `lib/types.ts` - Add Admin interface
-- [x] Update `firestore.rules` - Add admins collection rules
-- [x] Create admin data structure
+- [ ] README_FINAL.md - GSPK 32 documentation
+- [ ] README_GSPK32.md - Additional GSPK 32 docs
 
-### Phase 2: Authentication System Updates
+### Backup/Duplicate Files
 
-- [x] Update `lib/auth.ts` - Modify role checking logic to handle both collections
-- [x] Update `components/auth/role-guard.tsx` - Improve role handling
-- [x] Update authentication flow to check both collections based on role
+- [ ] hooks/use-firestore.ts.backup - Outdated backup
+- [ ] app/members/page-fixed.tsx - Duplicate members page
 
-### Phase 3: API Updates
+### Test Data Files
 
-- [x] Update `app/api/admin/set-user-role/route.ts` - Add data migration logic
-- [x] Create migration utilities for moving data from members to admins collection
-- [x] Add proper error handling and rollback mechanisms
-- [x] Create missing role checking API endpoints (`/api/admin/check-role`, `/api/member/check-role`)
+- [ ] participants.json - Russian test data
 
-### Phase 4: UI Updates
+## Progress
 
-- [x] Update `app/members/page.tsx` - Add admin management features
-- [x] Update `app/attendance/page.tsx` - Update role restrictions
-- [x] Add admin management interface
-
-### Phase 5: Testing & Migration
-
-- [x] Test role transitions
-- [x] Verify data migration works correctly
-- [x] Test authentication flow for both roles
-- [x] Test UI components with new role system
-- [x] Create role testing page (`/test-role`) for debugging
-
-## Current Progress
-
-- [x] Analysis completed
-- [x] Types updated
-- [x] Firestore rules updated
-- [x] Authentication system updated
-- [x] API updates completed
-- [x] Implementation completed
-- [x] Migration utilities created
-- [x] UI components updated
-- [x] Role management features implemented
-- [x] Missing API endpoints created
-- [x] Role testing tools added
-
-## Recent Fixes
-
-### Issues Resolved:
-
-1. **Missing API Endpoints**: Created `/api/admin/check-role` and `/api/member/check-role` endpoints that were referenced in role-guard but didn't exist
-2. **Role Checking Logic**: Fixed role-guard component to properly use the API endpoints
-3. **WebAuthn Integration**: Ensured WebAuthn authentication works with the role system
-4. **Testing Tools**: Added `/test-role` page for debugging role issues
-
-### About `webauthn_auth_challenges` Collection:
-
-This collection is automatically created by Firebase Auth for WebAuthn (biometric/hardware key) authentication. It's used to store temporary challenges for security verification and is normal behavior.
-
-## Next Steps
-
-1. Test the role system using `/test-role` page
-2. Verify admin role is working correctly after fixes
-3. Test role transitions between member and admin
-4. Verify all UI components respect role permissions
+- [ ] All files deleted
+- [ ] Verify cleanup successful
+- [ ] Test Next.js application
