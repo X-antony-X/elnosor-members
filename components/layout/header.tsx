@@ -60,6 +60,7 @@ export function Header({ onMenuToggle, showBackButton = false, title }: HeaderPr
       "/attendance": "الحضور",
       "/posts": "المنشورات",
       "/notifications": "الإشعارات",
+      "/gallery": "المعرض",
       "/settings": "الإعدادات",
       "/profile": "ملفي الشخصي",
       "/about": "حول التطبيق",

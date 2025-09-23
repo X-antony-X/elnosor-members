@@ -106,8 +106,16 @@ export default function MembersPage() {
 
     setIsAddingMember(true)
     try {
+      // Check if user already has a member document
+      const existingMember = await firestoreHelpers.getCurrentUserMember()
+      if (existingMember) {
+        toast.error("لديك بالفعل ملف عضو مسجل. يرجى تحديث بياناتك بدلاً من إنشاء ملف جديد.")
+        setIsAddingMember(false)
+        return
+      }
+
       // Adjust newMember to match Member interface
-      const memberData: Omit<Member, "id"> = {
+      const memberData: Omit<Member, "id" | "uid" | "createdAt" | "updatedAt"> = {
         fullName: newMember.fullName,
         phonePrimary: newMember.phonePrimary,
         phoneSecondary: newMember.phoneSecondary,
@@ -117,8 +125,8 @@ export default function MembersPage() {
         classStage: newMember.classStage === "university" ? "university" : "graduation",
         universityYear: newMember.universityYear ? parseInt(newMember.universityYear) : undefined,
         confessorName: newMember.confessorName,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        notes: newMember.notes,
+        role: "member", // Default role for new members
       }
 
       await firestoreHelpers.addMember(memberData)
@@ -140,7 +148,8 @@ export default function MembersPage() {
       setAddMemberDialogOpen(false)
     } catch (error) {
       console.error("Error adding member:", error)
-      toast.error("خطأ في إضافة المخدوم")
+      const errorMessage = error instanceof Error ? error.message : "خطأ في إضافة المخدوم"
+      toast.error(errorMessage)
     } finally {
       setIsAddingMember(false)
     }
@@ -827,7 +836,7 @@ export default function MembersPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Settings className="w-5 h-5" />
-                إدارة صلاحيات العضو
+                إدارة صلاحيات المخدوم
               </DialogTitle>
             </DialogHeader>
             {selectedForAdmin && (

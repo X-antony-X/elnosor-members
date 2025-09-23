@@ -13,8 +13,9 @@ import {
   updateDoc,
   deleteDoc,
   Timestamp,
+  getDoc,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import type { Member, Post, AttendanceLog, Meeting } from "@/lib/types";
 
 export const useMembers = () => {
@@ -183,22 +184,29 @@ export const firestoreHelpers = {
   addMember: async (
     memberData: Omit<Member, "id" | "createdAt" | "updatedAt">
   ) => {
+    if (!auth.currentUser) {
+      throw new Error("يجب تسجيل الدخول أولاً");
+    }
+
+    const userId = auth.currentUser.uid;
     const now = Timestamp.now();
     const data = {
       ...memberData,
+      uid: userId, // Set the uid field to the authenticated user's ID
       createdAt: now,
       updatedAt: now,
     };
-    return await setDoc(doc(db, "members", memberData.uid!), data);
+
+    // Use the authenticated user's UID as the document ID to match Firestore rules
+    return await setDoc(doc(db, "members", userId), data);
   },
 
   refreshMembers: async () => {
     // This is a placeholder function to trigger a refresh.
     // Since useMembers uses onSnapshot, data is real-time updated.
-    // But if needed, we can force a refresh by re-fetching members once.
-    const membersCollection = collection(db, "members");
-    const snapshot = await getDocs(membersCollection);
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    // The real-time listener automatically handles updates, so this function
+    // is mainly for manual refresh if needed.
+    return Promise.resolve([]);
   },
 
   // Update member
@@ -214,6 +222,23 @@ export const firestoreHelpers = {
   deleteMember: async (memberId: string) => {
     const memberRef = doc(db, "members", memberId);
     return await deleteDoc(memberRef);
+  },
+
+  // Get current user's member document
+  getCurrentUserMember: async () => {
+    if (!auth.currentUser) {
+      throw new Error("يجب تسجيل الدخول أولاً");
+    }
+
+    const userId = auth.currentUser.uid;
+    const memberRef = doc(db, "members", userId);
+    const docSnap = await getDoc(memberRef);
+
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as Member;
+    }
+
+    return null;
   },
 
   // Add new post

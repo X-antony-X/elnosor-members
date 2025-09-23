@@ -42,6 +42,12 @@ export interface AnalyticsData {
   activeMembers: number;
   averageAttendance: number;
   engagementRate: number;
+
+  // Percentage Changes (calculated vs previous period)
+  totalMembersChange: number;
+  attendanceRateChange: number;
+  activeMembersChange: number;
+  engagementRateChange: number;
 }
 
 export const useAnalytics = (dateRange?: { start: Date; end: Date }) => {
@@ -74,6 +80,10 @@ export const useAnalytics = (dateRange?: { start: Date; end: Date }) => {
         activeMembers: 0,
         averageAttendance: 0,
         engagementRate: 0,
+        totalMembersChange: 0,
+        attendanceRateChange: 0,
+        activeMembersChange: 0,
+        engagementRateChange: 0,
       });
       return;
     }
@@ -303,6 +313,79 @@ export const useAnalytics = (dateRange?: { start: Date; end: Date }) => {
           ? (totalEngagement / (posts.length * members.length)) * 100
           : 0;
 
+      // Calculate percentage changes vs previous period
+      const previousPeriodStart = new Date(dateRange?.start || new Date());
+      const previousPeriodEnd = new Date(dateRange?.end || new Date());
+
+      if (dateRange) {
+        const periodLength = dateRange.end.getTime() - dateRange.start.getTime();
+        previousPeriodEnd.setTime(previousPeriodStart.getTime() - 1);
+        previousPeriodStart.setTime(previousPeriodEnd.getTime() - periodLength);
+      } else {
+        // Default to comparing with previous 30 days
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        previousPeriodEnd.setTime(thirtyDaysAgo.getTime() - 1);
+        previousPeriodStart.setTime(previousPeriodEnd.getTime() - 30 * 24 * 60 * 60 * 1000);
+      }
+
+      const previousLogs = attendanceLogs.filter(
+        (log) =>
+          log.checkInTimestamp >= previousPeriodStart &&
+          log.checkInTimestamp <= previousPeriodEnd
+      );
+
+      const previousMeetings = meetings.filter(
+        (meeting) =>
+          meeting.date >= previousPeriodStart && meeting.date <= previousPeriodEnd
+      );
+
+      const previousMembers = members.filter(
+        (member) => member.createdAt <= previousPeriodEnd
+      ).length;
+
+      const previousActiveMembers = members.filter((member) => {
+        const memberLogs = previousLogs.filter(
+          (log) => log.memberId === member.id
+        );
+        return memberLogs.length > 0;
+      }).length;
+
+      const previousTotalPossibleAttendance = previousMembers * previousMeetings.length;
+      const previousActualAttendance = previousLogs.length;
+      const previousAttendanceRate =
+        previousTotalPossibleAttendance > 0
+          ? (previousActualAttendance / previousTotalPossibleAttendance) * 100
+          : 0;
+
+      const previousTotalEngagement = posts
+        .filter((post) => post.createdAt >= previousPeriodStart && post.createdAt <= previousPeriodEnd)
+        .reduce((sum, post) => sum + post.likes.length + post.comments.length, 0);
+      const previousPosts = posts.filter(
+        (post) => post.createdAt >= previousPeriodStart && post.createdAt <= previousPeriodEnd
+      ).length;
+      const previousEngagementRate =
+        previousPosts > 0 && previousMembers > 0
+          ? (previousTotalEngagement / (previousPosts * previousMembers)) * 100
+          : 0;
+
+      // Calculate percentage changes
+      const totalMembersChange = previousMembers > 0
+        ? ((members.length - previousMembers) / previousMembers) * 100
+        : 0;
+
+      const attendanceRateChange = previousAttendanceRate > 0
+        ? ((attendanceRate - previousAttendanceRate) / previousAttendanceRate) * 100
+        : 0;
+
+      const activeMembersChange = previousActiveMembers > 0
+        ? ((activeMembers - previousActiveMembers) / previousActiveMembers) * 100
+        : 0;
+
+      const engagementRateChange = previousEngagementRate > 0
+        ? ((engagementRate - previousEngagementRate) / previousEngagementRate) * 100
+        : 0;
+
       return {
         attendanceRate: Math.round(attendanceRate),
         averageLateness: Math.round(averageLateness),
@@ -318,6 +401,10 @@ export const useAnalytics = (dateRange?: { start: Date; end: Date }) => {
         activeMembers,
         averageAttendance: Math.round(averageAttendance),
         engagementRate: Math.round(engagementRate),
+        totalMembersChange: Math.round(totalMembersChange * 100) / 100,
+        attendanceRateChange: Math.round(attendanceRateChange * 100) / 100,
+        activeMembersChange: Math.round(activeMembersChange * 100) / 100,
+        engagementRateChange: Math.round(engagementRateChange * 100) / 100,
       };
     };
 

@@ -33,6 +33,7 @@ export function Breadcrumbs() {
         attendance: t("attendance"),
         posts: t("posts"),
         notifications: t("notifications"),
+        gallery: t("gallery"),
         settings: t("settings"),
         profile: t("profile"),
         about: t("about"),

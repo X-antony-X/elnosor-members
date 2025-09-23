@@ -45,6 +45,77 @@ export default function DashboardPage() {
 
   const { analytics, loading } = useAnalytics(analyticsDateRange)
 
+  // Member view stats
+  const memberStatCards = [
+    {
+      title: "معدل حضوري",
+      value: `${analytics?.attendanceRate ?? 0}%`,
+      icon: Calendar,
+      color: "text-green-600",
+      bgColor: "bg-green-100 dark:bg-green-900",
+      change: analytics?.attendanceRateChange ? `${analytics.attendanceRateChange >= 0 ? '+' : ''}${analytics.attendanceRateChange.toFixed(1)}%` : "0%",
+      changeType: (analytics?.attendanceRateChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
+    },
+    {
+      title: "مشاركاتي",
+      value: analytics?.memberAttendanceStats.find(m => m.memberId === user?.uid)?.attendanceCount ?? 0,
+      icon: Activity,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100 dark:bg-blue-900",
+      change: "نشط",
+      changeType: "positive" as const,
+    },
+    {
+      title: "معدل التفاعل",
+      value: `${analytics?.engagementRate ?? 0}%`,
+      icon: Target,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100 dark:bg-purple-900",
+      change: analytics?.engagementRateChange ? `${analytics.engagementRateChange >= 0 ? '+' : ''}${analytics.engagementRateChange.toFixed(1)}%` : "0%",
+      changeType: (analytics?.engagementRateChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
+    },
+  ]
+
+  // Admin view stats
+  const adminStatCards = [
+    {
+      title: "إجمالي المخدومين",
+      value: analytics?.totalMembers ?? 0,
+      icon: Users,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100 dark:bg-blue-900",
+      change: analytics?.totalMembersChange ? `${analytics.totalMembersChange >= 0 ? '+' : ''}${analytics.totalMembersChange.toFixed(1)}%` : "0%",
+      changeType: (analytics?.totalMembersChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
+    },
+    {
+      title: "معدل الحضور",
+      value: `${analytics?.attendanceRate ?? 0}%`,
+      icon: Calendar,
+      color: "text-green-600",
+      bgColor: "bg-green-100 dark:bg-green-900",
+      change: analytics?.attendanceRateChange ? `${analytics.attendanceRateChange >= 0 ? '+' : ''}${analytics.attendanceRateChange.toFixed(1)}%` : "0%",
+      changeType: (analytics?.attendanceRateChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
+    },
+    {
+      title: "المخدومين النشطون",
+      value: analytics?.activeMembers ?? 0,
+      icon: Activity,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100 dark:bg-purple-900",
+      change: analytics?.activeMembersChange ? `${analytics.activeMembersChange >= 0 ? '+' : ''}${analytics.activeMembersChange.toFixed(1)}%` : "0%",
+      changeType: (analytics?.activeMembersChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
+    },
+    {
+      title: "معدل التفاعل",
+      value: `${analytics?.engagementRate ?? 0}%`,
+      icon: Target,
+      color: "text-orange-600",
+      bgColor: "bg-orange-100 dark:bg-orange-900",
+      change: analytics?.engagementRateChange ? `${analytics.engagementRateChange >= 0 ? '+' : ''}${analytics.engagementRateChange.toFixed(1)}%` : "0%",
+      changeType: (analytics?.engagementRateChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
+    },
+  ]
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -56,106 +127,116 @@ export default function DashboardPage() {
   if (role !== "admin") {
     // Member view
     return (
-      <div className="p-6 space-y-6 text-center">
-        <h1 className="text-3xl font-bold mb-4">مرحباً، {user?.displayName}</h1>
-        <p className="mb-6 text-gray-600 dark:text-gray-400">في انتظار التحديثات القادمة</p>
-
-        <div className="space-y-4 max-w-md mx-auto">
-          <Button
-            onClick={() => setShowQR(!showQR)}
-            className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white mx-auto animate-pulse"
-            size="lg"
-          >
-            <QrCode className="w-6 h-6" />
-            إظهار رمز QR لتسجيل الحضور
-          </Button>
-
-          {showQR && (
-            <div className="mt-4 bg-white p-4 rounded-lg inline-block mx-auto">
-              <QRCode
-                value={JSON.stringify({
-                  memberId: user?.uid,
-                  timestamp: Date.now(),
-                })}
-                size={180}
-              />
-            </div>
-          )}
-
-          <div className="mt-8 space-y-4 text-right max-w-md mx-auto">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => window.location.href = "/profile"}
-            >
-              الملف الشخصي
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => window.location.href = "/about"}
-            >
-              عن البرنامج
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => window.location.href = "/settings"}
-            >
-              الإعدادات
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => window.location.href = "/gallery"}
-            >
-              معرض الصور
-            </Button>
+      <div className="p-6 space-y-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-4">مرحباً، {user?.displayName}</h1>
+            <p className="mb-6 text-gray-600 dark:text-gray-400">إحصائياتي الشخصية</p>
           </div>
+        </motion.div>
+
+        {/* Member Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {memberStatCards.map((stat: any, index: number) => {
+            const Icon = stat.icon
+            return (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card glassy>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                        <p
+                          className={`text-sm mt-1 ${stat.changeType === "positive" ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {stat.change} من الفترة السابقة
+                        </p>
+                      </div>
+                      <div className={`p-3 rounded-full ${stat.bgColor}`}>
+                        <Icon className={`h-6 w-6 ${stat.color}`} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* QR Code Section */}
+          <Card glassy>
+            <CardContent className="p-6 text-center">
+              <h3 className="text-lg font-semibold mb-4">تسجيل الحضور</h3>
+              <Button
+                onClick={() => setShowQR(!showQR)}
+                className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white mx-auto"
+                size="lg"
+              >
+                <QrCode className="w-6 h-6" />
+                {showQR ? "إخفاء رمز QR" : "إظهار رمز QR"}
+              </Button>
+
+              {showQR && (
+                <div className="mt-4 bg-white p-4 rounded-lg inline-block mx-auto">
+                  <QRCode
+                    value={JSON.stringify({
+                      memberId: user?.uid,
+                      timestamp: Date.now(),
+                    })}
+                    size={180}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card glassy>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4 text-center">الإجراءات السريعة</h3>
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = "/profile"}
+                >
+                  الملف الشخصي
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = "/about"}
+                >
+                  عن البرنامج
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = "/settings"}
+                >
+                  الإعدادات
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = "/gallery"}
+                >
+                  معرض الصور
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
   }
-
-  // Admin view (existing dashboard)
-  const statCards = [
-    {
-      title: "إجمالي الأعضاء",
-      value: analytics?.totalMembers ?? 0,
-      icon: Users,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100 dark:bg-blue-900",
-      change: "+12%",
-      changeType: "positive" as const,
-    },
-    {
-      title: "معدل الحضور",
-      value: `${analytics?.attendanceRate ?? 0}%`,
-      icon: Calendar,
-      color: "text-green-600",
-      bgColor: "bg-green-100 dark:bg-green-900",
-      change: "+5%",
-      changeType: "positive" as const,
-    },
-    {
-      title: "الأعضاء النشطون",
-      value: analytics?.activeMembers ?? 0,
-      icon: Activity,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100 dark:bg-purple-900",
-      change: "+8%",
-      changeType: "positive" as const,
-    },
-    {
-      title: "معدل التفاعل",
-      value: `${analytics?.engagementRate ?? 0}%`,
-      icon: Target,
-      color: "text-orange-600",
-      bgColor: "bg-orange-100 dark:bg-orange-900",
-      change: "-2%",
-      changeType: "negative" as const,
-    },
-  ]
 
   const COLORS = ["#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EF4444", "#06B6D4"]
 
@@ -183,7 +264,7 @@ export default function DashboardPage() {
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, index) => {
+        {(role === "admin" ? adminStatCards : memberStatCards).map((stat: any, index: number) => {
           const Icon = stat.icon
           return (
             <motion.div
@@ -201,7 +282,7 @@ export default function DashboardPage() {
                       <p
                         className={`text-sm mt-1 ${stat.changeType === "positive" ? "text-green-600" : "text-red-600"}`}
                       >
-                        {stat.change} من الشهر الماضي
+                        {stat.change} من الفترة السابقة
                       </p>
                     </div>
                     <div className={`p-3 rounded-full ${stat.bgColor}`}>
@@ -218,7 +299,7 @@ export default function DashboardPage() {
       <Tabs defaultValue="attendance" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="attendance">الحضور</TabsTrigger>
-          <TabsTrigger value="members">الأعضاء</TabsTrigger>
+          <TabsTrigger value="members">المخدومين</TabsTrigger>
           <TabsTrigger value="engagement">التفاعل</TabsTrigger>
           <TabsTrigger value="performance">الأداء</TabsTrigger>
         </TabsList>
@@ -326,7 +407,7 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <LucidePieChart className="w-5 h-5" />
-                  توزيع الأعضاء حسب المرحلة
+                  توزيع المخدومين حسب المرحلة
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -357,7 +438,7 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
-                  نمو الأعضاء
+                  نمو المخدومين
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -366,10 +447,10 @@ export default function DashboardPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip formatter={(value, name) => [value, name === "total" ? "إجمالي الأعضاء" : "أعضاء جدد"]} />
+                    <Tooltip formatter={(value, name) => [value, name === "total" ? "إجمالي المخدومين" : "مخدومين جدد"]} />
                     <Legend />
-                    <Line type="monotone" dataKey="total" stroke="#3B82F6" strokeWidth={2} name="إجمالي الأعضاء" />
-                    <Line type="monotone" dataKey="new" stroke="#10B981" strokeWidth={2} name="أعضاء جدد" />
+                    <Line type="monotone" dataKey="total" stroke="#3B82F6" strokeWidth={2} name="إجمالي المخدومين" />
+                    <Line type="monotone" dataKey="new" stroke="#10B981" strokeWidth={2} name="مخدومين جدد" />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -504,7 +585,16 @@ export default function DashboardPage() {
                   onClick={() => window.location.href = "/notifications"}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">إرسال إشعار</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إرسال إشعار لجميع الأعضاء</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إرسال إشعار لجميع المخدومين</p>
+                </button>
+
+                <button
+                  type="button"
+                  className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => window.location.href = "/admin/meeting-generator"}
+                >
+                  <h3 className="font-medium text-gray-900 dark:text-white">إنشاء اجتماعات</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إنشاء اجتماعات الجمعة الأسبوعية</p>
                 </button>
               </div>
             </CardContent>

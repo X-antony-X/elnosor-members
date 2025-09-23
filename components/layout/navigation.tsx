@@ -16,6 +16,8 @@ const navigationItems = [
   { href: "/attendance", icon: Calendar, label: "attendance", adminOnly: true },
   { href: "/posts", icon: FileText, label: "posts", adminOnly: true },
   { href: "/notifications", icon: Bell, label: "notifications" },
+  { href: "/gallery", icon: FileText, label: "gallery" },
+  { href: "/settings", icon: Bell, label: "notifications" },
   { href: "/settings", icon: Settings, label: "settings", adminOnly: true },
   { href: "/about", icon: Info, label: "about" },
 ]
@@ -24,6 +26,7 @@ const memberNavigationItems = [
   { href: "/dashboard", icon: Home, label: "dashboard" },
   { href: "/profile", icon: User, label: "profile" },
   { href: "/notifications", icon: Bell, label: "notifications" },
+  { href: "/gallery", icon: FileText, label: "gallery" },
   { href: "/about", icon: Info, label: "about" },
 ]
 
