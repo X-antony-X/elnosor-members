@@ -656,7 +656,14 @@ export default function MembersPage() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation()
-                        member.id && handleShowQR(member as Member)
+                        const qrData = {
+                          id: member.id,
+                          name: member.fullName,
+                          phone: member.phonePrimary,
+                        };
+                        const qrString = JSON.stringify(qrData);
+                        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrString)}`;
+                        window.open(qrUrl, '_blank');
                       }}
                     >
                       QR

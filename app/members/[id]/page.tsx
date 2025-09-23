@@ -28,7 +28,7 @@ export default function MemberProfilePage() {
       setLoading(true)
       try {
         const token = await auth.currentUser?.getIdToken()
-        const res = await fetch(`/api/members/${params.id}`, {
+        const res = await fetch(`/api/members?id=${params.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -96,7 +96,20 @@ export default function MemberProfilePage() {
           </div>
 
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const qrData = {
+                  id: member.id,
+                  name: member.fullName,
+                  phone: member.phonePrimary,
+                };
+                const qrString = JSON.stringify(qrData);
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrString)}`;
+                window.open(qrUrl, '_blank');
+              }}
+            >
               <QrCode className="w-4 h-4 ml-2" />
               رمز QR
             </Button>

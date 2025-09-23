@@ -30,14 +30,20 @@ export default function PostsPage() {
     if (!newPostContent.trim() || !user) return
 
     try {
-      await firestoreHelpers.addPost({
+      const postData: any = {
         content: newPostContent,
-        imageUrl: newPostImage ? URL.createObjectURL(newPostImage) : undefined,
         authorId: user.uid,
         authorName: user.displayName || "مستخدم",
         likes: [],
         comments: [],
-      })
+      }
+
+      // Only add imageUrl if there's an actual image
+      if (newPostImage) {
+        postData.imageUrl = URL.createObjectURL(newPostImage)
+      }
+
+      await firestoreHelpers.addPost(postData)
 
       setNewPostContent("")
       setNewPostImage(null)

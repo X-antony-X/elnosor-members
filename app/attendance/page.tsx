@@ -268,6 +268,49 @@ export default function AttendancePage() {
         </TabsList>
 
         <TabsContent value="attendance" className="space-y-6">
+          {/* Meeting Selection */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Label className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                  اختيار الاجتماع *
+                </Label>
+                <Select
+                  value={currentMeeting?.id || ""}
+                  onValueChange={(value) => {
+                    const meeting = meetings.find(m => m.id === value)
+                    setCurrentMeeting(meeting || null)
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="اختر الاجتماع" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {meetings
+                      .filter(meeting => meeting.date >= new Date()) // Show only upcoming meetings
+                      .sort((a, b) => a.date.getTime() - b.date.getTime()) // Sort by date
+                      .map((meeting) => (
+                        <SelectItem key={meeting.id} value={meeting.id!}>
+                          {meeting.title} - {meeting.date.toLocaleDateString('ar-EG')} - {meeting.startTime.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {currentMeeting && (
+                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">تم اختيار الاجتماع</span>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
