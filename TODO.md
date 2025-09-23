@@ -1,36 +1,21 @@
-# File Cleanup Task
+# Fix Next.js Build Error - Dynamic Route Conflict
 
-## Files to Delete
+## Issue
 
-### Python Project Files (GSPK 32)
+Build error: "You cannot use different slug names for the same dynamic path ('id' !== 'uid')."
+Caused by conflicting dynamic routes in `app/api/members/` directory.
 
-- [ ] main.py - Python/Kivy main application
-- [ ] main.kv - Kivy interface file
-- [ ] search.py - Search module
-- [ ] database.py - Database management
-- [ ] import_participants.py - Data import script
-- [ ] import_participants_fixed.py - Duplicate import script
-- [ ] run_gspk32.py - Python project runner
-- [ ] start_gspk32.bat - Windows batch file
-- [ ] requirements.txt - Python dependencies
-- [ ] .gitignore_python - Python gitignore
+## Plan
 
-### Documentation Files
-
-- [ ] README_FINAL.md - GSPK 32 documentation
-- [ ] README_GSPK32.md - Additional GSPK 32 docs
-
-### Backup/Duplicate Files
-
-- [ ] hooks/use-firestore.ts.backup - Outdated backup
-- [ ] app/members/page-fixed.tsx - Duplicate members page
-
-### Test Data Files
-
-- [ ] participants.json - Russian test data
+- [x] Remove `app/api/members/[id]/` directory entirely
+- [x] Rename `app/api/members/[uid]/` directory to `app/api/members/[id]/`
+- [x] Update parameter references from `uid` to `id` in route files
+- [ ] Test build to verify fix
 
 ## Progress
 
-- [ ] All files deleted
-- [ ] Verify cleanup successful
-- [ ] Test Next.js application
+- [x] Analysis completed - identified conflict between [id] and [uid] routes
+- [x] Remove [id] directory
+- [x] Rename [uid] to [id]
+- [x] Update parameter references - Files already updated to use 'id'
+- [ ] Test build
