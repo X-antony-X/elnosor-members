@@ -30,8 +30,8 @@ export const translations = {
     success: "تم بنجاح",
 
     // Members
-    addMember: "إضافة عضو جديد",
-    editMember: "تعديل العضو",
+    addMember: "إضافة مخدوم جديد",
+    editMember: "تعديل المخدوم",
     fullName: "الاسم الكامل",
     phonePrimary: "رقم الهاتف الأساسي",
     phoneSecondary: "رقم الهاتف الثانوي",

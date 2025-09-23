@@ -13,7 +13,7 @@ export interface ExcelMember {
 }
 
 export interface ExcelAttendance {
-  "اسم العضو": string
+  "اسم المخدوم": string
   "تاريخ الاجتماع": string
   "وقت الحضور": string
   "وقت الانصراف"?: string
@@ -65,7 +65,7 @@ export class ExcelService {
       const meeting = meetings.find((m) => m.id === log.meetingId)
 
       return {
-        "اسم العضو": member?.fullName || "غير معروف",
+        "اسم المخدوم": member?.fullName || "غير معروف",
         "تاريخ الاجتماع": meeting?.date.toLocaleDateString("ar-EG") || "",
         "وقت الحضور": log.checkInTimestamp.toLocaleTimeString("ar-EG"),
         "وقت الانصراف": log.checkOutTimestamp?.toLocaleTimeString("ar-EG") || "",
@@ -196,7 +196,7 @@ export class ExcelService {
   static downloadMembersTemplate(): void {
     const templateData: ExcelMember[] = [
       {
-        "الاسم الكامل": "مثال: أحمد محمد",
+        "الاسم الكامل": "مثال: استفانوس كبريانوس",
         "الهاتف الأساسي": "01234567890",
         "الهاتف الثانوي": "01123456789",
         العنوان: "مثال: شارع الجمهورية، القاهرة",

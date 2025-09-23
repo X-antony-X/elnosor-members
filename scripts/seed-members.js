@@ -20,7 +20,7 @@ const sampleMembers = [
     classStage: "university",
     universityYear: 2,
     confessorName: "أبونا يوسف",
-    notes: "عضو نشط في الخدمة",
+    notes: "خادم نشط في الخدمة",
   },
   {
     fullName: "مريم سمير",

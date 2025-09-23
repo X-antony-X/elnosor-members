@@ -44,7 +44,7 @@ export function Breadcrumbs() {
         // For dynamic routes like /members/[id], show a generic label
         const parentSegment = pathSegments[index - 1]
         if (parentSegment === "members") {
-          label = "تفاصيل العضو"
+          label = "تفاصيل المخدوم"
         }
       }
 

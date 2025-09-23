@@ -192,7 +192,7 @@ export default function AboutPage() {
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900 dark:text-white">{group.name}</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {group.platform} • {group.members} عضو
+                    {group.platform} • {group.members} مخدوم
                   </p>
                 </div>
                 <Button asChild variant="outline" size="sm">

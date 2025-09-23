@@ -48,7 +48,7 @@ export default function MemberProfilePage() {
           setMember(memberData)
           setEditData(memberData)
         } else {
-          toast.error("لم يتم العثور على بيانات العضو")
+          toast.error("لم يتم العثور على بيانات المخدوم")
         }
       } catch (error) {
         console.error("Error fetching member data:", error)
@@ -116,7 +116,7 @@ export default function MemberProfilePage() {
     return (
       <div className="p-6">
         <div className="text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400">لم يتم العثور على بيانات العضو</p>
+          <p className="text-gray-500 dark:text-gray-400">لم يتم العثور على بيانات المخدوم</p>
         </div>
       </div>
     )

@@ -78,7 +78,7 @@ export default function AttendancePage() {
         setShowQRScanner(false)
         toast.success(`تم تسجيل حضور ${member.fullName}`)
       } else {
-        toast.error("لم يتم العثور على العضو")
+        toast.error("لم يتم العثور على المخدوم")
       }
     } catch (error) {
       console.error("Error parsing QR data:", error)
@@ -320,14 +320,14 @@ export default function AttendancePage() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="البحث عن عضو..."
+                placeholder="البحث عن مخدوم..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pr-10"
               />
             </div>
             <Badge variant="secondary" className="px-3 py-1">
-              {filteredMembers.length} عضو
+              {filteredMembers.length} مخدوم
             </Badge>
           </motion.div>
 
@@ -449,7 +449,7 @@ export default function AttendancePage() {
                               <CheckCircle className="w-4 h-4 text-green-600" />
                             </div>
                             <div>
-                              <p className="font-medium">{member?.fullName || "عضو غير معروف"}</p>
+                              <p className="font-medium">{member?.fullName || "مخدوم غير معروف"}</p>
                               <p className="text-sm text-gray-600">
                                 {log.checkInTimestamp.toLocaleTimeString("ar-EG")}
                               </p>

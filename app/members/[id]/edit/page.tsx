@@ -55,7 +55,7 @@ export default function MemberEditPage() {
           notes: data.notes || "",
         })
       } catch (error) {
-        toast.error("خطأ في جلب بيانات العضو")
+        toast.error("خطأ في جلب بيانات المخدوم")
       } finally {
         setLoading(false)
       }
@@ -94,10 +94,10 @@ export default function MemberEditPage() {
       if (!res.ok) {
         throw new Error("Failed to update member")
       }
-      toast.success("تم تحديث بيانات العضو بنجاح")
+      toast.success("تم تحديث بيانات المخدوم بنجاح")
       router.push(`/members/${params.id}`)
     } catch (error) {
-      toast.error("خطأ في تحديث بيانات العضو")
+      toast.error("خطأ في تحديث بيانات المخدوم")
     } finally {
       setSaving(false)
     }
@@ -113,7 +113,7 @@ export default function MemberEditPage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">تعديل بيانات العضو</h1>
+      <h1 className="text-2xl font-bold">تعديل بيانات المخدوم</h1>
 
       <div className="space-y-4">
         <div>

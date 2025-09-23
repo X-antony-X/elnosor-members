@@ -23,7 +23,7 @@ export function TestRoleRefresh() {
 
       <div className="space-y-2 mb-4">
         <p><strong>البريد الإلكتروني:</strong> {user.email}</p>
-        <p><strong>الدور الحالي:</strong> {role === "admin" ? "مدير" : "عضو"}</p>
+        <p><strong>الدور الحالي:</strong> {role === "admin" ? "خادم" : "مخدم"}</p>
         <p><strong>UID:</strong> {user.uid}</p>
       </div>
 

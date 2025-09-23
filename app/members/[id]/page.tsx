@@ -40,7 +40,7 @@ export default function MemberProfilePage() {
         setMember(data)
       } catch (error) {
         console.error("Error fetching member:", error)
-        toast.error("خطأ في جلب بيانات العضو")
+        toast.error("خطأ في جلب بيانات المخدوم")
       } finally {
         setLoading(false)
       }

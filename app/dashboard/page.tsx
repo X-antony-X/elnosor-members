@@ -121,7 +121,7 @@ export default function DashboardPage() {
   const statCards = [
     {
       title: "إجمالي الأعضاء",
-      value: analytics?.totalMembers,
+      value: analytics?.totalMembers ?? 0,
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-100 dark:bg-blue-900",
@@ -130,7 +130,7 @@ export default function DashboardPage() {
     },
     {
       title: "معدل الحضور",
-      value: `${analytics?.attendanceRate}%`,
+      value: `${analytics?.attendanceRate ?? 0}%`,
       icon: Calendar,
       color: "text-green-600",
       bgColor: "bg-green-100 dark:bg-green-900",
@@ -139,7 +139,7 @@ export default function DashboardPage() {
     },
     {
       title: "الأعضاء النشطون",
-      value: analytics?.activeMembers,
+      value: analytics?.activeMembers ?? 0,
       icon: Activity,
       color: "text-purple-600",
       bgColor: "bg-purple-100 dark:bg-purple-900",
@@ -148,7 +148,7 @@ export default function DashboardPage() {
     },
     {
       title: "معدل التفاعل",
-      value: `${analytics?.engagementRate}%`,
+      value: `${analytics?.engagementRate ?? 0}%`,
       icon: Target,
       color: "text-orange-600",
       bgColor: "bg-orange-100 dark:bg-orange-900",
@@ -281,32 +281,39 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analytics?.memberAttendanceStats.slice(0, 10).map((member, index) => (
-                  <div
-                    key={member.memberId}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${index === 0
-                          ? "bg-yellow-500"
-                          : index === 1
-                            ? "bg-gray-400"
-                            : index === 2
-                              ? "bg-orange-600"
-                              : "bg-blue-500"
-                          }`}
-                      >
-                        {index + 1}
+                {analytics?.memberAttendanceStats && analytics.memberAttendanceStats.length > 0 ? (
+                  analytics.memberAttendanceStats.slice(0, 10).map((member, index) => (
+                    <div
+                      key={member.memberId}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${index === 0
+                            ? "bg-yellow-500"
+                            : index === 1
+                              ? "bg-gray-400"
+                              : index === 2
+                                ? "bg-orange-600"
+                                : "bg-blue-500"
+                            }`}
+                        >
+                          {index + 1}
+                        </div>
+                        <span className="font-medium">{member.memberName}</span>
                       </div>
-                      <span className="font-medium">{member.memberName}</span>
+                      <div className="text-left">
+                        <div className="font-bold">{member.attendanceRate}%</div>
+                        <div className="text-sm text-gray-600">{member.attendanceCount} اجتماع</div>
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <div className="font-bold">{member.attendanceRate}%</div>
-                      <div className="text-sm text-gray-600">{member.attendanceCount} اجتماع</div>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <p>لا توجد بيانات حضور متاحة</p>
+                    <p className="text-sm mt-2">سيتم عرض إحصائيات الحضور بعد أول اجتماع</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -400,25 +407,32 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analytics?.postEngagement.slice(0, 5).map((post, index) => (
-                    <div
-                      key={post.postId}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold">
-                          {index + 1}
+                  {analytics?.postEngagement && analytics.postEngagement.length > 0 ? (
+                    analytics.postEngagement.slice(0, 5).map((post, index) => (
+                      <div
+                        key={post.postId}
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold">
+                            {index + 1}
+                          </div>
+                          <span className="font-medium">منشور #{post.postId.slice(-4)}</span>
                         </div>
-                        <span className="font-medium">منشور #{post.postId.slice(-4)}</span>
-                      </div>
-                      <div className="text-left">
-                        <div className="font-bold">{post.engagement} تفاعل</div>
-                        <div className="text-sm text-gray-600">
-                          {post.likes} إعجاب، {post.comments} تعليق
+                        <div className="text-left">
+                          <div className="font-bold">{post.engagement} تفاعل</div>
+                          <div className="text-sm text-gray-600">
+                            {post.likes} إعجاب، {post.comments} تعليق
+                          </div>
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <p>لا توجد منشورات متاحة</p>
+                      <p className="text-sm mt-2">سيتم عرض إحصائيات التفاعل بعد نشر أول منشور</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -433,18 +447,25 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analytics?.meetingStats.slice(0, 10).map((meeting, index) => (
-                  <div key={meeting.meetingId} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-medium">{meeting.title}</h3>
-                      <p className="text-sm text-gray-600">{meeting.attendanceCount} حاضر</p>
+                {analytics?.meetingStats && analytics.meetingStats.length > 0 ? (
+                  analytics.meetingStats.slice(0, 10).map((meeting, index) => (
+                    <div key={meeting.meetingId} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h3 className="font-medium">{meeting.title}</h3>
+                        <p className="text-sm text-gray-600">{meeting.attendanceCount} حاضر</p>
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold text-lg">{meeting.attendanceRate}%</div>
+                        <div className="text-sm text-gray-600">معدل الحضور</div>
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <div className="font-bold text-lg">{meeting.attendanceRate}%</div>
-                      <div className="text-sm text-gray-600">معدل الحضور</div>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <p>لا توجد اجتماعات متاحة</p>
+                    <p className="text-sm mt-2">سيتم عرض إحصائيات الأداء بعد أول اجتماع</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -464,8 +485,8 @@ export default function DashboardPage() {
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                   onClick={() => window.location.href = "/members"}
                 >
-                  <h3 className="font-medium text-gray-900 dark:text-white">إضافة عضو جديد</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إضافة عضو جديد إلى الخدمة</p>
+                  <h3 className="font-medium text-gray-900 dark:text-white">إضافة مخدوم جديد</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إضافة مخدوم جديد إلى الخدمة</p>
                 </button>
 
                 <button

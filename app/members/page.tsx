@@ -122,7 +122,7 @@ export default function MembersPage() {
       }
 
       await firestoreHelpers.addMember(memberData)
-      toast.success("تم إضافة العضو بنجاح")
+      toast.success("تم إضافة المخدوم بنجاح")
 
       // Reset form
       setNewMember({
@@ -140,7 +140,7 @@ export default function MembersPage() {
       setAddMemberDialogOpen(false)
     } catch (error) {
       console.error("Error adding member:", error)
-      toast.error("خطأ في إضافة العضو")
+      toast.error("خطأ في إضافة المخدوم")
     } finally {
       setIsAddingMember(false)
     }
@@ -162,12 +162,12 @@ export default function MembersPage() {
       }
 
       await firestoreHelpers.updateMember(selectedMember.id!, updatedData)
-      toast.success("تم تحديث بيانات العضو بنجاح")
+      toast.success("تم تحديث بيانات المخدوم بنجاح")
       setEditMemberDialogOpen(false)
       setSelectedMember(null)
     } catch (error) {
       console.error("Error updating member:", error)
-      toast.error("خطأ في تحديث بيانات العضو")
+      toast.error("خطأ في تحديث بيانات المخدوم")
     } finally {
       setIsEditingMember(false)
     }
@@ -203,7 +203,7 @@ export default function MembersPage() {
         toast.success(
           newRole === "admin"
             ? `تم ترقية ${selectedForAdmin.fullName} إلى خادم بنجاح`
-            : `تم إعادة ${selectedForAdmin.fullName} إلى عضو بنجاح`
+            : `تم إعادة ${selectedForAdmin.fullName} إلى مخدوم بنجاح`
         )
         setAdminDialogOpen(false)
         setSelectedForAdmin(null)
@@ -277,7 +277,7 @@ export default function MembersPage() {
         })) as Member[]
 
         // TODO: Save newMembers to Firestore using firestoreHelpers.addMember or a batch operation
-        toast.success(`تم استيراد ${importedMembers.length} عضو بنجاح`)
+        toast.success(`تم استيراد ${importedMembers.length} مخدوم بنجاح`)
 
         // Reset form after successful import
         setTimeout(() => {
@@ -318,7 +318,7 @@ export default function MembersPage() {
         >
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("members")}</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">إدارة أعضاء خدمة الشباب والخدام</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">إدارة مخدومين شباب النسور والخدام</p>
           </div>
 
           <div className="flex gap-2">
@@ -331,7 +331,7 @@ export default function MembersPage() {
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>استيراد أعضاء من Excel</DialogTitle>
+                  <DialogTitle>استيراد مخدومين من Excel</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   {!importFile && !importResults && (
@@ -437,7 +437,7 @@ export default function MembersPage() {
                         <Alert>
                           <CheckCircle className="h-4 w-4" />
                           <AlertDescription>
-                            تم استيراد {importResults.success} عضو بنجاح إلى قاعدة البيانات.
+                            تم استيراد {importResults.success} مخدوم بنجاح إلى قاعدة البيانات.
                           </AlertDescription>
                         </Alert>
                       )}
@@ -460,7 +460,7 @@ export default function MembersPage() {
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>إضافة عضو جديد</DialogTitle>
+                  <DialogTitle>إضافة مخدوم جديد</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -599,7 +599,7 @@ export default function MembersPage() {
             />
           </div>
           <Badge variant="secondary" className="px-3 py-1">
-            {filteredMembers.length} عضو
+            {filteredMembers.length} مخدوم
           </Badge>
         </motion.div>
 
@@ -836,7 +836,7 @@ export default function MembersPage() {
                   <p className="font-medium">{selectedForAdmin.fullName}</p>
                   <p className="text-sm text-gray-600">{selectedForAdmin.phonePrimary}</p>
                   <Badge variant={selectedForAdmin.role === "admin" ? "default" : "secondary"}>
-                    {selectedForAdmin.role === "admin" ? "خادم" : "عضو"}
+                    {selectedForAdmin.role === "admin" ? "خادم" : "مخدوم"}
                   </Badge>
                 </div>
 
@@ -859,7 +859,7 @@ export default function MembersPage() {
                       className="flex items-center gap-2"
                     >
                       <UserX className="w-4 h-4" />
-                      إعادة إلى عضو
+                      إعادة إلى مخدوم
                     </Button>
                   </div>
                 </div>
