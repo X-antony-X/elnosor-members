@@ -17,7 +17,6 @@ const navigationItems = [
   { href: "/posts", icon: FileText, label: "posts", adminOnly: true },
   { href: "/notifications", icon: Bell, label: "notifications" },
   { href: "/gallery", icon: FileText, label: "gallery" },
-  { href: "/settings", icon: Bell, label: "notifications" },
   { href: "/settings", icon: Settings, label: "settings", adminOnly: true },
   { href: "/about", icon: Info, label: "about" },
 ]

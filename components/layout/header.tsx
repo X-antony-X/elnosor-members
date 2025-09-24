@@ -32,7 +32,7 @@ export function Header({ onMenuToggle, showBackButton = false, title }: HeaderPr
   const { user, role } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
-  const [notificationCount] = useState(3) // Mock notification count
+  const [notificationCount] = useState(0) // Mock notification count
 
   const handleLogout = async () => {
     try {

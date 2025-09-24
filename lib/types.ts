@@ -69,6 +69,9 @@ export interface Meeting {
   endTime: Date;
   title: string;
   description?: string;
+  location: string;
+  type: "regular" | "special" | "training";
+  status: "scheduled" | "completed" | "cancelled";
   photos?: string[];
   createdAt: Date;
 }

@@ -304,6 +304,32 @@ export const firestoreHelpers = {
       createdAt: Timestamp.now(),
     });
   },
+
+  // Update meeting
+  updateMeeting: async (meetingId: string, updates: Partial<Meeting>) => {
+    const meetingRef = doc(db, "meetings", meetingId);
+    const updateData: any = { ...updates };
+
+    if (updates.date) {
+      updateData.date = Timestamp.fromDate(updates.date);
+    }
+    if (updates.startTime) {
+      updateData.startTime = Timestamp.fromDate(updates.startTime);
+    }
+    if (updates.endTime) {
+      updateData.endTime = Timestamp.fromDate(updates.endTime);
+    }
+
+    updateData.updatedAt = Timestamp.now();
+
+    return await updateDoc(meetingRef, updateData);
+  },
+
+  // Delete meeting
+  deleteMeeting: async (meetingId: string) => {
+    const meetingRef = doc(db, "meetings", meetingId);
+    return await deleteDoc(meetingRef);
+  },
 };
 
 export const useFirestoreHelpers = () => firestoreHelpers;

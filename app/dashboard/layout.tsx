@@ -11,7 +11,7 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       <Navigation />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-white/10 dark:bg-black/10 backdrop-blur-sm">
         <Header />
         <main className="flex-1 overflow-auto">
           <Breadcrumbs />

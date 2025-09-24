@@ -66,10 +66,12 @@ export default function RootLayout({
         <div className="background-blur" />
         <HydrationSafe>
           <Providers>
-            <Breadcrumbs />
-            {children}
-            <OfflineDetector />
-            <InstallPrompt />
+            <>
+              <Breadcrumbs />
+              {children}
+              <OfflineDetector />
+              <InstallPrompt />
+            </>
             <Toaster
               position="top-center"
               toastOptions={{

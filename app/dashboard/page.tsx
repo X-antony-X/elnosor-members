@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/app/providers"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useAnalytics } from "@/hooks/use-analytics"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import QRCode from "react-qr-code"
 import {
@@ -29,8 +30,50 @@ import {
   Pie,
 } from "recharts"
 
+// Animation variants for mobile and desktop
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+}
+
+const cardVariants = {
+  hidden: ({ isMobile, index }: { isMobile: boolean; index: number }) => ({
+    opacity: 0,
+    x: isMobile && index % 2 === 0 ? -50 : isMobile && index % 2 === 1 ? 50 : 0,
+    y: 20,
+  }),
+  visible: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+  },
+}
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+  },
+}
+
+const chartVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+  },
+}
+
 export default function DashboardPage() {
   const { user, role } = useAuth()
+  const isMobile = useIsMobile()
   const [dateRange, setDateRange] = useState<string>("30")
   const [analyticsDateRange, setAnalyticsDateRange] = useState<{ start: Date; end: Date } | undefined>()
   const [showQR, setShowQR] = useState(false)
@@ -127,8 +170,13 @@ export default function DashboardPage() {
   if (role !== "admin") {
     // Member view
     return (
-      <div className="p-6 space-y-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+      <motion.div
+        className="p-6 space-y-6"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div variants={sectionVariants} transition={{ duration: 0.5 }} className="space-y-2">
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-4">مرحباً، {user?.displayName}</h1>
             <p className="mb-6 text-gray-600 dark:text-gray-400">إحصائياتي الشخصية</p>
@@ -136,15 +184,20 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Member Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {memberStatCards.map((stat: any, index: number) => {
             const Icon = stat.icon
             return (
               <motion.div
                 key={stat.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                custom={{ isMobile, index }}
+                variants={cardVariants}
+                transition={{ duration: isMobile ? 0.7 : 0.5 }}
               >
                 <Card glassy>
                   <CardContent className="p-6">
@@ -167,7 +220,7 @@ export default function DashboardPage() {
               </motion.div>
             )
           })}
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* QR Code Section */}
@@ -234,7 +287,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
