@@ -170,12 +170,12 @@ export default function DashboardPage() {
   if (role !== "admin") {
     // Member view
     return (
-      <motion.div
-        className="p-6 space-y-6"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
+    <motion.div
+      className="p-6 space-y-6 bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
         <motion.div variants={sectionVariants} transition={{ duration: 0.5 }} className="space-y-2">
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-4">مرحباً، {user?.displayName}</h1>
