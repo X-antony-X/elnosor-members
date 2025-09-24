@@ -292,11 +292,13 @@ export default function AttendancePage() {
                   </SelectTrigger>
                   <SelectContent>
                     {meetings
-                      .filter(meeting => meeting.date >= new Date()) // Show only upcoming meetings
                       .sort((a, b) => a.date.getTime() - b.date.getTime()) // Sort by date
                       .map((meeting) => (
                         <SelectItem key={meeting.id} value={meeting.id!}>
                           {meeting.title} - {meeting.date.toLocaleDateString('ar-EG')} - {meeting.startTime.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                          {meeting.date < new Date() && (
+                            <Badge variant="secondary" className="mr-2 text-xs">ماضي</Badge>
+                          )}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -399,6 +401,27 @@ export default function AttendancePage() {
           {filteredMembers.length === 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
               <p className="text-gray-500 dark:text-gray-400">لا توجد أعضاء مطابقة لبحثك</p>
+            </motion.div>
+          )}
+
+          {meetings.length === 0 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-6 rounded-lg border border-yellow-200 dark:border-yellow-800 max-w-md mx-auto">
+                <p className="text-yellow-700 dark:text-yellow-300 mb-4">
+                  لا توجد اجتماعات متاحة حالياً
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  يمكنك إنشاء اجتماعات جديدة من خلال:
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    1. الانتقال إلى صفحة "مولد الاجتماعات" في لوحة الإدارة
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    2. أو تشغيل الأمر: <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">npx tsx scripts/generate-meetings.ts</code>
+                  </p>
+                </div>
+              </div>
             </motion.div>
           )}
         </TabsContent>
