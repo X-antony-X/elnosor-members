@@ -46,6 +46,7 @@ export default function MembersPage() {
     fullName: "",
     phonePrimary: "",
     phoneSecondary: "",
+    dateOfBirth: "",
     address: {
       addressString: "",
     },
@@ -106,19 +107,12 @@ export default function MembersPage() {
 
     setIsAddingMember(true)
     try {
-      // Check if user already has a member document
-      const existingMember = await firestoreHelpers.getCurrentUserMember()
-      if (existingMember) {
-        toast.error("لديك بالفعل ملف عضو مسجل. يرجى تحديث بياناتك بدلاً من إنشاء ملف جديد.")
-        setIsAddingMember(false)
-        return
-      }
-
       // Adjust newMember to match Member interface
       const memberData: Omit<Member, "id" | "uid" | "createdAt" | "updatedAt"> = {
         fullName: newMember.fullName,
         phonePrimary: newMember.phonePrimary,
         phoneSecondary: newMember.phoneSecondary,
+        dateOfBirth: newMember.dateOfBirth ? new Date(newMember.dateOfBirth) : undefined,
         address: {
           addressString: newMember.address.addressString,
         },
@@ -129,7 +123,7 @@ export default function MembersPage() {
         role: "member", // Default role for new members
       }
 
-      await firestoreHelpers.addMember(memberData)
+      await firestoreHelpers.addMemberByAdmin(memberData)
       toast.success("تم إضافة المخدوم بنجاح")
 
       // Reset form
@@ -137,6 +131,7 @@ export default function MembersPage() {
         fullName: "",
         phonePrimary: "",
         phoneSecondary: "",
+        dateOfBirth: "",
         address: {
           addressString: "",
         },
@@ -501,6 +496,16 @@ export default function MembersPage() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label>تاريخ الميلاد</Label>
+                    <Input
+                      type="date"
+                      value={newMember.dateOfBirth}
+                      onChange={(e) => setNewMember({ ...newMember, dateOfBirth: e.target.value })}
+                      placeholder="اختر تاريخ الميلاد"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>العنوان</Label>
                     <Textarea
                       value={newMember.address.addressString}
@@ -734,6 +739,16 @@ export default function MembersPage() {
                       placeholder="01xxxxxxxxx"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>تاريخ الميلاد</Label>
+                  <Input
+                    type="date"
+                    value={selectedMember.dateOfBirth ? selectedMember.dateOfBirth.toISOString().split('T')[0] : ""}
+                    onChange={(e) => setSelectedMember({ ...selectedMember, dateOfBirth: e.target.value ? new Date(e.target.value) : undefined })}
+                    placeholder="اختر تاريخ الميلاد"
+                  />
                 </div>
 
                 <div className="space-y-2">

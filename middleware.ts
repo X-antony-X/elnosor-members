@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const adminOnlyRoutes = ["/members", "/attendance", "/posts", "/settings"];
+  const adminOnlyRoutes = ["/members", "/attendance", "/settings"];
 
   const protectedRoutes = [
     "/dashboard",

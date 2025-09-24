@@ -4,6 +4,7 @@ export interface Member {
   fullName: string;
   phonePrimary: string;
   phoneSecondary?: string;
+  dateOfBirth?: Date;
   address: {
     lat?: number;
     lng?: number;

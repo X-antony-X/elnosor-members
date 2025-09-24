@@ -180,7 +180,7 @@ export const useAttendance = (meetingId?: string) => {
 };
 
 export const firestoreHelpers = {
-  // Add new member
+  // Add new member (for self-registration)
   addMember: async (
     memberData: Omit<Member, "id" | "createdAt" | "updatedAt">
   ) => {
@@ -199,6 +199,25 @@ export const firestoreHelpers = {
 
     // Use the authenticated user's UID as the document ID to match Firestore rules
     return await setDoc(doc(db, "members", userId), data);
+  },
+
+  // Add new member by admin (auto-generated ID)
+  addMemberByAdmin: async (
+    memberData: Omit<Member, "id" | "createdAt" | "updatedAt">
+  ) => {
+    if (!auth.currentUser) {
+      throw new Error("يجب تسجيل الدخول أولاً");
+    }
+
+    const now = Timestamp.now();
+    const data = {
+      ...memberData,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Use auto-generated ID for admin-created members
+    return await addDoc(collection(db, "members"), data);
   },
 
   refreshMembers: async () => {

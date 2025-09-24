@@ -10,7 +10,7 @@ export function TestRoleRefresh() {
     return <div>جاري التحميل...</div>
   }
 
-  if (!user) {
+  if (!user || !refreshRole) {
     return <div>يرجى تسجيل الدخول أولاً</div>
   }
 

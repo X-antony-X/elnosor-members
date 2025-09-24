@@ -24,6 +24,7 @@ const navigationItems = [
 const memberNavigationItems = [
   { href: "/dashboard", icon: Home, label: "dashboard" },
   { href: "/profile", icon: User, label: "profile" },
+  { href: "/posts", icon: FileText, label: "posts" },
   { href: "/notifications", icon: Bell, label: "notifications" },
   { href: "/gallery", icon: FileText, label: "gallery" },
   { href: "/about", icon: Info, label: "about" },

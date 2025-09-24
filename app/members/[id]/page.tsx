@@ -217,6 +217,13 @@ export default function MemberProfilePage() {
                   </div>
 
                   <div>
+                    <p className="font-medium text-gray-900 dark:text-white">تاريخ الميلاد</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {member.dateOfBirth ? new Date(member.dateOfBirth).toLocaleDateString("ar-EG") : "غير محدد"}
+                    </p>
+                  </div>
+
+                  <div>
                     <p className="font-medium text-gray-900 dark:text-white">تاريخ الانضمام</p>
                     <p className="text-gray-600 dark:text-gray-400">{new Date(member.createdAt).toLocaleDateString("ar-EG")}</p>
                   </div>

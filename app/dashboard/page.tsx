@@ -283,6 +283,13 @@ export default function DashboardPage() {
                 >
                   معرض الصور
                 </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = "/posts"}
+                >
+                  البوستات
+                </Button>
               </div>
             </CardContent>
           </Card>

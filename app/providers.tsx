@@ -10,7 +10,7 @@ import { getUserRole } from "@/lib/auth"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null
   role: "admin" | "member" | null
   token: string | null
