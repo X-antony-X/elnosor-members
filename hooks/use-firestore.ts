@@ -243,6 +243,31 @@ export const firestoreHelpers = {
     return await deleteDoc(memberRef);
   },
 
+  // Backup and delete member
+  backupAndDeleteMember: async (memberId: string) => {
+    const memberRef = doc(db, "members", memberId);
+    const memberSnap = await getDoc(memberRef);
+
+    if (memberSnap.exists()) {
+      const memberData = memberSnap.data();
+      // Add deletion timestamp
+      const backupData = {
+        ...memberData,
+        originalId: memberId,
+        deletedAt: Timestamp.now(),
+        deletedBy: auth.currentUser?.uid,
+      };
+
+      // Save to deleted_members collection
+      await addDoc(collection(db, "deleted_members"), backupData);
+
+      // Delete from members collection
+      await deleteDoc(memberRef);
+    } else {
+      throw new Error("Member not found");
+    }
+  },
+
   // Get current user's member document
   getCurrentUserMember: async () => {
     if (!auth.currentUser) {

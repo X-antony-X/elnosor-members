@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useRef } from "react"
 import { motion } from "framer-motion"
-import { Plus, Search, Download, Upload, User, FileSpreadsheet, AlertCircle, CheckCircle, Crown, UserX, Settings } from "lucide-react"
+import { Plus, Search, Download, Upload, User, FileSpreadsheet, AlertCircle, CheckCircle, Crown, UserX, Settings, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -62,6 +62,10 @@ export default function MembersPage() {
   const [adminDialogOpen, setAdminDialogOpen] = useState(false)
   const [selectedForAdmin, setSelectedForAdmin] = useState<Member | null>(null)
   const [isUpdatingRole, setIsUpdatingRole] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedForDelete, setSelectedForDelete] = useState<Member | null>(null)
+  const [isDeletingMember, setIsDeletingMember] = useState(false)
+  const [createBackup, setCreateBackup] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   if (error) {
@@ -222,6 +226,37 @@ export default function MembersPage() {
       toast.error(error instanceof Error ? error.message : "خطأ في تحديث الدور")
     } finally {
       setIsUpdatingRole(false)
+    }
+  }
+
+  const handleDeleteMember = (member: Member) => {
+    setSelectedForDelete(member)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!selectedForDelete?.id) return
+
+    setIsDeletingMember(true)
+    try {
+      if (createBackup) {
+        await firestoreHelpers.backupAndDeleteMember(selectedForDelete.id)
+        toast.success(`تم حذف ${selectedForDelete.fullName} مع حفظ نسخة احتياطية`)
+      } else {
+        await firestoreHelpers.deleteMember(selectedForDelete.id)
+        toast.success(`تم حذف ${selectedForDelete.fullName} نهائياً`)
+      }
+
+      setDeleteDialogOpen(false)
+      setSelectedForDelete(null)
+      setCreateBackup(true)
+      // Refresh members list
+      await firestoreHelpers.refreshMembers()
+    } catch (error) {
+      console.error("Error deleting member:", error)
+      toast.error(error instanceof Error ? error.message : "خطأ في حذف المخدوم")
+    } finally {
+      setIsDeletingMember(false)
     }
   }
 
@@ -692,6 +727,17 @@ export default function MembersPage() {
                     >
                       <Settings className="w-4 h-4" />
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteMember(member as Member)
+                      }}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -953,6 +999,81 @@ export default function MembersPage() {
                     }}
                   >
                     تحميل
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Member Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <Trash2 className="w-5 h-5" />
+                حذف المخدوم
+              </DialogTitle>
+            </DialogHeader>
+            {selectedForDelete && (
+              <div className="space-y-4">
+                <div className="text-center space-y-2">
+                  <p className="font-medium">{selectedForDelete.fullName}</p>
+                  <p className="text-sm text-gray-600">{selectedForDelete.phonePrimary}</p>
+                  <Badge variant={selectedForDelete.role === "admin" ? "default" : "secondary"}>
+                    {selectedForDelete.role === "admin" ? "خادم" : "مخدوم"}
+                  </Badge>
+                </div>
+
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    هل أنت متأكد من حذف هذا المخدوم؟ هذا الإجراء لا يمكن التراجع عنه.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">خيارات الحذف:</Label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="createBackup"
+                      checked={createBackup}
+                      onChange={(e) => setCreateBackup(e.target.checked)}
+                      className="rounded"
+                      aria-label="إنشاء نسخة احتياطية قبل الحذف"
+                    />
+                    <Label htmlFor="createBackup" className="text-sm">
+                      إنشاء نسخة احتياطية قبل الحذف
+                    </Label>
+                  </div>
+                </div>
+
+                {isDeletingMember && (
+                  <div className="flex items-center justify-center py-4">
+                    <LoadingSpinner size="sm" />
+                    <span className="mr-2">جاري الحذف...</span>
+                  </div>
+                )}
+
+                <div className="flex gap-2 justify-center pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setDeleteDialogOpen(false)
+                      setSelectedForDelete(null)
+                      setCreateBackup(true)
+                    }}
+                    disabled={isDeletingMember}
+                  >
+                    إلغاء
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={handleConfirmDelete}
+                    disabled={isDeletingMember}
+                  >
+                    {isDeletingMember ? "جاري الحذف..." : "حذف نهائياً"}
                   </Button>
                 </div>
               </div>
