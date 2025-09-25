@@ -73,13 +73,32 @@ async function migrateAdmins() {
         `🚀 Migrating user: ${uid} (${userData.displayName || userData.email})`
       );
 
+      // Get full profile from members collection
+      const memberRef = db.collection("members").doc(uid);
+      const memberSnap = await memberRef.get();
+
+      let profileData = userData; // fallback to users data
+      if (memberSnap.exists) {
+        profileData = memberSnap.data()!;
+        console.log(`   📄 Using profile data from 'members' collection`);
+      } else {
+        console.log(`   ⚠️  No profile data in 'members', using 'users' data`);
+      }
+
       // Copy to admins collection
       const adminRef = db.collection("admins").doc(uid);
       batch.set(adminRef, {
-        ...userData,
+        ...profileData,
+        role: "admin", // ensure role is admin
         migratedAt: admin.firestore.FieldValue.serverTimestamp(),
-        migratedFrom: "users",
+        migratedFrom: memberSnap.exists ? "members" : "users",
       });
+
+      // If data was from members, delete from members to avoid duplicates
+      if (memberSnap.exists) {
+        batch.delete(memberRef);
+        console.log(`   🗑️  Deleted from 'members' collection`);
+      }
 
       // Optionally, update users collection to mark as migrated
       const userRef = db.collection("users").doc(uid);

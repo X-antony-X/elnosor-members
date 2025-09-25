@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import {  UserCheck, Search, Download, Camera, X, FileSpreadsheet, Crown, CheckCircle } from "lucide-react"
+import { UserCheck, Search, Download, Camera, X, FileSpreadsheet, Crown, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -244,7 +244,6 @@ export default function AttendancePage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowQRScanner(true)}
-                disabled={cameraPermission === 'denied'}
               >
                 <Camera className="w-4 h-4 ml-2" />
                 مسح QR
@@ -290,15 +289,28 @@ export default function AttendancePage() {
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="اختر الاجتماع" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-60">
                     {meetings
                       .sort((a, b) => a.date.getTime() - b.date.getTime()) // Sort by date
                       .map((meeting) => (
-                        <SelectItem key={meeting.id} value={meeting.id!}>
-                          {meeting.title} - {meeting.date.toLocaleDateString('ar-EG')} - {meeting.startTime.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-                          {meeting.date < new Date() && (
-                            <Badge variant="secondary" className="mr-2 text-xs">ماضي</Badge>
-                          )}
+                        <SelectItem key={meeting.id} value={meeting.id!} className="py-3">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-primary-700 dark:text-primary-300">
+                                {meeting.startTime.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <span className="text-gray-500">•</span>
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {meeting.date.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                              </span>
+                              {meeting.date < new Date() && (
+                                <Badge variant="secondary" className="text-xs mr-2">ماضي</Badge>
+                              )}
+                            </div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {meeting.title}
+                            </div>
+                          </div>
                         </SelectItem>
                       ))}
                   </SelectContent>

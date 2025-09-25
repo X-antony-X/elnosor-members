@@ -58,6 +58,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           id: memberSnap.id,
           ...memberData,
+          dateOfBirth:
+            memberData.dateOfBirth?.toDate?.() || memberData.dateOfBirth,
           createdAt: memberData.createdAt?.toDate?.() || memberData.createdAt,
           updatedAt: memberData.updatedAt?.toDate?.() || memberData.updatedAt,
         });

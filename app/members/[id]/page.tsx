@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { ArrowRight, Phone, MapPin, User, Edit, QrCode } from "lucide-react"
+import { ArrowRight, Phone, MapPin, User, Edit, QrCode, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +14,8 @@ import toast from "react-hot-toast"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RoleGuard } from "@/components/auth/role-guard"
 import { FloatingBackButton } from "@/components/layout/floating-back-button"
-import { auth } from "@/lib/firebase"
+import { auth, db } from "@/lib/firebase"
+import { collection, getDocs, query, where } from "firebase/firestore"
 
 export default function MemberProfilePage() {
   const { role } = useAuth()
@@ -22,6 +23,13 @@ export default function MemberProfilePage() {
   const params = useParams()
   const [member, setMember] = useState<Member | null>(null)
   const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<{
+    numberOfAttendances: number
+    attendancePercentage: number
+    averageTime: number
+    totalMeetings: number
+  } | null>(null)
+  const [statsLoading, setStatsLoading] = useState(false)
 
   useEffect(() => {
     const fetchMember = async () => {
@@ -47,6 +55,58 @@ export default function MemberProfilePage() {
     }
     fetchMember()
   }, [params.id])
+
+  useEffect(() => {
+    if (!member?.id) return
+
+    const fetchStats = async () => {
+      setStatsLoading(true)
+      try {
+        // Fetch attendances for this member
+        const attendancesRef = collection(db, "attendance_logs")
+        const q = query(attendancesRef, where("memberId", "==", member.id))
+        const attendancesSnap = await getDocs(q)
+        const attendances = attendancesSnap.docs.map(doc => doc.data())
+
+        const numberOfAttendances = attendances.length
+
+        // Calculate average time
+        let totalDuration = 0
+        let countWithDuration = 0
+        attendances.forEach(att => {
+          if (att.checkOutTimestamp && att.checkInTimestamp) {
+            const checkIn = att.checkInTimestamp.toDate()
+            const checkOut = att.checkOutTimestamp.toDate()
+            const duration = (checkOut - checkIn) / (1000 * 60) // minutes
+            totalDuration += duration
+            countWithDuration++
+          }
+        })
+        const averageTime = countWithDuration > 0 ? totalDuration / countWithDuration : 0
+
+        // Fetch total meetings
+        const meetingsRef = collection(db, "meetings")
+        const meetingsSnap = await getDocs(meetingsRef)
+        const totalMeetings = meetingsSnap.docs.length
+
+        const attendancePercentage = totalMeetings > 0 ? (numberOfAttendances / totalMeetings) * 100 : 0
+
+        setStats({
+          numberOfAttendances,
+          attendancePercentage,
+          averageTime,
+          totalMeetings
+        })
+      } catch (error) {
+        console.error("Error fetching stats:", error)
+        toast.error("خطأ في جلب إحصائيات الحضور")
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [member?.id])
 
   const handleEditClick = () => {
     router.push(`/members/${params.id}/edit`)
@@ -233,6 +293,58 @@ export default function MemberProfilePage() {
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">ملاحظات</p>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">{member.notes}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Attendance Statistics */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-3"
+          >
+            <Card glassy>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  إحصائيات الحضور
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <div className="flex justify-center py-4">
+                    <LoadingSpinner size="sm" />
+                  </div>
+                ) : stats ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{stats.numberOfAttendances}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">عدد مرات الحضور</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{stats.attendancePercentage.toFixed(1)}%</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">نسبة الحضور</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {stats.averageTime > 60
+                          ? `${(stats.averageTime / 60).toFixed(1)} ساعة`
+                          : `${stats.averageTime.toFixed(0)} دقيقة`
+                        }
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">متوسط وقت الحضور</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">{stats.totalMeetings}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">إجمالي الاجتماعات</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    لا توجد بيانات إحصائية متاحة
                   </div>
                 )}
               </CardContent>

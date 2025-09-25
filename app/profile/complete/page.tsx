@@ -29,6 +29,7 @@ export default function ProfileCompletePage() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [birthDate, setBirthDate] = useState<Date>()
+  const [birthDatePopoverOpen, setBirthDatePopoverOpen] = useState(false)
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("")
   const [formData, setFormData] = useState({
     firstName: "",
@@ -276,24 +277,28 @@ export default function ProfileCompletePage() {
                 {/* Birth Date */}
                 <div>
                   <Label>تاريخ الميلاد *</Label>
-                  <Popover>
+                  <Popover open={birthDatePopoverOpen} onOpenChange={setBirthDatePopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !birthDate && "text-muted-foreground"
+                          "w-full justify-start text-left font-normal h-12 rounded-lg border-2 transition-colors",
+                          !birthDate && "text-muted-foreground hover:border-primary-300",
+                          birthDate && "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <CalendarIcon className="mr-2 h-5 w-5 text-primary-600" />
                         {birthDate ? format(birthDate, "PPP", { locale: ar }) : "اختر تاريخ الميلاد"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 shadow-lg border-2" align="start">
                       <Calendar
                         mode="single"
                         selected={birthDate}
-                        onSelect={setBirthDate}
+                        onSelect={(date) => {
+                          setBirthDate(date)
+                          setBirthDatePopoverOpen(false)
+                        }}
                         defaultMonth={new Date(2000, 0, 1)}
                         disabled={(date) =>
                           date > new Date() || date < new Date("1940-01-01")
@@ -306,7 +311,7 @@ export default function ProfileCompletePage() {
                     </PopoverContent>
                   </Popover>
                   {birthDate && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">
                       العمر: {calculateAge(birthDate)} سنة
                     </p>
                   )}

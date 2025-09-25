@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useRef } from "react"
 import { motion } from "framer-motion"
-import { Plus, Search, Download, Upload, User, FileSpreadsheet, AlertCircle, CheckCircle, Crown, UserX, Settings, Trash2 } from "lucide-react"
+import { Plus, Search, Download, Upload, User, FileSpreadsheet, AlertCircle, CheckCircle, Crown, UserX, Settings, Trash2, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
 import type { Member, Admin } from "@/lib/types"
+import type { FilterCriteria } from "@/lib/filter-types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import { RoleGuard } from "@/components/auth/role-guard"
@@ -30,6 +31,20 @@ export default function MembersPage() {
   const router = useRouter()
   const { members, loading, error } = useMembers()
   const firestoreHelpers = useFirestoreHelpers()
+  const [filters, setFilters] = useState<FilterCriteria>({
+    fullName: "",
+    phonePrimary: "",
+    phoneSecondary: "",
+    dateOfBirthMonth: "",
+    classStage: "",
+    universityYear: "",
+    confessorName: "",
+    role: "",
+    notes: "",
+  })
+  const [sortField, setSortField] = useState<string>("fullName")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importFile, setImportFile] = useState<File | null>(null)
@@ -79,7 +94,59 @@ export default function MembersPage() {
     )
   }
 
-  const filteredMembers = members.filter((member) => member.fullName.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Apply advanced filters and search
+  const filteredMembers = members
+    .filter((member) => {
+      // Basic search
+      if (searchTerm && !member.fullName.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false
+      }
+
+      // Advanced filters
+      if (filters.fullName && !member.fullName.toLowerCase().includes(filters.fullName.toLowerCase())) {
+        return false
+      }
+      if (filters.phonePrimary && !member.phonePrimary.includes(filters.phonePrimary)) {
+        return false
+      }
+      if (filters.phoneSecondary && member.phoneSecondary && !member.phoneSecondary.includes(filters.phoneSecondary)) {
+        return false
+      }
+      if (filters.dateOfBirthMonth && member.dateOfBirth) {
+        const month = (member.dateOfBirth.getMonth() + 1).toString()
+        if (month !== filters.dateOfBirthMonth) {
+          return false
+        }
+      }
+      if (filters.classStage && member.classStage !== filters.classStage) {
+        return false
+      }
+      if (filters.universityYear && member.universityYear && member.universityYear.toString() !== filters.universityYear) {
+        return false
+      }
+      if (filters.confessorName && !member.confessorName.toLowerCase().includes(filters.confessorName.toLowerCase())) {
+        return false
+      }
+      if (filters.role && member.role !== filters.role) {
+        return false
+      }
+      if (filters.notes && member.notes && !member.notes.toLowerCase().includes(filters.notes.toLowerCase())) {
+        return false
+      }
+
+      return true
+    })
+    .sort((a, b) => {
+      let aVal = a[sortField as keyof Member] ?? ''
+      let bVal = b[sortField as keyof Member] ?? ''
+      if (typeof aVal === 'number') aVal = aVal.toString()
+      if (typeof bVal === 'number') bVal = bVal.toString()
+      if (sortDirection === 'asc') {
+        return aVal.toString().localeCompare(bVal.toString())
+      } else {
+        return bVal.toString().localeCompare(aVal.toString())
+      }
+    })
 
   const handleMemberClick = (memberId: string) => {
     router.push(`/members/${memberId}`)
@@ -636,18 +703,203 @@ export default function MembersPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex items-center gap-4"
+          className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full"
         >
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder={t("search")}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10"
-            />
+          <div className="flex flex-1 gap-2 max-w-2xl w-full">
+            <div className="relative flex-1">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder={t("search")}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+
+            <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 px-3">
+                  <Filter className="w-4 h-4 mr-2" />
+                  فلاتر
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>فلاتر البحث المتقدم</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>الاسم الكامل</Label>
+                      <Input
+                        value={filters.fullName}
+                        onChange={(e) => setFilters({ ...filters, fullName: e.target.value })}
+                        placeholder="جزء من الاسم"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>رقم الهاتف الأساسي</Label>
+                      <Input
+                        value={filters.phonePrimary}
+                        onChange={(e) => setFilters({ ...filters, phonePrimary: e.target.value })}
+                        placeholder="01xxxxxxxxx"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>رقم الهاتف الثانوي</Label>
+                      <Input
+                        value={filters.phoneSecondary}
+                        onChange={(e) => setFilters({ ...filters, phoneSecondary: e.target.value })}
+                        placeholder="01xxxxxxxxx"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>شهر الميلاد</Label>
+                      <Select
+                        value={filters.dateOfBirthMonth}
+                        onValueChange={(value) => setFilters({ ...filters, dateOfBirthMonth: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر الشهر" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <SelectItem key={i + 1} value={(i + 1).toString()}>
+                              {i + 1} - {t(`month.${i + 1}`) || (i + 1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>المرحلة التعليمية</Label>
+                      <Select
+                        value={filters.classStage}
+                        onValueChange={(value) => setFilters({ ...filters, classStage: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر المرحلة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">الكل</SelectItem>
+                          <SelectItem value="university">جامعة</SelectItem>
+                          <SelectItem value="graduation">تخرج</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {filters.classStage === "university" && (
+                      <div className="space-y-2">
+                        <Label>السنة الجامعية</Label>
+                        <Select
+                          value={filters.universityYear}
+                          onValueChange={(value) => setFilters({ ...filters, universityYear: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر السنة" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">الكل</SelectItem>
+                            {Array.from({ length: 7 }, (_, i) => (
+                              <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                السنة {i + 1}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label>أب الاعتراف</Label>
+                      <Input
+                        value={filters.confessorName}
+                        onChange={(e) => setFilters({ ...filters, confessorName: e.target.value })}
+                        placeholder="جزء من الاسم"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>الدور</Label>
+                      <Select
+                        value={filters.role}
+                        onValueChange={(value) => setFilters({ ...filters, role: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر الدور" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">الكل</SelectItem>
+                          <SelectItem value="member">مخدوم</SelectItem>
+                          <SelectItem value="admin">خادم</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <Label>ملاحظات</Label>
+                      <Input
+                        value={filters.notes}
+                        onChange={(e) => setFilters({ ...filters, notes: e.target.value })}
+                        placeholder="كلمات مفتاحية في الملاحظات"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 justify-end pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setFilters({
+                          fullName: "",
+                          phonePrimary: "",
+                          phoneSecondary: "",
+                          dateOfBirthMonth: "",
+                          classStage: "",
+                          universityYear: "",
+                          confessorName: "",
+                          role: "",
+                          notes: "",
+                        });
+                      }}
+                    >
+                      مسح الكل
+                    </Button>
+                    <Button type="button" onClick={() => setFilterDialogOpen(false)}>
+                      تطبيق الفلاتر
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Select value={`${sortField}-${sortDirection}`} onValueChange={(value) => {
+              const [field, direction] = value.split('-') as [string, "asc" | "desc"];
+              setSortField(field);
+              setSortDirection(direction);
+            }}>
+              <SelectTrigger className="w-48 h-10">
+                <SelectValue placeholder="ترتيب حسب..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fullName-asc">الاسم (أ-ي)</SelectItem>
+                <SelectItem value="fullName-desc">الاسم (ي-أ)</SelectItem>
+                <SelectItem value="dateOfBirth-asc">تاريخ الميلاد (الأقدم)</SelectItem>
+                <SelectItem value="dateOfBirth-desc">تاريخ الميلاد (الأحدث)</SelectItem>
+                <SelectItem value="universityYear-asc">السنة الجامعية (صاعد)</SelectItem>
+                <SelectItem value="universityYear-desc">السنة الجامعية (هابط)</SelectItem>
+                <SelectItem value="phonePrimary-asc">رقم الهاتف (صاعد)</SelectItem>
+                <SelectItem value="phonePrimary-desc">رقم الهاتف (هابط)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Badge variant="secondary" className="px-3 py-1">
+
+          <Badge variant="secondary" className="px-3 py-1 whitespace-nowrap">
             {filteredMembers.length} مخدوم
           </Badge>
         </motion.div>

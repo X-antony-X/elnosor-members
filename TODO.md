@@ -1,21 +1,23 @@
-# Fix Next.js Build Error - Dynamic Route Conflict
+# TODO: Enable QR Scanner and Ensure Exact Timing for Attendance
 
-## Issue
+## Tasks
 
-Build error: "You cannot use different slug names for the same dynamic path ('id' !== 'uid')."
-Caused by conflicting dynamic routes in `app/api/members/` directory.
+- [x] Remove disabled prop from QR scanner button in app/attendance/page.tsx
+- [ ] Verify QR scanner requests permission and scans correctly
+- [x] Confirm manual attendance uses exact timestamp (already implemented)
+
+## Information Gathered
+
+- QR scanner button is disabled only if cameraPermission === 'denied'
+- QRScanner component handles permission requests internally
+- Attendance recording uses new Date() for exact checkInTimestamp
 
 ## Plan
 
-- [x] Remove `app/api/members/[id]/` directory entirely
-- [x] Rename `app/api/members/[uid]/` directory to `app/api/members/[id]/`
-- [x] Update parameter references from `uid` to `id` in route files
-- [ ] Test build to verify fix
+- Edit app/attendance/page.tsx to remove disabled={cameraPermission === 'denied'} from the QR scanner button
+- This allows the button to be always clickable, letting the component handle permissions
 
-## Progress
+## Followup Steps
 
-- [x] Analysis completed - identified conflict between [id] and [uid] routes
-- [x] Remove [id] directory
-- [x] Rename [uid] to [id]
-- [x] Update parameter references - Files already updated to use 'id'
-- [ ] Test build
+- Test QR scanner functionality in browser
+- Ensure attendance is recorded with exact timing for both QR and manual methods
