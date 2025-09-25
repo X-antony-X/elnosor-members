@@ -65,7 +65,8 @@ service cloud.firestore {
       allow create: if request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
       allow update: if request.auth != null &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'comments']) ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
          resource.data.authorId == request.auth.uid);
       allow delete: if request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
