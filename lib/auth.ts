@@ -94,13 +94,25 @@ export const getUserRole = async (user: User): Promise<"admin" | "member"> => {
       return tokenRole;
     }
 
-    // If no role in custom claims, check admins/members collections (consistent with API)
+    // If no role in custom claims, check collections (consistent with API)
+    // Check if user exists in admins collection
     const adminRef = doc(db, "admins", user.uid);
     const adminSnap = await getDoc(adminRef);
     if (adminSnap.exists()) {
       return "admin";
     }
 
+    // Check if user exists in users collection and has admin role
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      if (userData?.role === "admin") {
+        return "admin";
+      }
+    }
+
+    // Check if user exists in members collection
     const memberRef = doc(db, "members", user.uid);
     const memberSnap = await getDoc(memberRef);
     if (memberSnap.exists()) {
@@ -124,6 +136,16 @@ export const getUserProfile = async (user: User) => {
       const adminSnap = await getDoc(adminRef);
       if (adminSnap.exists()) {
         return { ...adminSnap.data(), id: adminSnap.id, role: "admin" };
+      }
+
+      // Try to get user profile if admin role is in users collection
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        if (userData?.role === "admin") {
+          return { ...userData, id: userSnap.id, role: "admin" };
+        }
       }
 
       // If no admin profile, try to get member profile and migrate

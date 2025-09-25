@@ -12,6 +12,16 @@ async function getUserRole(uid: string): Promise<"admin" | "member"> {
       return "admin";
     }
 
+    // Check if user exists in users collection and has admin role
+    const userRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      if (userData?.role === "admin") {
+        return "admin";
+      }
+    }
+
     // Check if user exists in members collection
     const memberRef = doc(db, "members", uid);
     const memberSnap = await getDoc(memberRef);

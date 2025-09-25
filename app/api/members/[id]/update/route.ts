@@ -5,12 +5,30 @@ import { adminAuth } from "@/lib/firebase-admin";
 
 async function getUserRole(uid: string): Promise<"admin" | "member"> {
   try {
+    // Check if user exists in admins collection
+    const adminRef = doc(db, "admins", uid);
+    const adminSnap = await getDoc(adminRef);
+    if (adminSnap.exists()) {
+      return "admin";
+    }
+
+    // Check if user exists in users collection and has admin role
     const userRef = doc(db, "users", uid);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const userData = userSnap.data();
-      return userData.role === "admin" ? "admin" : "member";
+      if (userData?.role === "admin") {
+        return "admin";
+      }
     }
+
+    // Check if user exists in members collection
+    const memberRef = doc(db, "members", uid);
+    const memberSnap = await getDoc(memberRef);
+    if (memberSnap.exists()) {
+      return "member";
+    }
+
     return "member";
   } catch (error) {
     console.error("Error getting user role:", error);

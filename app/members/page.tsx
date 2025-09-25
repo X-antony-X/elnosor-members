@@ -778,14 +778,14 @@ export default function MembersPage() {
                     <div className="space-y-2">
                       <Label>المرحلة التعليمية</Label>
                       <Select
-                        value={filters.classStage}
-                        onValueChange={(value) => setFilters({ ...filters, classStage: value })}
+                        value={filters.classStage || "all"}
+                        onValueChange={(value) => setFilters({ ...filters, classStage: value === "all" ? "" : value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="اختر المرحلة" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">الكل</SelectItem>
+                          <SelectItem value="all">الكل</SelectItem>
                           <SelectItem value="university">جامعة</SelectItem>
                           <SelectItem value="graduation">تخرج</SelectItem>
                         </SelectContent>
@@ -796,14 +796,14 @@ export default function MembersPage() {
                       <div className="space-y-2">
                         <Label>السنة الجامعية</Label>
                         <Select
-                          value={filters.universityYear}
-                          onValueChange={(value) => setFilters({ ...filters, universityYear: value })}
+                          value={filters.universityYear || "all"}
+                          onValueChange={(value) => setFilters({ ...filters, universityYear: value === "all" ? "" : value })}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="اختر السنة" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">الكل</SelectItem>
+                            <SelectItem value="all">الكل</SelectItem>
                             {Array.from({ length: 7 }, (_, i) => (
                               <SelectItem key={i + 1} value={(i + 1).toString()}>
                                 السنة {i + 1}
@@ -826,14 +826,14 @@ export default function MembersPage() {
                     <div className="space-y-2">
                       <Label>الدور</Label>
                       <Select
-                        value={filters.role}
-                        onValueChange={(value) => setFilters({ ...filters, role: value })}
+                        value={filters.role || "all"}
+                        onValueChange={(value) => setFilters({ ...filters, role: value === "all" ? "" : value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="اختر الدور" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">الكل</SelectItem>
+                          <SelectItem value="all">الكل</SelectItem>
                           <SelectItem value="member">مخدوم</SelectItem>
                           <SelectItem value="admin">خادم</SelectItem>
                         </SelectContent>

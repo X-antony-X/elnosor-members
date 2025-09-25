@@ -21,6 +21,19 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Check if user exists in users collection and has admin role
+    const userDoc = await adminDb.collection("users").doc(uid).get();
+
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      if (userData?.role === "admin") {
+        return NextResponse.json({
+          role: "admin",
+          profile: userData,
+        });
+      }
+    }
+
     // Check if user exists in members collection
     const memberDoc = await adminDb.collection("members").doc(uid).get();
 

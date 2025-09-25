@@ -48,6 +48,15 @@ export default function AttendancePage() {
       return
     }
 
+    // Check if running over HTTPS (required for camera access)
+    const isHttps = window.location.protocol === 'https:' || window.location.hostname === 'localhost'
+
+    if (!isHttps) {
+      setCameraPermission('denied')
+      console.warn('Camera access requires HTTPS. Please run the app over HTTPS for camera functionality.')
+      return
+    }
+
     // Check camera permission
     if (navigator.permissions) {
       navigator.permissions.query({ name: 'camera' as PermissionName }).then((result) => {
@@ -55,6 +64,9 @@ export default function AttendancePage() {
         result.addEventListener('change', () => {
           setCameraPermission(result.state)
         })
+      }).catch((error) => {
+        console.error('Error checking camera permission:', error)
+        setCameraPermission('denied')
       })
     }
   }, [user, router])
@@ -91,6 +103,12 @@ export default function AttendancePage() {
   const handleAttendance = async (member: Member, method: "manual" | "qr" | "scan") => {
     if (!currentMeeting) {
       toast.error("يرجى اختيار اجتماع أولاً")
+      return
+    }
+
+    const todaysLogs = getTodaysAttendance()
+    if (todaysLogs.some(log => log.memberId === member.id)) {
+      toast.error("تم تسجيل الحضور بالفعل لهذا العضو اليوم")
       return
     }
 
@@ -146,6 +164,10 @@ export default function AttendancePage() {
   const getTodaysAttendance = () => {
     const today = new Date().toDateString()
     return attendanceLogs.filter(log => log.checkInTimestamp.toDateString() === today)
+  }
+
+  const hasAttendedToday = (memberId: string) => {
+    return getTodaysAttendance().some(log => log.memberId === memberId)
   }
 
   const displayAttendanceLogs = getTodaysAttendance()
@@ -243,7 +265,14 @@ export default function AttendancePage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowQRScanner(true)}
+                onClick={() => {
+                  if (cameraPermission === 'denied') {
+                    toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.')
+                    return
+                  }
+                  setShowQRScanner(true)
+                }}
+                disabled={cameraPermission === 'denied'}
               >
                 <Camera className="w-4 h-4 ml-2" />
                 مسح QR
@@ -251,12 +280,19 @@ export default function AttendancePage() {
             </>
           )}
 
-          {role === "member" && (
-            <Button onClick={() => handleManualAttendance(members.find(m => m.uid === user?.uid) || members[0])}>
-              <UserCheck className="w-4 h-4 ml-2" />
-              تسجيل حضوري
-            </Button>
-          )}
+          {role === "member" && (() => {
+            const currentMember = members.find(m => m.uid === user?.uid) || members[0]
+            const attended = hasAttendedToday(currentMember?.id!)
+            return (
+              <Button
+                onClick={() => handleManualAttendance(currentMember)}
+                disabled={attended}
+              >
+                <UserCheck className="w-4 h-4 ml-2" />
+                {attended ? 'تم التسجيل' : 'تسجيل حضوري'}
+              </Button>
+            )
+          })()}
         </div>
       </motion.div>
 
@@ -353,7 +389,7 @@ export default function AttendancePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card glassy className="hover:shadow-lg transition-shadow">
+                <Card glassy className={`hover:shadow-lg transition-shadow ${hasAttendedToday(member.id!) ? 'opacity-50 pointer-events-none' : ''}`}>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <UserCheck className="w-5 h-5" />
@@ -378,8 +414,9 @@ export default function AttendancePage() {
                           size="sm"
                           className="flex-1 bg-transparent"
                           onClick={() => handleManualAttendance(member)}
+                          disabled={hasAttendedToday(member.id!)}
                         >
-                          تسجيل حضور
+                          {hasAttendedToday(member.id!) ? 'تم التسجيل' : 'تسجيل حضور'}
                         </Button>
                       )}
 
@@ -389,14 +426,15 @@ export default function AttendancePage() {
                           size="sm"
                           className="flex-1"
                           onClick={() => handleManualAttendance(member)}
+                          disabled={hasAttendedToday(member.id!)}
                         >
-                          تسجيل حضوري
+                          {hasAttendedToday(member.id!) ? 'تم التسجيل' : 'تسجيل حضوري'}
                         </Button>
                       )}
                     </div>
 
                     {/* Show attendance status for today */}
-                    {getMemberAttendanceLogs(member.id!).length > 0 && (
+                    {hasAttendedToday(member.id!) && (
                       <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                         <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                           <CheckCircle className="w-4 h-4" />
