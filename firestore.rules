@@ -73,7 +73,21 @@ service cloud.firestore {
     }
 
     // Daily quotes
-    match /daily_quotes/{quoteId} {
+    match /dailyQuotes/{quoteId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        request.auth.token.role == 'admin';
+    }
+
+    // Notification templates
+    match /notificationTemplates/{templateId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        request.auth.token.role == 'admin';
+    }
+
+    // Notification schedules
+    match /notificationSchedules/{scheduleId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null &&
         request.auth.token.role == 'admin';

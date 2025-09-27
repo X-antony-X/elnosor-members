@@ -9,6 +9,7 @@ import { onAuthStateChanged } from "firebase/auth"
 import { getUserRole } from "@/lib/auth"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { SplashScreen } from "@/components/ui/splash-screen"
 
 export interface AuthContextType {
   user: User | null
@@ -32,6 +33,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isHydrated, setIsHydrated] = useState(false)
+  const [showSplash, setShowSplash] = useState(false)
 
   useEffect(() => {
     // Set hydrated flag after component mounts to prevent hydration mismatch
@@ -62,6 +64,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return () => unsubscribe()
   }, [])
 
+  useEffect(() => {
+    if (!loading && user && !showSplash) {
+      setShowSplash(true)
+    }
+  }, [loading, user, showSplash])
+
   // Prevent hydration mismatch by not rendering until after client-side hydration
   if (!isHydrated) {
     return (
@@ -76,6 +84,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
+    )
+  }
+
+  if (showSplash) {
+    return (
+      <SplashScreen onComplete={() => setShowSplash(false)} />
     )
   }
 
