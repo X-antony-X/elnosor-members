@@ -115,19 +115,21 @@ export default function NotificationsPage() {
       scheduledTime: newNotification.scheduledTime ? new Date(newNotification.scheduledTime) : undefined,
       priority: newNotification.priority,
       isRecurring: newNotification.isRecurring,
-      recurringPattern: newNotification.isRecurring
-        ? {
-          type: newNotification.recurringPattern.type,
-          interval: newNotification.recurringPattern.interval,
-          daysOfWeek: newNotification.recurringPattern.daysOfWeek,
-          endDate: newNotification.recurringPattern.endDate
-            ? new Date(newNotification.recurringPattern.endDate)
-            : undefined,
-        }
-        : undefined,
       createdBy: user?.uid || "admin",
       createdAt: new Date(),
       readBy: [],
+    }
+
+    if (newNotification.isRecurring) {
+      const recurringPattern: RecurringPattern = {
+        type: newNotification.recurringPattern.type,
+        interval: newNotification.recurringPattern.interval,
+        daysOfWeek: newNotification.recurringPattern.daysOfWeek,
+      }
+      if (newNotification.recurringPattern.endDate) {
+        recurringPattern.endDate = new Date(newNotification.recurringPattern.endDate)
+      }
+      notification.recurringPattern = recurringPattern
     }
 
     await createNotification(notification)
