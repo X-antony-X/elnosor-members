@@ -14,6 +14,7 @@ import {
   BookTemplate as Template,
   BarChart3,
   Copy,
+  Bell,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,14 +40,31 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 
+import {
+  useNotifications,
+  useNotificationTemplates,
+  useNotificationSchedules,
+  useDailyQuotes,
+  useNotificationHelpers,
+} from "@/hooks/use-notifications"
+import { useFCM } from "@/hooks/use-fcm"
+
 export default function NotificationsPage() {
   const { role, user } = useAuth()
   const router = useRouter()
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [templates, setTemplates] = useState<NotificationTemplate[]>([])
-  const [schedules, setSchedules] = useState<NotificationSchedule[]>([])
-  const [dailyQuotes, setDailyQuotes] = useState<DailyQuote[]>([])
-  const [loading, setLoading] = useState(true)
+
+  // Real-time data hooks
+  const { notifications, loading: notificationsLoading, error: notificationsError } = useNotifications()
+  const { templates, loading: templatesLoading, error: templatesError } = useNotificationTemplates()
+  const { schedules, loading: schedulesLoading, error: schedulesError } = useNotificationSchedules()
+  const { quotes: dailyQuotes, loading: quotesLoading, error: quotesError } = useDailyQuotes()
+  const { createNotification, updateNotification, deleteNotification, createTemplate, updateTemplate, deleteTemplate, createSchedule, updateSchedule, deleteSchedule } = useNotificationHelpers()
+
+  // FCM hook for push notifications
+  const { permission, requestPermission, disableNotifications, isSupported } = useFCM()
+
+  const loading = notificationsLoading || templatesLoading || schedulesLoading || quotesLoading
+
   const [dailyVersesEnabled, setDailyVersesEnabled] = useState(true)
 
   // Form states
@@ -86,116 +104,6 @@ export default function NotificationsPage() {
     }
   }, [role])
 
-  useEffect(() => {
-    // Simulate loading data
-    setTimeout(() => {
-      setNotifications([
-        {
-          id: "1",
-          title: "اجتماع الشباب غداً",
-          message: "لا تنسوا اجتماع الشباب غداً الجمعة الساعة 7 مساءً",
-          targetAudience: "all",
-          scheduledTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          sentTime: undefined,
-          createdBy: user?.uid || "admin",
-          createdAt: new Date(),
-          readBy: ["user1", "user2"],
-          priority: "high",
-          isRecurring: true,
-          recurringPattern: {
-            type: "weekly",
-            interval: 1,
-            daysOfWeek: [5], // Friday
-          },
-        },
-        {
-          id: "2",
-          title: "آية اليوم",
-          message: "في البدء كان الكلمة، والكلمة كان عند الله، وكان الكلمة الله - يوحنا 1:1",
-          targetAudience: "all",
-          sentTime: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          createdBy: "system",
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          readBy: ["user1", "user2", "user3"],
-          priority: "normal",
-          templateId: "daily-verse",
-        },
-      ])
-
-      setTemplates([
-        {
-          id: "1",
-          name: "تذكير اجتماع الشباب",
-          title: "اجتماع الشباب {date}",
-          message: "لا تنسوا اجتماع الشباب {date} الساعة {time}",
-          category: "meeting",
-          targetAudience: "all",
-          variables: ["date", "time"],
-          createdBy: user?.uid || "admin",
-          createdAt: new Date(),
-          isActive: true,
-        },
-        {
-          id: "2",
-          name: "آية يومية",
-          title: "آية اليوم",
-          message: "{verse} - {reference}",
-          category: "verse",
-          targetAudience: "all",
-          variables: ["verse", "reference"],
-          createdBy: "system",
-          createdAt: new Date(),
-          isActive: true,
-        },
-      ])
-
-      setSchedules([
-        {
-          id: "1",
-          templateId: "1",
-          scheduledTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          targetAudience: "all",
-          variables: {
-            date: "غداً الجمعة",
-            time: "7 مساءً",
-          },
-          isActive: true,
-          createdBy: user?.uid || "admin",
-          createdAt: new Date(),
-          nextSend: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          recurringPattern: {
-            type: "weekly",
-            interval: 1,
-            daysOfWeek: [4], // Thursday (day before meeting)
-          },
-        },
-      ])
-
-      setDailyQuotes([
-        {
-          id: "1",
-          type: "youth",
-          dayOfYear: new Date().getDate(),
-          quote: "في البدء كان الكلمة، والكلمة كان عند الله، وكان الكلمة الله",
-          author: "يوحنا الإنجيلي",
-          reference: "يوحنا 1:1",
-          createdAt: new Date(),
-        },
-        {
-          id: "2",
-          type: "fathers",
-          dayOfYear: new Date().getDate(),
-          quote: "الصلاة هي تنفس الروح",
-          author: "القديس يوحنا ذهبي الفم",
-          reference: "",
-          createdAt: new Date(),
-        },
-      ])
-
-      setLoading(false)
-    }, 1000)
-  }, [user])
-
   const handleSendNotification = async () => {
     if (!newNotification.title.trim() || !newNotification.message.trim()) return
 
@@ -222,7 +130,7 @@ export default function NotificationsPage() {
       readBy: [],
     }
 
-    setNotifications([notification, ...notifications])
+    await createNotification(notification)
     setNewNotification({
       title: "",
       message: "",
@@ -257,7 +165,7 @@ export default function NotificationsPage() {
       isActive: true,
     }
 
-    setTemplates([template, ...templates])
+    await createTemplate(template)
     setNewTemplate({
       name: "",
       title: "",
@@ -291,7 +199,9 @@ export default function NotificationsPage() {
       nextSend: new Date(date),
     }))
 
-    setSchedules([...schedules, ...newSchedules])
+    for (const schedule of newSchedules) {
+      await createSchedule(schedule)
+    }
     setBulkSchedule({
       templateId: "",
       dates: [],
@@ -301,17 +211,17 @@ export default function NotificationsPage() {
   }
 
   const handleDeleteNotification = async (notificationId: string) => {
-    setNotifications(notifications.filter((n) => n.id !== notificationId))
+    await deleteNotification(notificationId)
     toast.success("تم حذف الإشعار")
   }
 
   const handleDeleteTemplate = async (templateId: string) => {
-    setTemplates(templates.filter((t) => t.id !== templateId))
+    await deleteTemplate(templateId)
     toast.success("تم حذف القالب")
   }
 
   const handleDeleteSchedule = async (scheduleId: string) => {
-    setSchedules(schedules.filter((s) => s.id !== scheduleId))
+    await deleteSchedule(scheduleId)
     toast.success("تم حذف الجدولة")
   }
 
@@ -885,10 +795,8 @@ export default function NotificationsPage() {
                             <div className="flex gap-2">
                               <Switch
                                 checked={schedule.isActive}
-                                onCheckedChange={(checked) => {
-                                  setSchedules(
-                                    schedules.map((s) => (s.id === schedule.id ? { ...s, isActive: checked } : s)),
-                                  )
+                                onCheckedChange={async (checked) => {
+                                  await updateSchedule(schedule.id!, { isActive: checked })
                                 }}
                               />
                               <Button variant="ghost" size="sm" onClick={() => handleDeleteSchedule(schedule.id!)}>
