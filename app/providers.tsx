@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useRef, useState } from "react"
 import type { User } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged } from "firebase/auth"
@@ -34,6 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isHydrated, setIsHydrated] = useState(false)
   const [showSplash, setShowSplash] = useState(false)
+  const hasShownSplash = useRef(false)
 
   useEffect(() => {
     // Set hydrated flag after component mounts to prevent hydration mismatch
@@ -65,10 +66,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!loading && user && !showSplash) {
+    if (isHydrated && !loading && user && !hasShownSplash.current && !showSplash) {
       setShowSplash(true)
     }
-  }, [loading, user, showSplash])
+  }, [loading, user, isHydrated, showSplash])
 
   // Prevent hydration mismatch by not rendering until after client-side hydration
   if (!isHydrated) {
@@ -87,15 +88,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (showSplash) {
-    return (
-      <SplashScreen onComplete={() => setShowSplash(false)} />
-    )
-  }
-
   return (
     <AuthContext.Provider value={{ user, role, token, loading }}>
-      <ThemeProvider>{children}</ThemeProvider>
+      <ThemeProvider>
+        {showSplash && (
+          <SplashScreen
+            onComplete={() => {
+              setShowSplash(false)
+              hasShownSplash.current = true
+            }}
+          />
+        )}
+        {children}
+      </ThemeProvider>
     </AuthContext.Provider>
   )
 }

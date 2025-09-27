@@ -1,20 +1,32 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface SplashScreenProps {
   onComplete: () => void
+  duration?: number
 }
 
-export function SplashScreen({ onComplete }: SplashScreenProps) {
+export function SplashScreen({ onComplete, duration = 3000 }: SplashScreenProps) {
   const [show, setShow] = useState(true)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+
+    timerRef.current = setTimeout(() => {
       setShow(false)
       onComplete()
-    }, 3000) 
+    }, duration)
 
-    return () => clearTimeout(timer)
-  }, [onComplete])
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [onComplete, duration])
 
   if (!show) return null
 
