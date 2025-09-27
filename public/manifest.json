@@ -9,43 +9,34 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icons/android/android-launchericon-512-512.png",
+      "src": "icons/512.png",
       "sizes": "512x512"
     },
     {
-      "src": "icons/android/android-launchericon-192-192.png",
-      "sizes": "192x192"
+      "src": "icons/196.png",
+      "sizes": "196x196"
     },
     {
-      "src": "icons/android/android-launchericon-144-144.png",
+      "src": "icons/144.png",
       "sizes": "144x144"
     },
     {
-      "src": "icons/android/android-launchericon-96-96.png",
-      "sizes": "96x96"
+      "src": "icons/92.png",
+      "sizes": "92x92"
     },
     {
-      "src": "icons/android/android-launchericon-72-72.png",
+      "src": "icons/72.png",
       "sizes": "72x72"
     },
     {
-      "src": "icons/android/android-launchericon-48-48.png",
+      "src": "icons/48.png",
       "sizes": "48x48"
-    },
-    {
-      "src": "icons/ios/144.png",
-      "sizes": "144x144"
-    },
-    {
-      "src": "icons/ios/192.png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "icons/ios/512.png",
-      "sizes": "512x512"
     }
   ],
-  "categories": ["productivity", "social"],
+  "categories": [
+    "productivity",
+    "social"
+  ],
   "lang": "ar",
   "dir": "rtl"
 }
