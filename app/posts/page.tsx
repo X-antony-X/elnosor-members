@@ -11,14 +11,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
-import type { Post, Comment } from "@/lib/types"
+import type { Post, Comment, Notification } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { usePosts, firestoreHelpers } from "@/hooks/use-firestore"
+import { useNotificationHelpers } from "@/hooks/use-notifications"
 import { toast } from "@/components/ui/use-toast"
 
 export default function PostsPage() {
   const { user, role } = useAuth()
   const { posts, loading, error } = usePosts()
+  const notificationHelpers = useNotificationHelpers()
   const [newPostContent, setNewPostContent] = useState("")
   const [newPostImage, setNewPostImage] = useState<File | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
@@ -43,11 +45,33 @@ export default function PostsPage() {
         postData.imageUrl = URL.createObjectURL(newPostImage)
       }
 
-      await firestoreHelpers.addPost(postData)
+      const postRef = await firestoreHelpers.addPost(postData)
+      const postId = postRef.id
+
+      // Create automatic notification for all users
+      const notificationData: Omit<Notification, "id" | "createdAt"> = {
+        title: `منشور جديد من ${postData.authorName}`,
+        message: postData.content,
+        imageUrl: postData.imageUrl || undefined,
+        targetAudience: "all",
+        targetIds: [],
+        scheduledTime: undefined, // Immediate
+        sentTime: undefined,
+        createdBy: user.uid,
+        readBy: [],
+        isRecurring: false,
+        recurringPattern: undefined,
+        templateId: undefined,
+        priority: "normal",
+        expiresAt: undefined,
+        data: { type: "post", postId }, // Optional: link to post
+      }
+
+      await notificationHelpers.createNotification(notificationData)
 
       setNewPostContent("")
       setNewPostImage(null)
-      toast({ description: "تم نشر المنشور بنجاح", variant: "default" })
+      toast({ description: "تم نشر المنشور وإرسال الإشعار بنجاح", variant: "default" })
     } catch (error) {
       console.error("Error creating post:", error)
       toast({ description: "خطأ في نشر المنشور", variant: "destructive" })
