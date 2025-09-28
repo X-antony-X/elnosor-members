@@ -63,34 +63,21 @@ export const recordAttendance = functions.https.onCall(async (data, context) => 
   }
 })
 
-// Helper function to send notification to users
 async function sendNotificationToUsers(notification: any, notificationId: string) {
-  const message = {
-    notification: {
-      title: notification.title,
-      body: notification.message,
-      image: notification.imageUrl,
-    },
-    data: {
-      notificationId,
-      type: notification.scheduledTime ? "scheduled" : "immediate",
-      priority: notification.priority || "normal",
-    },
+  const onesignalAppId = process.env.ONESIGNAL_APP_ID;
+  const restApiKey = process.env.ONESIGNAL_REST_API_KEY;
+
+  if (!onesignalAppId || !restApiKey) {
+    console.error('OneSignal configuration missing');
+    return;
   }
 
-  let tokens: string[] = []
+  let includeExternalUserIds: string[] = [];
 
   if (notification.targetAudience === "all") {
-    // Get all user tokens
-    const usersQuery = await admin.firestore()
-      .collection("users")
-      .where("notificationsEnabled", "==", true)
-      .get()
-    tokens = usersQuery.docs
-      .map((userDoc) => userDoc.data()?.fcmToken)
-      .filter((token): token is string => token !== undefined && token !== null)
+    // Send to all
   } else if (notification.targetAudience === "group" && notification.targetIds) {
-    // Get users in specific groups
+    // Get user IDs for the group
     for (const groupId of notification.targetIds) {
       const groupUsersQuery = await admin.firestore()
         .collection("users")
@@ -98,44 +85,69 @@ async function sendNotificationToUsers(notification: any, notificationId: string
         .where("notificationsEnabled", "==", true)
         .get()
 
-      const groupTokens = groupUsersQuery.docs
-        .map((userDoc) => userDoc.data()?.fcmToken)
-        .filter((token): token is string => token !== undefined && token !== null)
-
-      tokens.push(...groupTokens)
+      const groupUserIds = groupUsersQuery.docs.map(doc => doc.id);
+      includeExternalUserIds.push(...groupUserIds);
     }
   } else if (notification.targetAudience === "individuals" && notification.targetIds) {
-    // Get specific user tokens
-    for (const userId of notification.targetIds) {
-      const userDoc = await admin.firestore().collection("users").doc(userId).get()
-      const userData = userDoc.data()
-      if (userData?.fcmToken && userData?.notificationsEnabled) {
-        tokens.push(userData.fcmToken)
-      }
-    }
+    includeExternalUserIds = notification.targetIds;
   }
 
   // Remove duplicates
-  tokens = [...new Set(tokens)]
+  includeExternalUserIds = [...new Set(includeExternalUserIds)];
 
-  if (tokens.length > 0) {
-    try {
-      const result = await admin.messaging().sendMulticast({
-        ...message,
-        tokens,
-      })
+  const payload: any = {
+    app_id: onesignalAppId,
+    headings: { "en": notification.title, "ar": notification.title },
+    contents: { "en": notification.message, "ar": notification.message },
+    data: {
+      notificationId,
+      type: notification.scheduledTime ? "scheduled" : "immediate",
+      priority: notification.priority || "normal",
+    },
+  };
 
-      console.log(`Sent notification to ${result.successCount} devices`)
+  if (notification.imageUrl) {
+    payload.big_picture = notification.imageUrl;
+  }
 
-      // Mark as sent
-      await admin.firestore().collection("notifications").doc(notificationId).update({
-        sentTime: admin.firestore.FieldValue.serverTimestamp(),
-        sentCount: result.successCount,
-        failureCount: result.failureCount,
-      })
-    } catch (error) {
-      console.error("Failed to send notification:", error)
+  if (includeExternalUserIds.length > 0) {
+    payload.include_external_user_ids = includeExternalUserIds;
+  } else {
+    payload.included_segments = ["All"];
+  }
+
+  try {
+    const response = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${restApiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`OneSignal API error: ${response.status} ${errorData.message}`);
     }
+
+    const result = await response.json();
+    console.log(`Sent notification to OneSignal, ID: ${result.id}`);
+
+    // Mark as sent
+    await admin.firestore().collection("notifications").doc(notificationId).update({
+      sentTime: admin.firestore.FieldValue.serverTimestamp(),
+      sentCount: result.recipients || 0,
+      onesignalNotificationId: result.id,
+    });
+  } catch (error) {
+    console.error("Failed to send OneSignal notification:", error);
+    // Still mark as attempted
+    await admin.firestore().collection("notifications").doc(notificationId).update({
+      sentTime: admin.firestore.FieldValue.serverTimestamp(),
+      sentCount: 0,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 }
 

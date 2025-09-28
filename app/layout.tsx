@@ -7,6 +7,7 @@ import { OfflineDetector } from "@/components/error/offline-detector"
 import { InstallPrompt } from "@/components/pwa/install-prompt"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { HydrationSafe } from "@/components/hydration-safe"
+import { OneSignalProvider } from "@/components/onesignal-provider"
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.VERSEL_URL_FULL || 'http://localhost:3000'),
@@ -62,10 +63,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" className="rtl">
+      <head>
+        <script
+          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+          defer
+        ></script>
+      </head>
       <body className="font-arabic" suppressHydrationWarning={true}>
         <div className="background-blur" />
         <HydrationSafe>
           <Providers>
+            <OneSignalProvider />
             <>
               <Breadcrumbs />
               {children}
