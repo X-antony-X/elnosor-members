@@ -7,9 +7,10 @@ import jsQR from "jsqr"
 interface QRScannerProps {
   onScan: (data: string) => void
   onError?: (error: string) => void
+  start?: boolean
 }
 
-export function QRScanner({ onScan, onError }: QRScannerProps) {
+export function QRScanner({ onScan, onError, start }: QRScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isScanning, setIsScanning] = useState(false)
@@ -17,11 +18,18 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    startCamera()
-    return () => {
+    if (start) {
+      startCamera()
+    } else if (stream) {
       stopCamera()
     }
-  }, [])
+
+    return () => {
+      if (stream) {
+        stopCamera()
+      }
+    }
+  }, [start])
 
   const startCamera = async () => {
     try {

@@ -31,7 +31,9 @@ export default function AttendancePage() {
   const [currentMeeting, setCurrentMeeting] = useState<Meeting | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
-  const [showQRScanner, setShowQRScanner] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
+  const [startScannerState, setStartScannerState] = useState(false)
+  const startScanner = () => setStartScannerState(true)
   const [scannerLoading, setScannerLoading] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [exportDateRange, setExportDateRange] = useState({
@@ -87,7 +89,8 @@ export default function AttendancePage() {
 
       if (member) {
         await handleAttendance(member, "qr")
-        setShowQRScanner(false)
+        setShowScanner(false)
+        setStartScannerState(false)
         toast.success(`تم تسجيل حضور ${member.fullName}`)
       } else {
         toast.error("لم يتم العثور على المخدوم")
@@ -262,21 +265,9 @@ export default function AttendancePage() {
                 </DialogContent>
               </Dialog>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (cameraPermission === 'denied') {
-                    toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.')
-                    return
-                  }
-                  setShowQRScanner(true)
-                }}
-                disabled={cameraPermission === 'denied'}
-              >
-                <Camera className="w-4 h-4 ml-2" />
-                مسح QR
-              </Button>
+              <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={() => { if (cameraPermission === 'denied') { toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.'); return; } setShowScanner(true); setTimeout(startScanner, 100); }} disabled={cameraPermission === 'denied'}>
+                <span role="img" aria-label="scan">📷</span> مسح QR
+              </button>
             </>
           )}
 
@@ -284,13 +275,18 @@ export default function AttendancePage() {
             const currentMember = members.find(m => m.uid === user?.uid) || members[0]
             const attended = hasAttendedToday(currentMember?.id!)
             return (
-              <Button
-                onClick={() => handleManualAttendance(currentMember)}
-                disabled={attended}
-              >
-                <UserCheck className="w-4 h-4 ml-2" />
-                {attended ? 'تم التسجيل' : 'تسجيل حضوري'}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleManualAttendance(currentMember)}
+                  disabled={attended}
+                >
+                  <UserCheck className="w-4 h-4 ml-2" />
+                  {attended ? 'تم التسجيل' : 'تسجيل حضوري'}
+                </Button>
+                <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={() => { if (cameraPermission === 'denied') { toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.'); return; } setShowScanner(true); setTimeout(startScanner, 100); }} disabled={attended || cameraPermission === 'denied'}>
+                  <span role="img" aria-label="scan">📷</span> QR
+                </button>
+              </div>
             )
           })()}
         </div>
@@ -558,7 +554,7 @@ export default function AttendancePage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={showQRScanner} onOpenChange={setShowQRScanner}>
+      <Dialog open={showScanner} onOpenChange={(open) => { setShowScanner(open); if (!open) setStartScannerState(false); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -579,11 +575,12 @@ export default function AttendancePage() {
                   console.error("QR Scanner error:", error)
                   toast.error(error)
                 }}
+                start={startScannerState}
               />
             )}
             <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">وجه الكاميرا نحو كود QR الخاص بالعضو</p>
-              <Button variant="outline" onClick={() => setShowQRScanner(false)} className="mt-2">
+              <Button variant="outline" onClick={() => setShowScanner(false)} className="mt-2">
                 <X className="w-4 h-4 ml-2" />
                 إغلاق
               </Button>
