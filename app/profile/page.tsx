@@ -13,7 +13,7 @@ import { useAuth } from "@/app/providers"
 import { t } from "@/lib/translations"
 import type { Member } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { generateMemberQR } from "@/lib/utils"
+import { generateMemberQR, generateAttendanceCode } from "@/lib/utils"
 import QRCode from "react-qr-code"
 import toast from "react-hot-toast"
 import { firestoreHelpers } from "@/hooks/use-firestore"
@@ -26,6 +26,11 @@ export default function MemberProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editData, setEditData] = useState<Partial<Member>>({})
+
+  const generateUniqueAttendanceCode = async (): Promise<string> => {
+    // Use the new sequential code generation from utils
+    return await generateAttendanceCode()
+  }
 
   useEffect(() => {
     if (!user) return
@@ -45,6 +50,19 @@ export default function MemberProfilePage() {
             createdAt: memberDoc.data().createdAt?.toDate() || new Date(),
             updatedAt: memberDoc.data().updatedAt?.toDate() || new Date(),
           } as Member
+
+          // Generate attendance code if missing
+          if (!memberData.attendanceCode) {
+            try {
+              const code = await generateUniqueAttendanceCode()
+              await firestoreHelpers.updateMember(memberDoc.id, { attendanceCode: code })
+              memberData.attendanceCode = code
+            } catch (error) {
+              console.error("Error generating attendance code:", error)
+              toast.error("خطأ في إنشاء كود الحضور")
+            }
+          }
+
           setMember(memberData)
           setEditData(memberData)
         } else {
@@ -207,14 +225,21 @@ export default function MemberProfilePage() {
                   <p className="text-sm text-gray-600 dark:text-gray-400">اعرض هذا الرمز للخادم لتسجيل حضورك</p>
                 </CardHeader>
                 <CardContent className="text-center">
-                  <div className="bg-white p-6 rounded-lg inline-block shadow-sm">
+                  <div className="mb-6">
+                    <div className="text-6xl font-bold text-primary-600 dark:text-primary-400 mb-2 tracking-wider">
+                      {member.attendanceCode}
+                    </div>
+                    <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">كود الحضور الخاص بك</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">اعرض هذا الكود أو الرمز للخادم</p>
+                  </div>
+                  <div className="bg-white p-6 rounded-lg inline-block shadow-sm border-2 border-gray-200">
                     <QRCode
-                      value={generateMemberQR(member.id!)}
-                      size={180}
+                      value={generateMemberQR(member.attendanceCode!)}
+                      size={200}
                       style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-3">صالح لجلسة الحضور الحالية</p>
+                  <p className="text-xs text-gray-500 mt-4">يحتوي الرمز على الكود الرقمي فقط</p>
                 </CardContent>
               </Card>
             </motion.div>

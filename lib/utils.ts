@@ -1,8 +1,8 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export function formatDate(date: Date): string {
@@ -10,54 +10,92 @@ export function formatDate(date: Date): string {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(date)
+  }).format(date);
 }
 
 export function formatTime(date: Date): string {
   return new Intl.DateTimeFormat("ar-EG", {
     hour: "2-digit",
     minute: "2-digit",
-  }).format(date)
+  }).format(date);
 }
 
 export function calculateLateness(checkIn: Date, meetingStart: Date): number {
-  const diff = checkIn.getTime() - meetingStart.getTime()
-  return Math.max(0, Math.floor(diff / (1000 * 60))) // in minutes
+  const diff = checkIn.getTime() - meetingStart.getTime();
+  return Math.max(0, Math.floor(diff / (1000 * 60))); // in minutes
 }
 
 export function formatLateness(minutes: number): string {
-  if (minutes === 0) return "في الوقت"
+  if (minutes === 0) return "في الوقت";
 
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
 
   if (hours > 0) {
-    return `متأخر ${hours} ساعة${remainingMinutes > 0 ? ` و ${remainingMinutes} دقيقة` : ""}`
+    return `متأخر ${hours} ساعة${
+      remainingMinutes > 0 ? ` و ${remainingMinutes} دقيقة` : ""
+    }`;
   }
 
-  return `متأخر ${remainingMinutes} دقيقة`
+  return `متأخر ${remainingMinutes} دقيقة`;
 }
 
-export function generateMemberQR(memberId: string): string {
-  // In production, this should include a secure signature
-  const timestamp = Date.now()
-  const signature = btoa(`${memberId}:${timestamp}`)
-  return `church-youth://member/${memberId}?sig=${signature}`
-}
-
-export function validateQRSignature(qrData: string): { valid: boolean; memberId?: string } {
+export async function generateAttendanceCode(): Promise<string> {
+  // Generate sequential 4-digit codes starting from 1000
   try {
-    const url = new URL(qrData)
-    const memberId = url.pathname.split("/").pop()
-    const signature = url.searchParams.get("sig")
+    const { db } = await import("@/lib/firebase");
+    const { collection, getDocs, query, orderBy, limit } = await import(
+      "firebase/firestore"
+    );
 
-    if (!memberId || !signature) {
-      return { valid: false }
+    // Query for the highest existing attendance code
+    const q = query(
+      collection(db, "members"),
+      orderBy("attendanceCode", "desc"),
+      limit(1)
+    );
+    const querySnapshot = await getDocs(q);
+
+    let nextCode = 1000; // Start from 1000
+
+    if (!querySnapshot.empty) {
+      const highestCode = querySnapshot.docs[0].data().attendanceCode;
+      if (
+        highestCode &&
+        typeof highestCode === "string" &&
+        /^\d{4}$/.test(highestCode)
+      ) {
+        const numericCode = parseInt(highestCode, 10);
+        nextCode = numericCode + 1;
+      }
     }
 
-    // In production, verify the signature properly
-    return { valid: true, memberId }
-  } catch {
-    return { valid: false }
+    // Ensure we don't exceed 9999
+    if (nextCode > 9999) {
+      throw new Error("Maximum attendance codes reached");
+    }
+
+    return nextCode.toString().padStart(4, "0");
+  } catch (error) {
+    console.error("Error generating attendance code:", error);
+    // Fallback to random generation if Firestore fails
+    return Math.floor(1000 + Math.random() * 9000).toString();
   }
+}
+
+export function generateMemberQR(attendanceCode: string): string {
+  // Simple QR with just the attendance code
+  return attendanceCode;
+}
+
+export function validateQRSignature(qrData: string): {
+  valid: boolean;
+  attendanceCode?: string;
+} {
+  // For now, just check if it's a 4-digit number
+  const codeRegex = /^\d{4}$/;
+  if (codeRegex.test(qrData)) {
+    return { valid: true, attendanceCode: qrData };
+  }
+  return { valid: false };
 }

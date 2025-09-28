@@ -17,10 +17,12 @@ import type { Member, AttendanceLog, Meeting } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import { QRScanner } from "@/components/qr-scanner"
+import { NumberScanner } from "@/components/number-scanner"
 import { ExcelService } from "@/lib/excel-utils"
 import toast from "react-hot-toast"
 import { useMembers, useAttendance, firestoreHelpers } from "@/hooks/use-firestore"
 import { useOfflineStorage } from "@/hooks/use-offline-storage"
+import { validateQRSignature } from "@/lib/utils"
 
 export default function AttendancePage() {
   const { user, role } = useAuth()
@@ -43,6 +45,11 @@ export default function AttendancePage() {
   })
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown')
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [manualCode, setManualCode] = useState("")
+  const [showManualDialog, setShowManualDialog] = useState(false)
+  const [showNumberScanner, setShowNumberScanner] = useState(false)
+  const [startNumberScanner, setStartNumberScanner] = useState(false)
+  const [numberScannerLoading, setNumberScannerLoading] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -84,8 +91,13 @@ export default function AttendancePage() {
   const handleQRScan = async (qrData: string) => {
     setScannerLoading(true)
     try {
-      const memberData = JSON.parse(qrData)
-      const member = members.find(m => m.id === memberData.id)
+      const validation = validateQRSignature(qrData)
+      if (!validation.valid || !validation.attendanceCode) {
+        toast.error("كود QR غير صالح")
+        return
+      }
+
+      const member = members.find(m => m.attendanceCode === validation.attendanceCode)
 
       if (member) {
         await handleAttendance(member, "qr")
@@ -93,11 +105,11 @@ export default function AttendancePage() {
         setStartScannerState(false)
         toast.success(`تم تسجيل حضور ${member.fullName}`)
       } else {
-        toast.error("لم يتم العثور على المخدوم")
+        toast.error("لم يتم العثور على المخدوم بهذا الكود")
       }
     } catch (error) {
-      console.error("Error parsing QR data:", error)
-      toast.error("خطأ في قراءة كود QR")
+      console.error("Error processing QR data:", error)
+      toast.error("خطأ في معالجة كود QR")
     } finally {
       setScannerLoading(false)
     }
@@ -140,6 +152,62 @@ export default function AttendancePage() {
 
   const handleManualAttendance = (member: Member) => {
     handleAttendance(member, "manual")
+  }
+
+  const handleManualCodeSubmit = async () => {
+    if (!manualCode.trim()) {
+      toast.error("يرجى إدخال الكود")
+      return
+    }
+
+    try {
+      const validation = validateQRSignature(manualCode.trim())
+      if (!validation.valid || !validation.attendanceCode) {
+        toast.error("كود غير صالح")
+        return
+      }
+
+      const member = members.find(m => m.attendanceCode === validation.attendanceCode)
+
+      if (member) {
+        await handleAttendance(member, "manual")
+        setShowManualDialog(false)
+        setManualCode("")
+        toast.success(`تم تسجيل حضور ${member.fullName}`)
+      } else {
+        toast.error("لم يتم العثور على المخدوم بهذا الكود")
+      }
+    } catch (error) {
+      console.error("Error processing manual code:", error)
+      toast.error("خطأ في معالجة الكود")
+    }
+  }
+
+  const handleNumberScan = async (numberData: string) => {
+    setNumberScannerLoading(true)
+    try {
+      const validation = validateQRSignature(numberData.trim())
+      if (!validation.valid || !validation.attendanceCode) {
+        toast.error("رقم الكود غير صالح")
+        return
+      }
+
+      const member = members.find(m => m.attendanceCode === validation.attendanceCode)
+
+      if (member) {
+        await handleAttendance(member, "scan")
+        setShowNumberScanner(false)
+        setStartNumberScanner(false)
+        toast.success(`تم تسجيل حضور ${member.fullName}`)
+      } else {
+        toast.error("لم يتم العثور على المخدوم بهذا الرقم")
+      }
+    } catch (error) {
+      console.error("Error processing number data:", error)
+      toast.error("خطأ في معالجة رقم الكود")
+    } finally {
+      setNumberScannerLoading(false)
+    }
   }
 
   const handleExportAttendance = () => {
@@ -267,6 +335,14 @@ export default function AttendancePage() {
 
               <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={() => { if (cameraPermission === 'denied') { toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.'); return; } setShowScanner(true); setTimeout(startScanner, 100); }} disabled={cameraPermission === 'denied'}>
                 <span role="img" aria-label="scan">📷</span> مسح QR
+              </button>
+
+              <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={() => setShowManualDialog(true)}>
+                <span role="img" aria-label="manual">⌨️</span> إدخال يدوي
+              </button>
+
+              <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={() => { if (cameraPermission === 'denied') { toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.'); return; } setShowNumberScanner(true); setTimeout(() => setStartNumberScanner(true), 100); }} disabled={cameraPermission === 'denied'}>
+                <span role="img" aria-label="number-scan">🔢</span> مسح رقم الكود
               </button>
             </>
           )}
@@ -581,6 +657,76 @@ export default function AttendancePage() {
             <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">وجه الكاميرا نحو كود QR الخاص بالعضو</p>
               <Button variant="outline" onClick={() => setShowScanner(false)} className="mt-2">
+                <X className="w-4 h-4 ml-2" />
+                إغلاق
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span role="img" aria-label="manual">⌨️</span>
+              إدخال كود يدوي
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="manual-code">أدخل كود QR أو كود الحضور</Label>
+              <Input
+                id="manual-code"
+                placeholder="أدخل الكود هنا..."
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleManualCodeSubmit()
+                  }
+                }}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowManualDialog(false)}>
+                إلغاء
+              </Button>
+              <Button onClick={handleManualCodeSubmit}>
+                تسجيل الحضور
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showNumberScanner} onOpenChange={(open) => { setShowNumberScanner(open); if (!open) setStartNumberScanner(false); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span role="img" aria-label="number-scan">🔢</span>
+              مسح رقم الكود
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {numberScannerLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <LoadingSpinner size="lg" />
+                <p className="mr-2">جاري معالجة رقم الكود...</p>
+              </div>
+            ) : (
+              <NumberScanner
+                onScan={handleNumberScan}
+                onError={(error) => {
+                  console.error("Number Scanner error:", error)
+                  toast.error(error)
+                }}
+                start={startNumberScanner}
+              />
+            )}
+            <div className="text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">وجه الكاميرا نحو رقم الكود الخاص بالعضو</p>
+              <Button variant="outline" onClick={() => setShowNumberScanner(false)} className="mt-2">
                 <X className="w-4 h-4 ml-2" />
                 إغلاق
               </Button>

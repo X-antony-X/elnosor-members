@@ -17,6 +17,7 @@ export interface Member {
   photoUrl?: string;
   notes?: string;
   role?: "member" | "admin";
+  attendanceCode?: string; // 4-digit unique code for attendance
   createdAt: Date;
   updatedAt: Date;
 }
