@@ -140,31 +140,6 @@ export default function NotificationsPage() {
 
     await createNotification(notification)
 
-    // Send immediate notification via OneSignal API
-    if (!newNotification.scheduledTime) {
-      try {
-        const response = await fetch('/api/notifications/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            title: newNotification.title,
-            message: newNotification.message,
-            targetAudience: newNotification.targetAudience,
-            targetIds: newNotification.targetAudience === 'individuals' ? [] : undefined, // Add logic for targetIds if needed
-          }),
-        })
-        if (!response.ok) {
-          throw new Error('Failed to send notification')
-        }
-      } catch (error) {
-        console.error('Error sending notification:', error)
-        toast.error("فشل في إرسال الإشعار")
-        return
-      }
-    }
-
     setNewNotification({
       title: "",
       message: "",

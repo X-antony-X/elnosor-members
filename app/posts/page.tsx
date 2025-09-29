@@ -64,7 +64,6 @@ export default function PostsPage() {
         templateId: undefined,
         priority: "normal",
         expiresAt: undefined,
-        data: { type: "post", postId }, // Optional: link to post
       }
 
       await notificationHelpers.createNotification(notificationData)
@@ -149,6 +148,27 @@ export default function PostsPage() {
 
       const updatedComments = [...post.comments, newComment]
       await firestoreHelpers.updatePost(postId, { comments: updatedComments })
+
+      // Create notification for post author if not self-comment
+      if (post.authorId !== user.uid) {
+        const commentNotificationData: Omit<Notification, "id" | "createdAt"> = {
+          title: `تعليق جديد على منشورك`,
+          message: `${newComment.authorName}: ${newComment.content}`,
+          targetAudience: "individuals",
+          targetIds: [post.authorId],
+          scheduledTime: undefined, // Immediate
+          sentTime: undefined,
+          createdBy: user.uid,
+          readBy: [],
+          isRecurring: false,
+          recurringPattern: undefined,
+          templateId: undefined,
+          priority: "normal",
+          expiresAt: undefined,
+        }
+
+        await notificationHelpers.createNotification(commentNotificationData)
+      }
 
       setCommentInputs({ ...commentInputs, [postId]: "" })
       toast({ description: "تم إضافة التعليق بنجاح", variant: "default" })

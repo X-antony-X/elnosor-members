@@ -14,7 +14,7 @@ if (!getApps().length) {
 const db = getFirestore()
 
 webpush.setVapidDetails(
-  "mailto:admin@example.com",
+  "mailto:petereshak11@gmail.com",
   process.env.VAPID_PUBLIC_KEY || "",
   process.env.VAPID_PRIVATE_KEY || ""
 );

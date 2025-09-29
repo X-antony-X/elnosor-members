@@ -34,7 +34,7 @@ Status: Pending
 - No new dependencies.
 - Ensure changes don't affect auth or theme providers.
 - After completion, update this file with [x] marks and close the task.
-
+<!-- ----------------------------------------------------------------------------------------------------- -->
 # TODO: Simplify Attendance System to Use Sequential 4-Digit Codes
 
 ## Overview
@@ -107,6 +107,7 @@ Status: Pending
 - No major dependencies unless OCR is added (prefer browser-native if possible).
 - After implementation, update TODO.md with completion status and remove closed tasks.
 
+<!-- ----------------------------------------------------------------------------------------------------- -->
 # TODO: Customize Notifications Page for Members and Implement Push Notifications
 
 ## Overview
@@ -161,6 +162,7 @@ Status: Pending
 - For FCM sending, may need to add Firebase Admin SDK in API route.
 - Ensure real-time updates work.
 
+<!-- ----------------------------------------------------------------------------------------------------- -->
 # TODO: Implement Push Notifications with Web-Push + VAPID
 
 ## Overview
@@ -191,6 +193,13 @@ Status: Completed ✅
 - Modify `public/sw.js` or create a new one to handle `push` and `notificationclick` events.
 - On push event, display the notification using `self.registration.showNotification()`.
 - On notification click, focus/open the PWA window or navigate to a specific page.
+
+Status: Completed ✅
+
+### 3.5. Register Service Worker in App
+
+- Add service worker registration in app/providers.tsx to enable web-push functionality.
+- Ensure service worker is registered on app startup.
 
 Status: Completed ✅
 

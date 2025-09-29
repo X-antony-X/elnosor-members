@@ -187,7 +187,40 @@ export const notificationHelpers = {
         : null,
     };
 
-    return await addDoc(collection(db, "notifications"), data);
+    const docRef = await addDoc(collection(db, "notifications"), data);
+
+    // If no scheduled time, send immediately
+    if (!notificationData.scheduledTime) {
+      try {
+        const response = await fetch('/api/notifications/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: notificationData.title,
+            message: notificationData.message,
+            targetAudience: notificationData.targetAudience,
+            targetIds: notificationData.targetIds,
+            imageUrl: notificationData.imageUrl,
+            priority: notificationData.priority,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to send notification');
+        } else {
+          // Update the notification with sentTime
+          await updateDoc(docRef, {
+            sentTime: Timestamp.now(),
+          });
+        }
+      } catch (error) {
+        console.error('Error sending notification:', error);
+      }
+    }
+
+    return docRef;
   },
 
   // Update notification

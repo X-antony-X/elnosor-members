@@ -40,6 +40,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Set hydrated flag after component mounts to prevent hydration mismatch
     setIsHydrated(true)
 
+    // Register service worker for web-push notifications
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered successfully:', registration);
+        })
+        .catch((error) => {
+          console.log('Service Worker registration failed:', error);
+        });
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
 
