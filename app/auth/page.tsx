@@ -38,7 +38,7 @@ export default function AuthPage() {
           const memberDoc = await getDoc(docRef)
 
           if (memberDoc.exists()) {
-            router.push("/dashboard")
+            router.push("/profile")
           } else {
             router.push("/profile/complete")
           }
@@ -105,9 +105,9 @@ export default function AuthPage() {
           const profileData = await profileResponse.json()
           console.log("Profile data:", profileData)
           if (profileData && profileData.fullName) {
-            // Profile exists, redirect to dashboard
-            console.log("Redirecting to dashboard")
-            window.location.href = "/dashboard"
+            // Profile exists, redirect to profile
+            console.log("Redirecting to profile")
+            window.location.href = "/profile"
           } else {
             // Profile incomplete, redirect to profile completion
             console.log("Redirecting to profile/complete")
@@ -149,8 +149,8 @@ export default function AuthPage() {
         if (profileResponse.ok) {
           const profileData = await profileResponse.json()
           if (profileData && profileData.fullName) {
-            // Profile exists, redirect to dashboard
-            router.push("/dashboard")
+            // Profile exists, redirect to profile
+            router.push("/profile")
           } else {
             // Profile incomplete, redirect to profile completion
             router.push("/profile/complete")
@@ -195,8 +195,8 @@ export default function AuthPage() {
           if (profileResponse.ok) {
             const profileData = await profileResponse.json()
             if (profileData && profileData.fullName) {
-              // Profile exists, redirect to dashboard
-              router.push("/dashboard")
+              // Profile exists, redirect to profile
+              router.push("/profile")
             } else {
               // Profile incomplete, redirect to profile completion
               router.push("/profile/complete")

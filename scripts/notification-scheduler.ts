@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
+
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import webpush, { PushSubscription } from "web-push";
@@ -197,49 +200,52 @@ async function sendDueNotifications() {
   }
 
   // 2. New Comments notifications
-  const commentsSnapshot = await db
-    .collectionGroup("comments")
-    .where("createdAt", ">", lastCheckTime)
-    .get();
+  // Query all posts to get their comments
+  const allPostsSnapshot = await db.collection("posts").get();
 
-  if (!commentsSnapshot.empty) {
-    for (const commentDoc of commentsSnapshot.docs) {
-      const comment = commentDoc.data();
-      const authorName = comment.authorName || "عضو";
-      const postRef = commentDoc.ref.parent.parent;
-      if (!postRef) continue;
-      const postDoc = await postRef.get();
-      if (!postDoc.exists) continue;
+  for (const postDoc of allPostsSnapshot.docs) {
+    const commentsSnapshot = await postDoc.ref
+      .collection("comments")
+      .where("createdAt", ">", lastCheckTime)
+      .get();
+
+    if (!commentsSnapshot.empty) {
       const post = postDoc.data();
-      if (!post) continue;
       const postAuthorId = post.authorId;
 
-      if (authorName && postAuthorId && authorName !== postAuthorId) {
-        const notificationData = {
-          title: `تعليق جديد من ${authorName}`,
-          message: comment.content || "",
-          targetAudience: "individuals",
-          targetIds: [postAuthorId],
-          scheduledTime: null,
-          sentTime: null,
-          createdBy: "system",
-          readBy: [],
-          isRecurring: false,
-          recurringPattern: null,
-          templateId: null,
-          priority: "normal",
-          expiresAt: null,
-          createdAt: Timestamp.now(),
-        };
+      for (const commentDoc of commentsSnapshot.docs) {
+        const comment = commentDoc.data();
+        const authorName = comment.authorName || "عضو";
 
-        try {
-          await db.collection("notifications").add(notificationData);
-          console.log(`Notification created for new comment by ${authorName}`);
-        } catch (error) {
-          console.error(
-            `Failed to create notification for comment by ${authorName}:`,
-            error
-          );
+        if (authorName && postAuthorId && authorName !== postAuthorId) {
+          const notificationData = {
+            title: `تعليق جديد من ${authorName}`,
+            message: comment.content || "",
+            targetAudience: "individuals",
+            targetIds: [postAuthorId],
+            scheduledTime: null,
+            sentTime: null,
+            createdBy: "system",
+            readBy: [],
+            isRecurring: false,
+            recurringPattern: null,
+            templateId: null,
+            priority: "normal",
+            expiresAt: null,
+            createdAt: Timestamp.now(),
+          };
+
+          try {
+            await db.collection("notifications").add(notificationData);
+            console.log(
+              `Notification created for new comment by ${authorName}`
+            );
+          } catch (error) {
+            console.error(
+              `Failed to create notification for comment by ${authorName}:`,
+              error
+            );
+          }
         }
       }
     }

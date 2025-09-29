@@ -22,7 +22,7 @@ export default function MemberProfilePage() {
   const { user, role } = useAuth()
   const [member, setMember] = useState<Member | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showQR, setShowQR] = useState(false)
+  const [showQR, setShowQR] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editData, setEditData] = useState<Partial<Member>>({})
@@ -38,6 +38,27 @@ export default function MemberProfilePage() {
     const fetchMemberData = async () => {
       setLoading(true)
       try {
+        // Try to load from cache first if offline
+        const isOnline = navigator.onLine
+        let cachedMember = null
+        if (!isOnline) {
+          try {
+            const cached = localStorage.getItem(`member-profile-${user.uid}`)
+            if (cached) {
+              cachedMember = JSON.parse(cached)
+              // Convert dates back
+              cachedMember.createdAt = new Date(cachedMember.createdAt)
+              cachedMember.updatedAt = new Date(cachedMember.updatedAt)
+              setMember(cachedMember)
+              setEditData(cachedMember)
+              setLoading(false)
+              return
+            }
+          } catch (cacheError) {
+            console.error("Error loading from cache:", cacheError)
+          }
+        }
+
         const { doc, getDoc } = await import("firebase/firestore")
         const { db } = await import("@/lib/firebase")
         const docRef = doc(db, "members", user.uid)
@@ -65,12 +86,22 @@ export default function MemberProfilePage() {
 
           setMember(memberData)
           setEditData(memberData)
+
+          // Cache the member data for offline use
+          try {
+            localStorage.setItem(`member-profile-${user.uid}`, JSON.stringify(memberData))
+          } catch (cacheError) {
+            console.error("Error caching member data:", cacheError)
+          }
         } else {
           toast.error("لم يتم العثور على بيانات المخدوم")
         }
       } catch (error) {
         console.error("Error fetching member data:", error)
-        toast.error("حدث خطأ في تحميل البيانات")
+        // If online fetch failed and no cache, show error
+        if (!member) {
+          toast.error("حدث خطأ في تحميل البيانات")
+        }
       } finally {
         setLoading(false)
       }
@@ -153,7 +184,7 @@ export default function MemberProfilePage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant={showQR ? "primary" : "outline"} size="sm" onClick={() => setShowQR(!showQR)}>
+          <Button variant="outline" size="sm" onClick={() => setShowQR(!showQR)}>
             <QrCode className="w-4 h-4 ml-2" />
             {showQR ? "إخفاء QR" : "عرض QR"}
           </Button>
@@ -187,12 +218,45 @@ export default function MemberProfilePage() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* QR Code Section - Full width on mobile */}
+      {showQR && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card glassy>
+            <CardHeader className="text-center">
+              <CardTitle className="text-lg">رمز الحضور الخاص بك</CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400">اعرض هذا الرمز للخادم لتسجيل حضورك</p>
+            </CardHeader>
+            <CardContent className="text-center">
+              <div className="mb-6">
+                <div className="text-7xl sm:text-6xl font-bold text-primary-600 dark:text-primary-400 mb-2 tracking-wider">
+                  {member.attendanceCode}
+                </div>
+                <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">كود الحضور الخاص بك</p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">اعرض هذا الكود أو الرمز للخادم</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg inline-block shadow-sm border-2 border-gray-200">
+                <QRCode
+                  value={generateMemberQR(member.attendanceCode!)}
+                  size={200}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-4">يحتوي الرمز على الكود الرقمي فقط</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profile Card */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
           <Card glassy>
             <CardHeader className="text-center">
-              <div className="mx-auto w-32 h-32 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 mb-4">
+              <div className="mx-auto w-24 sm:w-32 h-24 sm:h-32 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 mb-4">
                 {member.photoUrl ? (
                   <img
                     src={member.photoUrl || "/placeholder.svg"}
@@ -201,57 +265,24 @@ export default function MemberProfilePage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <User className="w-16 h-16 text-gray-400" />
+                    <User className="w-12 sm:w-16 h-12 sm:h-16 text-gray-400" />
                   </div>
                 )}
               </div>
-              <CardTitle className="text-xl">{member.fullName}</CardTitle>
-              <Badge variant="secondary">
+              <CardTitle className="text-lg sm:text-xl">{member.fullName}</CardTitle>
+              <Badge variant="secondary" className="text-sm">
                 {t(member.classStage)}
                 {member.universityYear && ` - السنة ${member.universityYear}`}
               </Badge>
             </CardHeader>
           </Card>
-
-          {showQR && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card glassy className="mt-4">
-                <CardHeader className="text-center">
-                  <CardTitle className="text-lg">رمز الحضور الخاص بك</CardTitle>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">اعرض هذا الرمز للخادم لتسجيل حضورك</p>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <div className="mb-6">
-                    <div className="text-6xl font-bold text-primary-600 dark:text-primary-400 mb-2 tracking-wider">
-                      {member.attendanceCode}
-                    </div>
-                    <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">كود الحضور الخاص بك</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">اعرض هذا الكود أو الرمز للخادم</p>
-                  </div>
-                  <div className="bg-white p-6 rounded-lg inline-block shadow-sm border-2 border-gray-200">
-                    <QRCode
-                      value={generateMemberQR(member.attendanceCode!)}
-                      size={200}
-                      style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-4">يحتوي الرمز على الكود الرقمي فقط</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
         </motion.div>
 
         {/* Contact Information */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="lg:col-span-2"
+          transition={{ delay: 0.3 }}
         >
           <Card glassy>
             <CardHeader>
@@ -342,10 +373,9 @@ export default function MemberProfilePage() {
 
         {/* Church Information */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="lg:col-span-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
         >
           <Card glassy>
             <CardHeader>
