@@ -23,12 +23,17 @@ export function useWebPush() {
       return;
     }
 
-    if (permission === "granted") {
+    if (permission === "granted" && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
       subscribeUser();
     }
   }, [permission]);
 
   async function subscribeUser() {
+    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+      console.warn("VAPID public key not configured, skipping web-push subscription");
+      return;
+    }
+
     try {
       const registration = await navigator.serviceWorker.ready;
       const existingSubscription = await registration.pushManager.getSubscription();
@@ -39,7 +44,7 @@ export function useWebPush() {
       }
       const newSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(process.env.VAPID_PUBLIC_KEY || ""),
+        applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY),
       });
       setSubscription(newSubscription);
       await saveSubscription(newSubscription);

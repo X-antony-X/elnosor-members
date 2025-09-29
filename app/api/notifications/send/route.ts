@@ -13,11 +13,13 @@ if (!getApps().length) {
 
 const db = getFirestore()
 
-webpush.setVapidDetails(
-  "mailto:petereshak11@gmail.com",
-  process.env.VAPID_PUBLIC_KEY || "",
-  process.env.VAPID_PRIVATE_KEY || ""
-);
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    "mailto:petereshak11@gmail.com",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,35 +52,37 @@ export async function POST(request: NextRequest) {
 
     const result = await response.json()
 
-    // Send web-push notifications
-    try {
-      const usersSnapshot = await db.collection('users').get()
-      const sendPromises: Promise<any>[] = []
-      usersSnapshot.forEach((userDoc) => {
-        const subRef = userDoc.ref.collection('pushSubscription').doc('subscription')
-        sendPromises.push(
-          subRef.get().then((subDoc) => {
-            if (!subDoc.exists) return
-            const subscription = subDoc.data() as PushSubscription
-            if (!subscription) return
-            return webpush.sendNotification(subscription, JSON.stringify({
-              title,
-              body: message,
-              icon: '/icons/icon-192x192.png',
-              url: '/notifications'
-            })).catch(async (error) => {
-              console.error('Web-push error:', error)
-              if (error.statusCode === 410 || error.statusCode === 404) {
-                // Subscription no longer valid, delete it
-                await subRef.delete()
-              }
+    // Send web-push notifications if VAPID keys are configured
+    if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+      try {
+        const usersSnapshot = await db.collection('users').get()
+        const sendPromises: Promise<any>[] = []
+        usersSnapshot.forEach((userDoc) => {
+          const subRef = userDoc.ref.collection('pushSubscription').doc('subscription')
+          sendPromises.push(
+            subRef.get().then((subDoc) => {
+              if (!subDoc.exists) return
+              const subscription = subDoc.data() as PushSubscription
+              if (!subscription) return
+              return webpush.sendNotification(subscription, JSON.stringify({
+                title,
+                body: message,
+                icon: '/icons/196.png',
+                url: '/notifications'
+              })).catch(async (error) => {
+                console.error('Web-push error:', error)
+                if (error.statusCode === 410 || error.statusCode === 404) {
+                  // Subscription no longer valid, delete it
+                  await subRef.delete()
+                }
+              })
             })
-          })
-        )
-      })
-      await Promise.all(sendPromises)
-    } catch (error) {
-      console.error('Error sending web-push notifications:', error)
+          )
+        })
+        await Promise.all(sendPromises)
+      } catch (error) {
+        console.error('Error sending web-push notifications:', error)
+      }
     }
 
     return NextResponse.json({ success: true, result })

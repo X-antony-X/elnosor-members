@@ -227,8 +227,9 @@ Status: Completed ✅
 - Test with phone locked (may require background sync or specific PWA settings).
 - Verify in incognito mode and after reloads.
 - Check manifest.json for notification settings (e.g., `display: "standalone"`).
+- Fixed build error by making VAPID keys optional for development/production builds.
 
-Status: Pending
+Status: Completed ✅
 
 ### Additional Notes
 
