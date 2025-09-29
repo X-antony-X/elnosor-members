@@ -41,13 +41,8 @@ export const useNotifications = () => {
           expiresAt: doc.data().expiresAt?.toDate(),
         })) as Notification[];
 
-        // Filter out future scheduled notifications that haven't been sent yet
-        const now = new Date();
-        const filteredNotifications = notificationsData.filter(notification => {
-          if (!notification.scheduledTime) return true; // Show immediate notifications
-          if (notification.sentTime) return true; // Show sent notifications
-          return notification.scheduledTime <= now; // Show past scheduled notifications
-        });
+        // Show all notifications including future scheduled ones for editing
+        const filteredNotifications = notificationsData;
 
         setNotifications(filteredNotifications);
         setLoading(false);

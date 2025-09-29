@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "notifications:cron": "npx tsx scripts/notification-scheduler.ts",
+    "birthday:cron": "npx tsx scripts/birthday-notifications.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
