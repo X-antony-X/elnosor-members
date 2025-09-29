@@ -48,6 +48,7 @@ import {
   useNotificationHelpers,
 } from "@/hooks/use-notifications"
 import { useFCM } from "@/hooks/use-fcm"
+import { useWebPush } from "@/hooks/use-web-push"
 
 export default function NotificationsPage() {
   const { role, user } = useAuth()
@@ -62,6 +63,9 @@ export default function NotificationsPage() {
 
   // FCM hook for push notifications
   const { permission, requestPermission, disableNotifications, isSupported } = useFCM()
+
+  // Web-push hook
+  const { permission: webPushPermission, requestPermission: requestWebPushPermission } = useWebPush()
 
   const loading = notificationsLoading || templatesLoading || schedulesLoading || quotesLoading
 
@@ -564,15 +568,43 @@ export default function NotificationsPage() {
       </motion.div>
 
       <Tabs defaultValue="notifications" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className={`grid w-full ${role === "member" ? "grid-cols-1" : "grid-cols-5"}`}>
           <TabsTrigger value="notifications">الإشعارات</TabsTrigger>
-          <TabsTrigger value="templates">القوالب</TabsTrigger>
-          <TabsTrigger value="schedules">الجدولة</TabsTrigger>
-          <TabsTrigger value="analytics">التحليلات</TabsTrigger>
-          <TabsTrigger value="daily-verses">الآيات اليومية</TabsTrigger>
+          {role === "admin" && (
+            <>
+              <TabsTrigger value="templates">القوالب</TabsTrigger>
+              <TabsTrigger value="schedules">الجدولة</TabsTrigger>
+              <TabsTrigger value="analytics">التحليلات</TabsTrigger>
+              <TabsTrigger value="daily-verses">الآيات اليومية</TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="notifications" className="space-y-6">
+          {/* Push Notification Permission Banner */}
+          {webPushPermission !== "granted" && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Bell className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <h3 className="font-medium text-blue-900 dark:text-blue-100">تفعيل الإشعارات</h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      احصل على إشعارات فورية حتى لو كان هاتفك مقفولاً
+                    </p>
+                  </div>
+                </div>
+                <Button onClick={requestWebPushPermission} variant="outline" size="sm">
+                  تفعيل
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
           <div className="space-y-4">
             {filteredNotifications.map((notification, index) => (
               <motion.div

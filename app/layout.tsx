@@ -22,8 +22,8 @@ export const metadata: Metadata = {
     title: "خدمة الشباب",
   },
   icons: {
-    icon: "/icons/android/android-launchericon-192-192.png",
-    apple: "/icons/ios/192.png",
+    icon: "/icons/196.png",
+    apple: "/icons/196.png",
   },
   generator: 'Tofa7a',
   openGraph: {

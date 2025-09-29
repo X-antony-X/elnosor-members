@@ -121,7 +121,7 @@ Modify the notifications page to show only relevant notifications for members (h
 - Hide tabs: templates, schedules, analytics, daily-verses for members.
 - Show only "notifications" tab for members.
 
-Status: Pending
+Status: Completed ✅
 
 ### 2. Add Push Notification Permission Request
 
@@ -175,7 +175,7 @@ Implement browser/PWA push notifications using the web-push library with VAPID k
 - Generate VAPID keys using `npx web-push generate-vapid-keys` and store them securely (e.g., in environment variables).
 - Add VAPID keys to Next.js config or API routes.
 
-Status: Pending
+Status: Completed ✅
 
 ### 2. Update Frontend for Subscription Management
 
@@ -184,7 +184,7 @@ Status: Pending
 - Store the subscription object (endpoint, keys) in Firestore under the user's document (e.g., `users/{uid}/pushSubscription`).
 - Handle subscription updates/changes (e.g., on permission revoke).
 
-Status: Pending
+Status: Completed ✅
 
 ### 3. Update Service Worker for Push Events
 
@@ -192,7 +192,7 @@ Status: Pending
 - On push event, display the notification using `self.registration.showNotification()`.
 - On notification click, focus/open the PWA window or navigate to a specific page.
 
-Status: Pending
+Status: Completed ✅
 
 ### 4. Implement Backend Notification Sending
 
@@ -201,7 +201,7 @@ Status: Pending
 - Handle errors (e.g., expired subscriptions) and update Firestore accordingly.
 - Ensure the API works without Firebase Cloud Functions (pure Node.js).
 
-Status: Pending
+Status: Completed ✅
 
 ### 5. Integrate with Existing Notification System
 
@@ -209,7 +209,7 @@ Status: Pending
 - Update `lib/utils.ts` or notification utilities to support web-push payloads.
 - Ensure notifications include proper title, body, icon, and actions for mobile display.
 
-Status: Pending
+Status: Completed ✅
 
 ### 6. Testing and Mobile Support
 
@@ -227,4 +227,5 @@ Status: Pending
 - Subscriptions stored per user in Firestore for scalability.
 - Compatible with PWA on mobile for locked-screen notifications.
 - Fallback to in-app notifications if push fails.
+- **Environment Variables**: Add VAPID keys to your environment (e.g., .env.local): `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Generate with `npx web-push generate-vapid-keys`.
 - After implementation, update TODO.md with completion status and remove closed tasks.
