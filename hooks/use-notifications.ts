@@ -41,7 +41,15 @@ export const useNotifications = () => {
           expiresAt: doc.data().expiresAt?.toDate(),
         })) as Notification[];
 
-        setNotifications(notificationsData);
+        // Filter out future scheduled notifications that haven't been sent yet
+        const now = new Date();
+        const filteredNotifications = notificationsData.filter(notification => {
+          if (!notification.scheduledTime) return true; // Show immediate notifications
+          if (notification.sentTime) return true; // Show sent notifications
+          return notification.scheduledTime <= now; // Show past scheduled notifications
+        });
+
+        setNotifications(filteredNotifications);
         setLoading(false);
         setError(null);
       },
