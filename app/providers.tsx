@@ -66,10 +66,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (isHydrated && !loading && user && !hasShownSplash.current && !showSplash) {
+    if (isHydrated && !loading && !hasShownSplash.current && !showSplash) {
       setShowSplash(true)
     }
-  }, [loading, user, isHydrated, showSplash])
+  }, [isHydrated, loading, showSplash])
 
   // Prevent hydration mismatch by not rendering until after client-side hydration
   if (!isHydrated) {
@@ -91,15 +91,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{ user, role, token, loading }}>
       <ThemeProvider>
+        {children}
         {showSplash && (
           <SplashScreen
+            duration={3000}
             onComplete={() => {
               setShowSplash(false)
               hasShownSplash.current = true
             }}
           />
         )}
-        {children}
       </ThemeProvider>
     </AuthContext.Provider>
   )

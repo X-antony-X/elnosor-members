@@ -65,6 +65,8 @@ export default function NotificationsPage() {
 
   const loading = notificationsLoading || templatesLoading || schedulesLoading || quotesLoading
 
+  const filteredNotifications = role === "member" ? notifications.filter(n => n.targetAudience === "all") : notifications;
+
   const [dailyVersesEnabled, setDailyVersesEnabled] = useState(true)
 
   // Form states
@@ -100,7 +102,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (role === "member") {
-      // Members can only view notifications, redirect to read-only view
+      // Members can only view notifications, filtered UI applied
     }
   }, [role])
 
@@ -572,7 +574,7 @@ export default function NotificationsPage() {
 
         <TabsContent value="notifications" className="space-y-6">
           <div className="space-y-4">
-            {notifications.map((notification, index) => (
+            {filteredNotifications.map((notification, index) => (
               <motion.div
                 key={notification.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -670,7 +672,7 @@ export default function NotificationsPage() {
               </motion.div>
             ))}
 
-            {notifications.length === 0 && (
+            {filteredNotifications.length === 0 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
                 <p className="text-gray-500 dark:text-gray-400">لا توجد إشعارات</p>
                 {role === "admin" && <p className="text-sm text-gray-400 mt-2">ابدأ بإرسال أول إشعار للأعضاء</p>}

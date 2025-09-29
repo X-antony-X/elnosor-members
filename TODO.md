@@ -106,3 +106,125 @@ Status: Pending
 - Keep backward compatibility for existing signed QRs if needed, but prioritize migration to simple codes.
 - No major dependencies unless OCR is added (prefer browser-native if possible).
 - After implementation, update TODO.md with completion status and remove closed tasks.
+
+# TODO: Customize Notifications Page for Members and Implement Push Notifications
+
+## Overview
+
+Modify the notifications page to show only relevant notifications for members (hide admin settings tabs), and implement browser/PWA push notifications with permission request.
+
+## Tasks
+
+### 1. Filter Notifications for Members in app/notifications/page.tsx
+
+- For role === "member", filter the notifications array to only show notifications where targetAudience === "all" (since individual targeting not implemented yet).
+- Hide tabs: templates, schedules, analytics, daily-verses for members.
+- Show only "notifications" tab for members.
+
+Status: Pending
+
+### 2. Add Push Notification Permission Request
+
+- In the notifications page, add a UI element (button or banner) to request notification permission if permission !== "granted".
+- Use the useFCM hook's requestPermission function.
+- Display current permission status.
+
+Status: Pending
+
+### 3. Ensure PWA Push Notifications Work on Mobile
+
+- Verify service worker (public/firebase-messaging-sw.js) is set up for FCM.
+- Ensure manifest.json has proper notification settings.
+- Test on mobile PWA that notifications appear in notification bar like WhatsApp/Facebook.
+
+Status: Pending
+
+### 4. Update Notification Sending to Trigger FCM
+
+- Modify app/api/notifications/send/route.ts to also send FCM messages to users' fcmTokens for web push.
+- Fetch users with fcmToken and send via Firebase Admin SDK or FCM API.
+
+Status: Pending
+
+### 5. Testing
+
+- Test permission request in Chrome.
+- Send notification and verify browser notification appears.
+- Test on mobile PWA.
+- Verify member view hides admin tabs and shows only relevant notifications.
+
+Status: Pending
+
+### Additional Notes
+
+- Use existing useFCM hook for permission and token management.
+- For FCM sending, may need to add Firebase Admin SDK in API route.
+- Ensure real-time updates work.
+
+# TODO: Implement Push Notifications with Web-Push + VAPID
+
+## Overview
+
+Implement browser/PWA push notifications using the web-push library with VAPID keys for full control and cost-free operation. This allows notifications to arrive even when the phone is locked, without relying on Firebase Cloud Functions. Store user subscriptions in Firestore and send notifications from Next.js API routes.
+
+## Tasks
+
+### 1. Install Web-Push Library and Generate VAPID Keys
+
+- Install `web-push` package: `npm install web-push`.
+- Generate VAPID keys using `npx web-push generate-vapid-keys` and store them securely (e.g., in environment variables).
+- Add VAPID keys to Next.js config or API routes.
+
+Status: Pending
+
+### 2. Update Frontend for Subscription Management
+
+- Create a new hook `hooks/use-web-push.ts` to handle permission request, subscription retrieval, and storage.
+- In app/notifications/page.tsx or a global component, request notification permission and get push subscription using `navigator.serviceWorker.register()` and `pushManager.subscribe()`.
+- Store the subscription object (endpoint, keys) in Firestore under the user's document (e.g., `users/{uid}/pushSubscription`).
+- Handle subscription updates/changes (e.g., on permission revoke).
+
+Status: Pending
+
+### 3. Update Service Worker for Push Events
+
+- Modify `public/sw.js` or create a new one to handle `push` and `notificationclick` events.
+- On push event, display the notification using `self.registration.showNotification()`.
+- On notification click, focus/open the PWA window or navigate to a specific page.
+
+Status: Pending
+
+### 4. Implement Backend Notification Sending
+
+- Create/update API route `app/api/notifications/send/route.ts` to use `web-push` library.
+- Fetch user subscriptions from Firestore and send push notifications via `webpush.sendNotification()`.
+- Handle errors (e.g., expired subscriptions) and update Firestore accordingly.
+- Ensure the API works without Firebase Cloud Functions (pure Node.js).
+
+Status: Pending
+
+### 5. Integrate with Existing Notification System
+
+- Modify notification creation flow to trigger web-push sending alongside any existing methods.
+- Update `lib/utils.ts` or notification utilities to support web-push payloads.
+- Ensure notifications include proper title, body, icon, and actions for mobile display.
+
+Status: Pending
+
+### 6. Testing and Mobile Support
+
+- Test permission request and subscription storage in browser.
+- Send test notifications and verify they appear as system notifications on desktop/mobile.
+- Test with phone locked (may require background sync or specific PWA settings).
+- Verify in incognito mode and after reloads.
+- Check manifest.json for notification settings (e.g., `display: "standalone"`).
+
+Status: Pending
+
+### Additional Notes
+
+- Full control and free (no third-party service fees).
+- Subscriptions stored per user in Firestore for scalability.
+- Compatible with PWA on mobile for locked-screen notifications.
+- Fallback to in-app notifications if push fails.
+- After implementation, update TODO.md with completion status and remove closed tasks.
