@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 import type { User } from "firebase/auth"
 import { auth } from "@/lib/firebase"
@@ -56,12 +55,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     // Register service worker for web-push notifications
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('/push-sw.js')
         .then((registration) => {
-          console.log('Service Worker registered successfully:', registration);
+          console.log('Push Service Worker registered successfully:', registration);
         })
         .catch((error) => {
-          console.log('Service Worker registration failed:', error);
+          console.log('Push Service Worker registration failed:', error);
         });
     }
 

@@ -35,79 +35,6 @@ Status: Pending
 - Ensure changes don't affect auth or theme providers.
 - After completion, update this file with [x] marks and close the task.
 <!-- ----------------------------------------------------------------------------------------------------- -->
-# TODO: Simplify Attendance System to Use Sequential 4-Digit Codes
-
-## Overview
-
-Update the attendance system to use simple 4-digit sequential codes (starting from 1000) instead of signed QR codes. This supports offline scenarios where members can show their QR (containing just the code) or verbally provide the code. Admins can manually enter codes or use a camera to detect 4-digit numbers directly.
-
-## Tasks
-
-### 1. Update Attendance Code Generation (lib/utils.ts)
-
-- Modify `generateAttendanceCode()` to generate sequential 4-digit codes starting from 1000 (e.g., query Firestore for the highest existing code and increment by 1).
-- Ensure uniqueness by checking the "members" collection.
-- Update `generateUniqueAttendanceCode()` in app/profile/page.tsx to use this sequential logic.
-- Remove any signature generation logic.
-
-Status: Pending
-
-### 2. Simplify QR Code Generation (lib/utils.ts and app/profile/page.tsx)
-
-- Update `generateMemberQR(code)` to simply return the 4-digit code as a string (no signature or timestamp).
-- In app/profile/page.tsx:
-  - Update the QRCode component to use just `value={member.attendanceCode}`.
-  - Display the code prominently as a large 4-digit number below/above the QR for easy reading.
-  - Ensure the QR is scannable and contains only the numeric code.
-- Test QR generation and display in the profile page.
-
-Status: Pending
-
-### 3. Update QR Validation and Scanning (lib/utils.ts and app/attendance/page.tsx)
-
-- Remove `validateQRSignature()` entirely or simplify it to just extract/validate the 4-digit code (check if it's exactly 4 digits, 1000-9999 range).
-- In app/attendance/page.tsx:
-  - Update `handleQRScan()` to parse the scanned data as a 4-digit code and search members by `attendanceCode`.
-  - For manual entry (`handleManualCodeSubmit()`), validate input as 4 digits and search directly.
-  - Ensure offline support: Codes work without internet for local lookup if members are cached.
-
-Status: Pending
-
-### 4. Add Number Detection Camera for Admins (app/attendance/page.tsx and components/)
-
-- Create a new component (e.g., components/number-scanner.tsx) similar to QRScanner but using a library like Tesseract.js or easyocr for OCR to detect 4-digit numbers in the camera feed.
-- Add a new button for admins: "مسح رقم الكود" (Scan Number Code) that opens a dialog with the number scanner.
-- On detection of a valid 4-digit code (1000-9999), automatically trigger attendance registration like QR scan.
-- Fallback: If OCR fails, allow manual entry.
-- Note: May require installing a lightweight OCR library (e.g., `npm install tesseract.js`).
-
-Status: Completed ✅
-
-### 5. Update Member Onboarding and Existing Members
-
-- For new members: Auto-generate sequential code on registration/update in profile page.
-- For existing members: Add a migration script (e.g., scripts/migrate-attendance-codes.ts) to assign sequential codes if `attendanceCode` is missing or invalid.
-- Run the script once via `npx tsx scripts/migrate-attendance-codes.ts`.
-- Update any database rules or indexes for `attendanceCode` queries.
-
-Status: Pending
-
-### 6. Testing and Offline Support
-
-- Test full flow: Generate code → Display in profile → Scan QR/Manual entry → Number detection.
-- Offline testing: Ensure local storage caches members with codes; attendance logs sync when online.
-- Edge cases: Invalid codes (non-4 digits), duplicate scans, code range limits.
-- UI/UX: Arabic labels for new buttons/dialogs (e.g., "اكتشاف كود رقمي").
-
-Status: Pending
-
-### Additional Notes
-
-- Keep backward compatibility for existing signed QRs if needed, but prioritize migration to simple codes.
-- No major dependencies unless OCR is added (prefer browser-native if possible).
-- After implementation, update TODO.md with completion status and remove closed tasks.
-
-<!-- ----------------------------------------------------------------------------------------------------- -->
 # TODO: Customize Notifications Page for Members and Implement Push Notifications
 
 ## Overview
@@ -239,3 +166,128 @@ Status: Completed ✅
 - Fallback to in-app notifications if push fails.
 - **Environment Variables**: Add VAPID keys to your environment (e.g., .env.local): `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Generate with `npx web-push generate-vapid-keys`.
 - After implementation, update TODO.md with completion status and remove closed tasks.
+
+<!-- ----------------------------------------------------------------------------------------------------- -->
+# TODO: Fix Push Notifications to Appear as System Notifications Like WhatsApp
+
+## Overview
+
+The current web-push implementation sends notifications, but they only appear as in-app notifications when the PWA is open. To make them appear as system notifications in the notification bar (even when the app is closed or phone is locked, like WhatsApp), we need to ensure the service worker properly handles push events and displays browser notifications. This requires a custom service worker with push event listeners, proper manifest configuration, and testing on mobile PWA.
+
+## Tasks
+
+### 1. Create Custom Service Worker for Push Notifications
+
+- Create a new file `public/push-sw.js` (or modify existing `public/sw.js` if not generated).
+- Include Workbox for caching (copy from current sw.js).
+- Add push event listener:
+  ```javascript
+  self.addEventListener('push', function(event) {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/icons/192.png',
+      badge: '/icons/72.png',
+      vibrate: [200, 100, 200],
+      data: { url: data.url || '/' },
+      requireInteraction: true,
+      silent: false
+    };
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  });
+  ```
+- Add notificationclick event listener to open the PWA on click:
+  ```javascript
+  self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    event.waitUntil(
+      clients.openWindow(event.notification.data.url || '/')
+    );
+  });
+  ```
+
+Status: Completed ✅
+
+### 2. Register the Custom Service Worker in the App
+
+- In `app/providers.tsx` or `app/layout.tsx`, register the custom SW instead of the default one.
+- Ensure it's registered only once, and handle updates.
+- Example:
+  ```javascript
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/push-sw.js')
+      .then(registration => console.log('SW registered'))
+      .catch(error => console.log('SW registration failed'));
+  }
+  ```
+
+Status: Completed ✅
+
+### 3. Update Manifest.json for Better Notification Support
+
+- Ensure `manifest.json` has:
+  ```json
+  {
+    "display": "standalone",
+    "start_url": "/",
+    "scope": "/",
+    "icons": [...],
+    "background_color": "#ffffff",
+    "theme_color": "#000000",
+    "name": "Member Elnosor",
+    "short_name": "Elnosor",
+    "description": "Member management app"
+  }
+  ```
+- Add notification-related settings if supported.
+
+Status: Completed ✅
+
+### 4. Ensure Web-Push API Route Sends Correct Payload
+
+- In `app/api/notifications/send/route.ts`, ensure the payload sent to web-push includes:
+  - title
+  - body
+  - icon
+  - url (for click action)
+  - vibration pattern
+- Example payload:
+  ```javascript
+  const payload = JSON.stringify({
+    title: notification.title,
+    body: notification.message,
+    icon: '/icons/192.png',
+    url: '/notifications'
+  });
+  ```
+
+Status: Completed ✅
+
+### 5. Test on Mobile PWA
+
+- Install the PWA on mobile (Android/iOS).
+- Send a test notification from the app.
+- Verify it appears in the notification bar even when the app is closed and phone is locked.
+- Test notification click opens the PWA.
+- Check vibration and sound (if possible).
+
+Status: Skipped (as per user request)
+
+### 6. Handle Edge Cases and Permissions
+
+- Ensure push permission is requested and granted.
+- Handle subscription expiration (update Firestore).
+- Fallback to in-app notifications if push fails.
+- Test in incognito mode and after app updates.
+
+Status: Completed ✅
+
+### Additional Notes
+
+- Web-push notifications require HTTPS in production.
+- On iOS, PWA notifications may have limitations; test thoroughly.
+- If using FCM alongside, ensure no conflicts.
+- After implementation, update TODO.md with completion status and remove closed tasks.
+- Reference: https://developer.mozilla.org/en-US/docs/Web/API/Push_API
