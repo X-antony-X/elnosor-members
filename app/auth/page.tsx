@@ -32,18 +32,18 @@ export default function AuthPage() {
     const checkProfileAndRedirect = async () => {
       if (user && !loading && !isSigningIn) {
         try {
-          const { doc, getDoc } = await import("firebase/firestore")
-          const { db } = await import("@/lib/firebase")
-          const docRef = doc(db, "members", user.uid)
-          const memberDoc = await getDoc(docRef)
+          const { getUserRole } = await import("@/lib/auth")
+          const userRole = await getUserRole(user)
 
-          if (memberDoc.exists()) {
+          if (userRole === "member") {
             router.push("/profile")
+          } else if (userRole === "admin") {
+            router.push("/dashboard")
           } else {
             router.push("/profile/complete")
           }
         } catch (error) {
-          console.error("Error checking member profile:", error)
+          console.error("Error checking user role:", error)
           router.push("/dashboard")
         }
       }
@@ -94,28 +94,14 @@ export default function AuthPage() {
           return
         }
 
-        // Check if user profile exists
-        const profileResponse = await fetch(`/api/members/${user.uid}`, {
-          headers: {
-            "Authorization": `Bearer ${idToken}`,
-          },
-        })
-        console.log("Profile response:", profileResponse.status)
-        if (profileResponse.ok) {
-          const profileData = await profileResponse.json()
-          console.log("Profile data:", profileData)
-          if (profileData && profileData.fullName) {
-            // Profile exists, redirect to profile
-            console.log("Redirecting to profile")
-            window.location.href = "/profile"
-          } else {
-            // Profile incomplete, redirect to profile completion
-            console.log("Redirecting to profile/complete")
-            window.location.href = "/profile/complete"
-          }
+        // Check user role and redirect
+        const { getUserRole } = await import("@/lib/auth")
+        const userRole = await getUserRole(user)
+        if (userRole === "member") {
+          window.location.href = "/profile"
+        } else if (userRole === "admin") {
+          window.location.href = "/dashboard"
         } else {
-          // If error fetching profile, redirect to profile completion
-          console.log("Profile not found, redirecting to profile/complete")
           window.location.href = "/profile/complete"
         }
       }
@@ -140,23 +126,14 @@ export default function AuthPage() {
           body: JSON.stringify({ idToken }),
         })
 
-        // Check if user profile exists
-        const profileResponse = await fetch(`/api/members/${user.uid}`, {
-          headers: {
-            "Authorization": `Bearer ${idToken}`,
-          },
-        })
-        if (profileResponse.ok) {
-          const profileData = await profileResponse.json()
-          if (profileData && profileData.fullName) {
-            // Profile exists, redirect to profile
-            router.push("/profile")
-          } else {
-            // Profile incomplete, redirect to profile completion
-            router.push("/profile/complete")
-          }
+        // Check user role and redirect
+        const { getUserRole } = await import("@/lib/auth")
+        const userRole = await getUserRole(user)
+        if (userRole === "member") {
+          router.push("/profile")
+        } else if (userRole === "admin") {
+          router.push("/dashboard")
         } else {
-          // If error fetching profile, redirect to profile completion
           router.push("/profile/complete")
         }
       }
@@ -192,17 +169,13 @@ export default function AuthPage() {
               "Authorization": `Bearer ${idToken}`,
             },
           })
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json()
-            if (profileData && profileData.fullName) {
-              // Profile exists, redirect to profile
-              router.push("/profile")
-            } else {
-              // Profile incomplete, redirect to profile completion
-              router.push("/profile/complete")
-            }
+          const { getUserRole } = await import("@/lib/auth")
+          const userRole = await getUserRole(currentUser)
+          if (userRole === "member") {
+            router.push("/profile")
+          } else if (userRole === "admin") {
+            router.push("/dashboard")
           } else {
-            // If error fetching profile, redirect to profile completion
             router.push("/profile/complete")
           }
         } else {

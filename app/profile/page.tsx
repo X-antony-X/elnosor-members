@@ -218,40 +218,7 @@ export default function MemberProfilePage() {
         </div>
       </motion.div>
 
-      {/* QR Code Section - Full width on mobile */}
-      {showQR && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card glassy>
-            <CardHeader className="text-center">
-              <CardTitle className="text-lg">رمز الحضور الخاص بك</CardTitle>
-              <p className="text-sm text-gray-600 dark:text-gray-400">اعرض هذا الرمز للخادم لتسجيل حضورك</p>
-            </CardHeader>
-            <CardContent className="text-center">
-              <div className="mb-6">
-                <div className="text-7xl sm:text-6xl font-bold text-primary-600 dark:text-primary-400 mb-2 tracking-wider">
-                  {member.attendanceCode}
-                </div>
-                <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">كود الحضور الخاص بك</p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">اعرض هذا الكود أو الرمز للخادم</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg inline-block shadow-sm border-2 border-gray-200">
-                <QRCode
-                  value={generateMemberQR(member.attendanceCode!)}
-                  size={200}
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-4">يحتوي الرمز على الكود الرقمي فقط</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {/* Profile Card */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
           <Card glassy>
@@ -370,6 +337,39 @@ export default function MemberProfilePage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* QR Code Section */}
+        {showQR && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card glassy>
+              <CardHeader className="text-center">
+                <CardTitle className="text-lg">رمز الحضور الخاص بك</CardTitle>
+                <p className="text-sm text-gray-600 dark:text-gray-400">اعرض هذا الرمز للخادم لتسجيل حضورك</p>
+              </CardHeader>
+              <CardContent className="text-center">
+                <div className="mb-6">
+                  <div className="text-7xl sm:text-6xl font-bold text-primary-600 dark:text-primary-400 mb-2 tracking-wider">
+                    {member.attendanceCode}
+                  </div>
+                  <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">كود الحضور الخاص بك</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">اعرض هذا الكود أو الرمز للخادم</p>
+                </div>
+                <div className="bg-white p-6 rounded-lg inline-block shadow-sm border-2 border-gray-200">
+                  <QRCode
+                    value={generateMemberQR(member.attendanceCode!)}
+                    size={200}
+                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-4">يحتوي الرمز على الكود الرقمي فقط</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Church Information */}
         <motion.div
