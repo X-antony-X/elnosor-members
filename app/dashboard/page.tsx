@@ -265,9 +265,16 @@ export default function DashboardPage() {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.location.href = "/about"}
+                  onClick={() => window.location.href = "/gallery"}
                 >
-                  عن البرنامج
+                  معرض الصور
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = "/posts"}
+                >
+                  البوستات
                 </Button>
                 <Button
                   variant="outline"
@@ -279,16 +286,9 @@ export default function DashboardPage() {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.location.href = "/gallery"}
+                  onClick={() => window.location.href = "/about"}
                 >
-                  معرض الصور
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => window.location.href = "/posts"}
-                >
-                  البوستات
+                  عن البرنامج
                 </Button>
               </div>
             </CardContent>

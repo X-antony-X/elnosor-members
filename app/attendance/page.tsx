@@ -66,17 +66,42 @@ export default function AttendancePage() {
       return
     }
 
-    // Check camera permission
+    // Actively request camera permission on load to trigger prompt if needed
+    const requestCameraPermission = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+        setCameraPermission('granted')
+        stream.getTracks().forEach(track => track.stop())
+      } catch (error: any) {
+        if (error.name === 'NotAllowedError') {
+          setCameraPermission('denied')
+        } else {
+          setCameraPermission('prompt')
+        }
+      }
+    }
+
+    // Check camera permission using Permissions API if available
     if (navigator.permissions) {
       navigator.permissions.query({ name: 'camera' as PermissionName }).then((result) => {
         setCameraPermission(result.state)
+        if (result.state === 'prompt') {
+          requestCameraPermission()
+        }
         result.addEventListener('change', () => {
           setCameraPermission(result.state)
+          if (result.state === 'prompt') {
+            requestCameraPermission()
+          }
         })
       }).catch((error) => {
         console.error('Error checking camera permission:', error)
-        setCameraPermission('denied')
+        // Fallback to actively request permission
+        requestCameraPermission()
       })
+    } else {
+      // If Permissions API not supported, actively request permission
+      requestCameraPermission()
     }
   }, [user, router])
 
@@ -333,7 +358,21 @@ export default function AttendancePage() {
                 </DialogContent>
               </Dialog>
 
-              <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={() => { if (cameraPermission === 'denied') { toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.'); return; } setShowScanner(true); setTimeout(startScanner, 100); }} disabled={cameraPermission === 'denied'}>
+              <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={async () => {
+                if (cameraPermission === 'denied') {
+                  toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.')
+                  return
+                }
+                try {
+                  // Actively request camera permission on button click to trigger prompt if needed
+                  const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+                  stream.getTracks().forEach(track => track.stop())
+                  setShowScanner(true)
+                  setTimeout(startScanner, 100)
+                } catch (error) {
+                  toast.error('تعذر الوصول إلى الكاميرا. يرجى التحقق من الأذونات.')
+                }
+              }} disabled={cameraPermission === 'denied'}>
                 <span role="img" aria-label="scan">📷</span> مسح QR
               </button>
 
@@ -341,7 +380,21 @@ export default function AttendancePage() {
                 <span role="img" aria-label="manual">⌨️</span> إدخال يدوي
               </button>
 
-              <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={() => { if (cameraPermission === 'denied') { toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.'); return; } setShowNumberScanner(true); setTimeout(() => setStartNumberScanner(true), 100); }} disabled={cameraPermission === 'denied'}>
+              <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={async () => {
+                if (cameraPermission === 'denied') {
+                  toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.')
+                  return
+                }
+                try {
+                  // Actively request camera permission on button click to trigger prompt if needed
+                  const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+                  stream.getTracks().forEach(track => track.stop())
+                  setShowNumberScanner(true)
+                  setTimeout(() => setStartNumberScanner(true), 100)
+                } catch (error) {
+                  toast.error('تعذر الوصول إلى الكاميرا. يرجى التحقق من الأذونات.')
+                }
+              }} disabled={cameraPermission === 'denied'}>
                 <span role="img" aria-label="number-scan">🔢</span> مسح رقم الكود
               </button>
             </>

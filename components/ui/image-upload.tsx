@@ -3,14 +3,17 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import { Upload, X, ImageIcon, Camera, Image as ImageIconLucide, Folder } from "lucide-react"
+import { Upload, X, ImageIcon, Camera, Image as ImageIconLucide, Folder, Crop } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { cloudinary } from "@/lib/cloudinary"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
+import ReactCrop, { type Crop as CropType, centerCrop, makeAspectCrop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
 
 interface ImageUploadProps {
   onUpload: (url: string) => void
@@ -38,43 +41,21 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [selectedSource, setSelectedSource] = useState<"camera" | "gallery" | "file">("gallery")
+  const [cropModalOpen, setCropModalOpen] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [crop, setCrop] = useState<CropType>()
+  const [completedCrop, setCompletedCrop] = useState<CropType>()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = (file: File) => {
     if (file.size > maxSize * 1024 * 1024) {
       alert(`حجم الملف يجب أن يكون أقل من ${maxSize} ميجابايت`)
       return
     }
-
-    setUploading(true)
-    try {
-      let imageUrl: string
-
-      switch (uploadType) {
-        case "member":
-          imageUrl = await cloudinary.uploadMemberPhoto(file, entityId)
-          break
-        case "post":
-          imageUrl = await cloudinary.uploadPostImage(file, entityId)
-          break
-        case "notification":
-          imageUrl = await cloudinary.uploadNotificationImage(file, entityId)
-          break
-        case "user":
-          imageUrl = await cloudinary.uploadUserPhoto(file, entityId)
-          break
-        default:
-          throw new Error("Invalid upload type")
-      }
-
-      onUpload(imageUrl)
-    } catch (error) {
-      console.error("Upload error:", error)
-      alert("حدث خطأ في رفع الصورة")
-    } finally {
-      setUploading(false)
-    }
+    setSelectedFile(file)
+    setCropModalOpen(true)
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -92,22 +73,130 @@ export function ImageUpload({
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      handleFileSelect(file)
+      if (file.size > maxSize * 1024 * 1024) {
+        alert(`حجم الملف يجب أن يكون أقل من ${maxSize} ميجابايت`)
+        return
+      }
+      setSelectedFile(file)
+      setCropModalOpen(true)
     }
   }
 
-  const handleUploadClick = () => {
+  const requestCameraPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      stream.getTracks().forEach(track => track.stop()) // Stop immediately
+      return true
+    } catch (error) {
+      console.error("Camera permission denied:", error)
+      alert("يجب السماح بالوصول إلى الكاميرا")
+      return false
+    }
+  }
+
+  const handleUploadClick = async () => {
     if (uploading) return
 
     switch (selectedSource) {
       case "camera":
-        cameraInputRef.current?.click()
+        const hasPermission = await requestCameraPermission()
+        if (hasPermission) {
+          cameraInputRef.current?.click()
+        }
         break
       case "gallery":
       case "file":
       default:
         fileInputRef.current?.click()
         break
+    }
+  }
+
+  const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget
+    const crop = centerCrop(
+      makeAspectCrop(
+        {
+          unit: '%',
+          width: 90,
+        },
+        1, // aspect ratio 1:1 for square
+        width,
+        height
+      ),
+      width,
+      height
+    )
+    setCrop(crop)
+  }
+
+  const handleCropComplete = (crop: CropType) => {
+    setCompletedCrop(crop)
+  }
+
+  const handleCropConfirm = async () => {
+    if (!selectedFile || !completedCrop || !imgRef.current) return
+
+    setCropModalOpen(false)
+    setUploading(true)
+
+    try {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('Canvas context not available')
+
+      const image = imgRef.current
+      const scaleX = image.naturalWidth / image.width
+      const scaleY = image.naturalHeight / image.height
+
+      canvas.width = completedCrop.width * scaleX
+      canvas.height = completedCrop.height * scaleY
+
+      ctx.drawImage(
+        image,
+        completedCrop.x * scaleX,
+        completedCrop.y * scaleY,
+        completedCrop.width * scaleX,
+        completedCrop.height * scaleY,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      )
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) throw new Error('Failed to create blob')
+
+        const croppedFile = new File([blob], selectedFile.name, { type: selectedFile.type })
+
+        let imageUrl: string
+
+        switch (uploadType) {
+          case "member":
+            imageUrl = await cloudinary.uploadMemberPhoto(croppedFile, entityId)
+            break
+          case "post":
+            imageUrl = await cloudinary.uploadPostImage(croppedFile, entityId)
+            break
+          case "notification":
+            imageUrl = await cloudinary.uploadNotificationImage(croppedFile, entityId)
+            break
+          case "user":
+            imageUrl = await cloudinary.uploadUserPhoto(croppedFile, entityId)
+            break
+          default:
+            throw new Error("Invalid upload type")
+        }
+
+        onUpload(imageUrl)
+        setSelectedFile(null)
+        setCompletedCrop(undefined)
+      }, selectedFile.type)
+    } catch (error) {
+      console.error("Upload error:", error)
+      alert("حدث خطأ في رفع الصورة")
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -126,7 +215,7 @@ export function ImageUpload({
         ref={cameraInputRef}
         type="file"
         accept={accept}
-        capture="environment"
+        // capture="environment"
         onChange={handleFileInput}
         className="hidden"
         disabled={uploading}
@@ -135,7 +224,23 @@ export function ImageUpload({
 
       {showSourceSelector && (
         <div className="mb-4">
-          <Select value={selectedSource} onValueChange={(value: "camera" | "gallery" | "file") => setSelectedSource(value)}>
+          <Select value={selectedSource} onValueChange={async (value: "camera" | "gallery" | "file") => {
+            setSelectedSource(value)
+            // Trigger the file picker immediately
+            switch (value) {
+              case "camera":
+                const hasPermission = await requestCameraPermission()
+                if (hasPermission) {
+                  cameraInputRef.current?.click()
+                }
+                break
+              case "gallery":
+              case "file":
+              default:
+                fileInputRef.current?.click()
+                break
+            }
+          }}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="اختر مصدر الصورة" />
             </SelectTrigger>
@@ -239,6 +344,37 @@ export function ImageUpload({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Dialog open={cropModalOpen} onOpenChange={setCropModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>قص الصورة</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            {selectedFile && (
+              <ReactCrop
+                crop={crop}
+                onChange={setCrop}
+                onComplete={handleCropComplete}
+                aspect={1}
+                circularCrop
+              >
+                <img
+                  ref={imgRef}
+                  src={URL.createObjectURL(selectedFile)}
+                  onLoad={onImageLoad}
+                  alt="Crop preview"
+                  className="max-w-full max-h-64"
+                />
+              </ReactCrop>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setCropModalOpen(false)} variant="outline">إلغاء</Button>
+            <Button onClick={handleCropConfirm} disabled={!completedCrop}>تأكيد</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
