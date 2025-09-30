@@ -118,10 +118,12 @@ export default function MemberProfilePage() {
         })
         const averageTime = countWithDuration > 0 ? totalDuration / countWithDuration : 0
 
-        // Fetch total meetings
+        // Fetch total meetings that have happened so far (up to current time)
+        const now = new Date()
         const meetingsRef = collection(db, "meetings")
         const meetingsSnap = await getDocs(meetingsRef)
-        const totalMeetings = meetingsSnap.docs.length
+        const allMeetings = meetingsSnap.docs.map(doc => doc.data())
+        const totalMeetings = allMeetings.filter(meeting => meeting.date.toDate() <= now).length
 
         const attendancePercentage = totalMeetings > 0 ? (numberOfAttendances / totalMeetings) * 100 : 0
 
@@ -193,13 +195,32 @@ export default function MemberProfilePage() {
           <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                // Use 4-digit attendanceCode or generate one if missing
+              onClick={async () => {
                 let code = member.attendanceCode;
                 if (!code) {
-                  // Generate a 4-digit code (random for now)
-                  code = Math.floor(1000 + Math.random() * 9000).toString();
-                  // TODO: Save this code to member document in Firestore (requires backend or client update)
+                  // Generate next sequential code
+                  try {
+                    const membersRef = collection(db, "members")
+                    const membersSnap = await getDocs(membersRef)
+                    const codes = membersSnap.docs
+                      .map(doc => doc.data().attendanceCode)
+                      .filter(c => c && /^\d{4}$/.test(c))
+                      .map(c => parseInt(c))
+                      .sort((a, b) => b - a)
+                    const nextCode = codes.length > 0 ? codes[0] + 1 : 1000
+                    code = nextCode.toString().padStart(4, '0')
+
+                    // Save to member document
+                    const { doc, updateDoc } = await import("firebase/firestore")
+                    const memberRef = doc(db, "members", member.id!)
+                    await updateDoc(memberRef, { attendanceCode: code })
+                    setMember({ ...member, attendanceCode: code })
+                    toast.success("تم إنشاء كود العضو")
+                  } catch (error) {
+                    console.error("Error generating code:", error)
+                    toast.error("خطأ في إنشاء الكود")
+                    return
+                  }
                 }
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(code)}`;
                 window.open(qrUrl, '_blank');
@@ -310,6 +331,11 @@ export default function MemberProfilePage() {
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">أب الاعتراف</p>
                     <p className="text-gray-600 dark:text-gray-400">{member.confessorName}</p>
+                  </div>
+
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">كود العضو</p>
+                    <p className="text-gray-600 dark:text-gray-400">{member.attendanceCode || 'غير محدد'}</p>
                   </div>
 
                   <div>

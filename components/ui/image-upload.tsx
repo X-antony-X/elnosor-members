@@ -117,8 +117,8 @@ export function ImageUpload({
     const crop = centerCrop(
       makeAspectCrop(
         {
-          unit: '%',
-          width: 90,
+          unit: 'px',
+          width: Math.min(width, height) * 0.8,
         },
         1, // aspect ratio 1:1 for square
         width,
@@ -371,6 +371,7 @@ export function ImageUpload({
           </div>
           <DialogFooter>
             <Button onClick={() => setCropModalOpen(false)} variant="outline">إلغاء</Button>
+            <Button onClick={handleCropConfirm} disabled={!completedCrop} variant="outline">تخطي القص</Button>
             <Button onClick={handleCropConfirm} disabled={!completedCrop}>تأكيد</Button>
           </DialogFooter>
         </DialogContent>

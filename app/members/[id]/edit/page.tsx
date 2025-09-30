@@ -288,7 +288,7 @@ export default function MemberEditPage() {
             onUpload={function (url: string): void {
               setUploadedPhotoUrl(url)
             }}
-            currentImage={memberData?.photoUrl}
+            currentImage={uploadedPhotoUrl || memberData?.photoUrl}
             uploadType="member"
             entityId={params.id as string}
           />

@@ -933,6 +933,9 @@ export default function MembersPage() {
                     <span className="font-medium">الهاتف:</span> {member.phonePrimary}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">الكود:</span> {member.attendanceCode || 'غير محدد'}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     <span className="font-medium">العنوان:</span> {member.address.addressString}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
