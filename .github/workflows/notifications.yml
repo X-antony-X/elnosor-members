@@ -2,7 +2,8 @@ name: Send Scheduled Notifications
 
 on:
   schedule:
-    - cron: '*/22 * * * *'  # Every 22 minutes
+    - cron: '*/11 10-21 * * *'  # Every 11 minutes from 10 AM to 9:55 PM
+    - cron: '0 22 * * *'  # At 10 PM
   workflow_dispatch:  # Allow manual trigger
 
 jobs:

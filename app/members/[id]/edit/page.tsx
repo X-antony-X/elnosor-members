@@ -1,4 +1,4 @@
-"use client"
+ "use client"
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -8,13 +8,17 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ImageUpload } from "@/components/ui/image-upload"
 import toast from "react-hot-toast"
 import { useAuth } from "@/app/providers"
+import { useObfuscatedMemberId } from "@/lib/id-obfuscation"
+import { auth } from "@/lib/firebase"
 
 export default function MemberEditPage() {
   const { role, token } = useAuth()
   const router = useRouter()
   const params = useParams()
+  const { deobfuscate, obfuscate } = useObfuscatedMemberId()
   const [memberData, setMemberData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -28,76 +32,112 @@ export default function MemberEditPage() {
     universityYear: "",
     notes: "",
   })
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("")
 
   useEffect(() => {
-    if (!params.id) return
+    if (!params.id || typeof params.id !== "string") return
     const fetchMember = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`/api/members/${params.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (!res.ok) {
-          throw new Error("Failed to fetch member data")
+        const { doc, getDoc } = await import("firebase/firestore")
+        const { db } = await import("@/lib/firebase")
+
+        // Check if user is authenticated
+        if (!auth.currentUser) {
+          throw new Error("User not authenticated")
         }
-        const data = await res.json()
-        setMemberData(data)
-        setFormData({
-          fullName: data.fullName || "",
-          phonePrimary: data.phonePrimary || "",
-          phoneSecondary: data.phoneSecondary || "",
-          address: data.address?.addressString || "",
-          confessorName: data.confessorName || "",
-          classStage: data.classStage || "",
-          universityYear: data.universityYear?.toString() || "",
-          notes: data.notes || "",
-        })
+
+        // Deobfuscate member ID from URL
+        const realMemberId = deobfuscate(params.id as string)
+
+        const memberRef = doc(db, "members", realMemberId)
+        const memberSnap = await getDoc(memberRef)
+
+        if (memberSnap.exists()) {
+          const data = memberSnap.data()
+          setMemberData({
+            id: memberSnap.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+          })
+          setFormData({
+            fullName: data.fullName || "",
+            phonePrimary: data.phonePrimary || "",
+            phoneSecondary: data.phoneSecondary || "",
+            address: data.address?.addressString || "",
+            confessorName: data.confessorName || "",
+            classStage: data.classStage || "",
+            universityYear: data.universityYear?.toString() || "",
+            notes: data.notes || "",
+          })
+        } else {
+          throw new Error("Member not found")
+        }
       } catch (error) {
-        toast.error("خطأ في جلب بيانات المخدوم")
+        if (error instanceof Error) {
+          if (error.message === "User not authenticated") {
+            toast.error("يجب تسجيل الدخول أولاً")
+            router.push("/auth")
+          } else if (error.message === "Member not found") {
+            toast.error("المخدوم غير موجود")
+          } else if (error.message.includes("permission-denied")) {
+            toast.error("ليس لديك صلاحية للوصول لبيانات هذا المخدوم")
+          } else if (error.message.includes("unavailable")) {
+            toast.error("مشكلة في الاتصال بقاعدة البيانات")
+          } else {
+            toast.error("خطأ في جلب بيانات المخدوم: " + error.message)
+          }
+        } else {
+          toast.error("خطأ غير معروف في جلب بيانات المخدوم")
+        }
       } finally {
         setLoading(false)
       }
     }
     fetchMember()
-  }, [params.id, token])
+  }, [params.id])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleSave = async () => {
-    if (!params.id) return
+    if (!params.id || typeof params.id !== "string") return
     setSaving(true)
     try {
-      const res = await fetch(`/api/members/${params.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const { firestoreHelpers } = await import("@/hooks/use-firestore")
+
+      // Deobfuscate member ID for database operations
+      const realMemberId = deobfuscate(params.id as string)
+
+      await firestoreHelpers.updateMember(realMemberId, {
+        fullName: formData.fullName,
+        phonePrimary: formData.phonePrimary,
+        phoneSecondary: formData.phoneSecondary || undefined,
+        address: {
+          addressString: formData.address,
         },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          phonePrimary: formData.phonePrimary,
-          phoneSecondary: formData.phoneSecondary || undefined,
-          address: {
-            addressString: formData.address,
-          },
-          confessorName: formData.confessorName,
-          classStage: formData.classStage,
-          universityYear: formData.classStage === "university" ? parseInt(formData.universityYear) : undefined,
-          notes: formData.notes,
-          updatedAt: new Date().toISOString(),
-        }),
+        confessorName: formData.confessorName,
+        classStage: formData.classStage as "graduation" | "university",
+        universityYear: formData.classStage === "university" ? parseInt(formData.universityYear) : undefined,
+        notes: formData.notes,
+        photoUrl: uploadedPhotoUrl || memberData?.photoUrl,
       })
-      if (!res.ok) {
-        throw new Error("Failed to update member")
-      }
       toast.success("تم تحديث بيانات المخدوم بنجاح")
       router.push(`/members/${params.id}`)
     } catch (error) {
-      toast.error("خطأ في تحديث بيانات المخدوم")
+      if (error instanceof Error) {
+        if (error.message.includes("permission-denied")) {
+          toast.error("ليس لديك صلاحية لتعديل بيانات هذا المخدوم")
+        } else if (error.message.includes("unavailable")) {
+          toast.error("مشكلة في الاتصال بقاعدة البيانات")
+        } else {
+          toast.error("خطأ في تحديث بيانات المخدوم: " + error.message)
+        }
+      } else {
+        toast.error("خطأ غير معروف في تحديث بيانات المخدوم")
+      }
     } finally {
       setSaving(false)
     }
@@ -214,6 +254,18 @@ export default function MemberEditPage() {
             value={formData.notes}
             onChange={(e) => handleInputChange("notes", e.target.value)}
             placeholder="أي ملاحظات إضافية..."
+          />
+        </div>
+
+        <div>
+          <Label>صورة الملف الشخصي</Label>
+          <ImageUpload
+            onUpload={function (url: string): void {
+              setUploadedPhotoUrl(url)
+            }}
+            currentImage={memberData?.photoUrl}
+            uploadType="member"
+            entityId={params.id as string}
           />
         </div>
 

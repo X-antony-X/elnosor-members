@@ -25,6 +25,7 @@ import { ExcelService } from "@/lib/excel-utils"
 import toast from "react-hot-toast"
 import { useMembers, useFirestoreHelpers } from "@/hooks/use-firestore"
 import QRCode from "react-qr-code"
+import { useObfuscatedMemberId } from "@/lib/id-obfuscation"
 
 export default function MembersPage() {
   const { role } = useAuth()
@@ -149,7 +150,9 @@ export default function MembersPage() {
     })
 
   const handleMemberClick = (memberId: string) => {
-    router.push(`/members/${memberId}`)
+    const { obfuscate } = useObfuscatedMemberId()
+    const obfuscatedId = obfuscate(memberId)
+    router.push(`/members/${obfuscatedId}`)
   }
 
   const handleExportMembers = () => {

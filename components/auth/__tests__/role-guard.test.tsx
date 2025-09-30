@@ -18,7 +18,7 @@ describe("RoleGuard", () => {
   })
 
   it("redirects to /auth if user is not logged in", async () => {
-    mockUseAuth.mockReturnValue({ user: null, role: null, loading: false, token: null })
+    mockUseAuth.mockReturnValue({ user: null, role: null, loading: false, token: null, refreshRole: jest.fn() })
 
     const pushMock = jest.fn()
     jest.spyOn(require("next/navigation"), "useRouter").mockReturnValue({ push: pushMock } as any)
@@ -59,7 +59,7 @@ describe("RoleGuard", () => {
       phoneNumber: null,
       photoURL: null,
       providerId: ""
-    }, role: "admin", loading: false, token: null })
+    }, role: "admin", loading: false, token: null, refreshRole: jest.fn() })
 
     jest.spyOn(global, "fetch").mockImplementation((url) => {
       if (typeof url === "string" && url.includes("/api/admin/check-role")) {
@@ -109,7 +109,7 @@ describe("RoleGuard", () => {
       phoneNumber: null,
       photoURL: null,
       providerId: ""
-    }, role: "member", loading: false, token: null })
+    }, role: "member", loading: false, token: null, refreshRole: jest.fn() })
 
     jest.spyOn(global, "fetch").mockImplementation((url) => {
       if (typeof url === "string" && url.includes("/api/admin/check-role")) {

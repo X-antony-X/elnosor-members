@@ -16,6 +16,7 @@ export interface AuthContextType {
   role: "admin" | "member" | null
   token: string | null
   loading: boolean
+  refreshRole: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   role: null,
   token: null,
   loading: true,
+  refreshRole: async () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -35,6 +37,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false)
   const [showSplash, setShowSplash] = useState(false)
   const hasShownSplash = useRef(false)
+
+  const refreshRole = async () => {
+    if (user) {
+      try {
+        const userRole = await getUserRole(user)
+        setRole(userRole)
+      } catch (error) {
+        console.error("Error refreshing user role:", error)
+        setRole("member") // Default fallback
+      }
+    }
+  }
 
   useEffect(() => {
     // Set hydrated flag after component mounts to prevent hydration mismatch
@@ -100,7 +114,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, token, loading }}>
+    <AuthContext.Provider value={{ user, role, token, loading, refreshRole }}>
       <ThemeProvider>
         {children}
         {showSplash && (

@@ -283,17 +283,15 @@ export default function ProfileCompletePage() {
                   <Label>تاريخ الميلاد *</Label>
                   <Popover open={birthDatePopoverOpen} onOpenChange={setBirthDatePopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal h-12 rounded-lg border-2 transition-colors",
-                          !birthDate && "text-muted-foreground hover:border-primary-300",
-                          birthDate && "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-5 w-5 text-primary-600" />
-                        {birthDate ? format(birthDate, "PPP", { locale: ar }) : "اختر تاريخ الميلاد"}
-                      </Button>
+                      <div className="relative">
+                        <input
+                          readOnly
+                          value={birthDate ? format(birthDate, "PPP", { locale: ar }) : ""}
+                          placeholder="اختر تاريخ الميلاد"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer pr-10"
+                        />
+                        <CalendarIcon className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+                      </div>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 shadow-lg border-2" align="start">
                       <Calendar

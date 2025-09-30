@@ -16,11 +16,13 @@ import { RoleGuard } from "@/components/auth/role-guard"
 import { FloatingBackButton } from "@/components/layout/floating-back-button"
 import { auth, db } from "@/lib/firebase"
 import { collection, getDocs, query, where } from "firebase/firestore"
+import { useObfuscatedMemberId } from "@/lib/id-obfuscation"
 
 export default function MemberProfilePage() {
   const { role } = useAuth()
   const router = useRouter()
   const params = useParams()
+  const { deobfuscate } = useObfuscatedMemberId()
   const [member, setMember] = useState<Member | null>(null)
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<{
@@ -32,23 +34,55 @@ export default function MemberProfilePage() {
   const [statsLoading, setStatsLoading] = useState(false)
 
   useEffect(() => {
+    if (!params.id || typeof params.id !== "string") return
+
     const fetchMember = async () => {
       setLoading(true)
       try {
-        const token = await auth.currentUser?.getIdToken()
-        const res = await fetch(`/api/members?id=${params.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (!res.ok) {
-          throw new Error("Failed to fetch member data")
+        const { doc, getDoc } = await import("firebase/firestore")
+        const { db } = await import("@/lib/firebase")
+
+        // Check if user is authenticated
+        if (!auth.currentUser) {
+          throw new Error("User not authenticated")
         }
-        const data = await res.json()
-        setMember(data)
+
+        // Deobfuscate member ID from URL
+        const realMemberId = deobfuscate(params.id as string)
+
+        const memberRef = doc(db, "members", realMemberId)
+        const memberSnap = await getDoc(memberRef)
+
+        if (memberSnap.exists()) {
+          const data = memberSnap.data()
+          setMember({
+            id: memberSnap.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+          } as Member)
+        } else {
+          throw new Error("Member not found")
+        }
       } catch (error) {
         console.error("Error fetching member:", error)
-        toast.error("خطأ في جلب بيانات المخدوم")
+
+        if (error instanceof Error) {
+          if (error.message === "User not authenticated") {
+            toast.error("يجب تسجيل الدخول أولاً")
+            router.push("/auth")
+          } else if (error.message === "Member not found") {
+            toast.error("المخدوم غير موجود")
+          } else if (error.message.includes("permission-denied")) {
+            toast.error("ليس لديك صلاحية للوصول لبيانات هذا المخدوم")
+          } else if (error.message.includes("unavailable")) {
+            toast.error("مشكلة في الاتصال بقاعدة البيانات")
+          } else {
+            toast.error("خطأ في جلب بيانات المخدوم: " + error.message)
+          }
+        } else {
+          toast.error("خطأ غير معروف في جلب بيانات المخدوم")
+        }
       } finally {
         setLoading(false)
       }

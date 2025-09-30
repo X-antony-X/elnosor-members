@@ -2,14 +2,14 @@ import { type NextRequest, NextResponse } from "next/server"
 import { adminDb } from "@/lib/firebase-admin"
 import { requireAdmin } from "@/lib/auth-middleware"
 
-export async function GET(request: NextRequest, { params }: { params: { userId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   try {
     const { user, error } = await requireAdmin(request)
     if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { userId } = params
+    const { userId } = await params
 
     // Only allow users to access their own credentials or admins to access any
     if (user.uid !== userId && user.role !== "admin") {

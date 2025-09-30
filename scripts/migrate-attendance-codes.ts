@@ -9,16 +9,7 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
-import { config } from "../firebase.json";
-
-const firebaseConfig = {
-  apiKey: config.apiKey,
-  authDomain: config.authDomain,
-  projectId: config.projectId,
-  storageBucket: config.storageBucket,
-  messagingSenderId: config.messagingSenderId,
-  appId: config.appId,
-};
+import { firebaseConfig } from "../lib/firebase";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
