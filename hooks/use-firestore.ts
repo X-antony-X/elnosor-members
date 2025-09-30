@@ -14,6 +14,7 @@ import {
   deleteDoc,
   Timestamp,
   getDoc,
+  getDocs,
 } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import type { Member, Post, AttendanceLog, Meeting } from "@/lib/types";
@@ -231,8 +232,31 @@ export const firestoreHelpers = {
   // Update member
   updateMember: async (memberId: string, updates: Partial<Member>) => {
     const memberRef = doc(db, "members", memberId);
+    // Filter out undefined values as Firestore doesn't accept them
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, value]) => value !== undefined)
+    );
+
+    // Check if member has attendanceCode, if not generate one
+    const memberSnap = await getDoc(memberRef);
+    if (memberSnap.exists()) {
+      const memberData = memberSnap.data();
+      if (!memberData.attendanceCode) {
+        // Generate a unique 4-digit code
+        let code;
+        let isUnique = false;
+        while (!isUnique) {
+          code = Math.floor(1000 + Math.random() * 9000).toString();
+          // Check uniqueness (simple check, in production use a better method)
+          const existing = await getDocs(query(collection(db, "members"), where("attendanceCode", "==", code)));
+          isUnique = existing.empty;
+        }
+        filteredUpdates.attendanceCode = code as string;
+      }
+    }
+
     return await updateDoc(memberRef, {
-      ...updates,
+      ...filteredUpdates,
       updatedAt: Timestamp.now(),
     });
   },

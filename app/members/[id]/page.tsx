@@ -97,7 +97,7 @@ export default function MemberProfilePage() {
       setStatsLoading(true)
       try {
         // Fetch attendances for this member
-        const attendancesRef = collection(db, "attendance_logs")
+        const attendancesRef = collection(db, "attendance")
         const q = query(attendancesRef, where("memberId", "==", member.id))
         const attendancesSnap = await getDocs(q)
         const attendances = attendancesSnap.docs.map(doc => doc.data())
@@ -190,18 +190,20 @@ export default function MemberProfilePage() {
           </div>
 
           <div className="flex gap-2">
-            <Button
+          <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                const qrData = {
-                  id: member.id,
-                  name: member.fullName,
-                  phone: member.phonePrimary,
-                };
-                const qrString = JSON.stringify(qrData);
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrString)}`;
+                // Use 4-digit attendanceCode or generate one if missing
+                let code = member.attendanceCode;
+                if (!code) {
+                  // Generate a 4-digit code (random for now)
+                  code = Math.floor(1000 + Math.random() * 9000).toString();
+                  // TODO: Save this code to member document in Firestore (requires backend or client update)
+                }
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(code)}`;
                 window.open(qrUrl, '_blank');
+                alert(`كود العضو: ${code}`);
               }}
             >
               <QrCode className="w-4 h-4 ml-2" />

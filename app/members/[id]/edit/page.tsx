@@ -31,6 +31,7 @@ export default function MemberEditPage() {
     classStage: "",
     universityYear: "",
     notes: "",
+    dateOfBirth: "",
   })
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("")
 
@@ -70,6 +71,7 @@ export default function MemberEditPage() {
             classStage: data.classStage || "",
             universityYear: data.universityYear?.toString() || "",
             notes: data.notes || "",
+            dateOfBirth: data.dateOfBirth ? data.dateOfBirth.toDate().toISOString().split('T')[0] : "",
           })
         } else {
           throw new Error("Member not found")
@@ -123,6 +125,7 @@ export default function MemberEditPage() {
         universityYear: formData.classStage === "university" ? parseInt(formData.universityYear) : undefined,
         notes: formData.notes,
         photoUrl: uploadedPhotoUrl || memberData?.photoUrl,
+        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
       })
       toast.success("تم تحديث بيانات المخدوم بنجاح")
       router.push(`/members/${params.id}`)
@@ -208,6 +211,16 @@ export default function MemberEditPage() {
           />
         </div>
 
+        <div>
+          <Label htmlFor="dateOfBirth">تاريخ الميلاد</Label>
+          <Input
+            id="dateOfBirth"
+            type="date"
+            value={formData.dateOfBirth}
+            onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="classStage">المرحلة الدراسية *</Label>
@@ -259,6 +272,18 @@ export default function MemberEditPage() {
 
         <div>
           <Label>صورة الملف الشخصي</Label>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              // Trigger file input or something, but since ImageUpload handles it, perhaps just label
+              const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+              if (input) input.click();
+            }}
+            className="mb-2"
+          >
+            اختر صورة جديدة
+          </Button>
           <ImageUpload
             onUpload={function (url: string): void {
               setUploadedPhotoUrl(url)
