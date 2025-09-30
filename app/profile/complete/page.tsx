@@ -18,7 +18,7 @@ import { CalendarIcon, Upload, User, Phone, MapPin, GraduationCap } from "lucide
 import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 import toast from "react-hot-toast"
-import { cn } from "@/lib/utils"
+import { cn, generateAttendanceCode } from "@/lib/utils"
 import type { Member } from "@/lib/types"
 import { firestoreHelpers } from "@/hooks/use-firestore"
 
@@ -114,6 +114,9 @@ export default function ProfileCompletePage() {
     try {
       const fullName = `${formData.firstName} ${formData.middleName} ${formData.lastName}`.trim()
 
+      // Generate attendance code for the new member
+      const attendanceCode = await generateAttendanceCode()
+
       const memberData: Omit<Member, 'id'> = {
         uid: user.uid,
         fullName,
@@ -125,6 +128,7 @@ export default function ProfileCompletePage() {
         classStage: formData.classStage as "graduation" | "university",
         ...(formData.classStage === "university" && { universityYear: parseInt(formData.universityYear) }),
         confessorName: formData.confessorName,
+        attendanceCode,
         ...(uploadedPhotoUrl && { photoUrl: uploadedPhotoUrl }),
         ...(user.photoURL && !uploadedPhotoUrl && { photoUrl: user.photoURL }),
         createdAt: new Date(),

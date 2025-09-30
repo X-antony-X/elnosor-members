@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 
 const navigationItems = [
   { href: "/dashboard", icon: Home, label: "dashboard" },
+  { href: "/profile", icon: User, label: "profile" },
   { href: "/members", icon: Users, label: "members", adminOnly: true },
   { href: "/attendance", icon: Calendar, label: "attendance", adminOnly: true },
   { href: "/posts", icon: FileText, label: "posts", adminOnly: true },
