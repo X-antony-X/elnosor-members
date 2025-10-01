@@ -16,7 +16,7 @@ import { t } from "@/lib/translations"
 import type { Member, AttendanceLog, Meeting } from "@/lib/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
-import { QRScanner } from "@/components/qr-scanner"
+import { Html5QrcodeScanner } from 'html5-qrcode'
 import { NumberScanner } from "@/components/number-scanner"
 import { ExcelService } from "@/lib/excel-utils"
 import toast from "react-hot-toast"
@@ -34,9 +34,8 @@ export default function AttendancePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [showScanner, setShowScanner] = useState(false)
-  const [startScannerState, setStartScannerState] = useState(false)
-  const startScanner = () => setStartScannerState(true)
   const [scannerLoading, setScannerLoading] = useState(false)
+  let html5QrcodeScanner: Html5QrcodeScanner | null = null
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [exportDateRange, setExportDateRange] = useState({
     startDate: "",
@@ -44,7 +43,7 @@ export default function AttendancePage() {
     reportType: "detailed" as "detailed" | "summary" | "comprehensive",
   })
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown')
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const scannerRef = useRef<HTMLDivElement>(null)
   const [manualCode, setManualCode] = useState("")
   const [showManualDialog, setShowManualDialog] = useState(false)
   const [showNumberScanner, setShowNumberScanner] = useState(false)
@@ -127,7 +126,6 @@ export default function AttendancePage() {
       if (member) {
         await handleAttendance(member, "qr")
         setShowScanner(false)
-        setStartScannerState(false)
         toast.success(`تم تسجيل حضور ${member.fullName}`)
       } else {
         toast.error("لم يتم العثور على المخدوم بهذا الكود")
@@ -270,6 +268,26 @@ export default function AttendancePage() {
   const filteredMembers = members.filter((member) =>
     member.fullName.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const startScanner = () => {
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.clear().catch(console.error)
+    }
+    html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      false
+    )
+    html5QrcodeScanner.render(
+      (decodedText) => {
+        handleQRScan(decodedText)
+        html5QrcodeScanner?.clear().catch(console.error)
+      },
+      (errorMessage: string) => {
+        console.error("QR Scan error:", errorMessage)
+      }
+    )
+  }
 
   if (membersLoading || attendanceLoading) {
     return (
@@ -683,7 +701,7 @@ export default function AttendancePage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={showScanner} onOpenChange={(open) => { setShowScanner(open); if (!open) setStartScannerState(false); }}>
+      <Dialog open={showScanner} onOpenChange={(open) => { setShowScanner(open); if (!open && html5QrcodeScanner) html5QrcodeScanner.clear().catch(console.error); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -698,14 +716,7 @@ export default function AttendancePage() {
                 <p className="mr-2">جاري معالجة الكود...</p>
               </div>
             ) : (
-              <QRScanner
-                onScan={handleQRScan}
-                onError={(error) => {
-                  console.error("QR Scanner error:", error)
-                  toast.error(error)
-                }}
-                start={startScannerState}
-              />
+              <div id="reader" className="w-full"></div>
             )}
             <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">وجه الكاميرا نحو كود QR الخاص بالعضو</p>
