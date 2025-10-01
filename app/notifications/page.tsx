@@ -67,11 +67,36 @@ export default function NotificationsPage() {
   // Web-push hook
   const { permission: webPushPermission, requestPermission: requestWebPushPermission } = useWebPush()
 
+  // Consolidate permission requests to avoid duplicate prompts
+  useEffect(() => {
+    if (permission !== "granted" && webPushPermission !== "granted") {
+      // Request permission once
+      requestPermission()
+    }
+  }, [permission, webPushPermission, requestPermission])
+
   const loading = notificationsLoading || templatesLoading || schedulesLoading || quotesLoading
 
   const filteredNotifications = role === "member" ? notifications.filter(n => n.targetAudience === "all") : notifications;
 
   const [dailyVersesEnabled, setDailyVersesEnabled] = useState(true)
+
+  // Notification badge count state
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  // Update badge count on notifications change
+  useEffect(() => {
+    const unread = notifications.filter(n => !n.readBy?.includes(user?.uid || "")).length
+    setUnreadCount(unread)
+
+    if ('setAppBadge' in navigator) {
+      if (unread > 0) {
+        navigator.setAppBadge(unread).catch(() => { })
+      } else {
+        navigator.clearAppBadge().catch(() => { })
+      }
+    }
+  }, [notifications, user])
 
   // Form states
   const [newNotification, setNewNotification] = useState({
@@ -98,10 +123,15 @@ export default function NotificationsPage() {
     targetAudience: "all" as "all" | "group" | "individuals",
   })
 
-  const [bulkSchedule, setBulkSchedule] = useState({
+  // Bulk schedule form state
+  const [bulkSchedule, setBulkSchedule] = useState<{
+    templateId: string
+    dates: string[]
+    targetAudience: "all" | "group" | "individuals"
+  }>({
     templateId: "",
-    dates: [] as string[],
-    targetAudience: "all" as "all" | "group" | "individuals",
+    dates: [],
+    targetAudience: "all",
   })
 
   useEffect(() => {

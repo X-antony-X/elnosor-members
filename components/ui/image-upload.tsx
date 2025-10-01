@@ -128,10 +128,48 @@ export function ImageUpload({
       height
     )
     setCrop(crop)
+    setCompletedCrop(crop)
   }
 
   const handleCropComplete = (crop: CropType) => {
     setCompletedCrop(crop)
+  }
+
+  const handleSkipCrop = async () => {
+    if (!selectedFile) return
+
+    setCropModalOpen(false)
+    setUploading(true)
+
+    try {
+      let imageUrl: string
+
+      switch (uploadType) {
+        case "member":
+          imageUrl = await cloudinary.uploadMemberPhoto(selectedFile, entityId)
+          break
+        case "post":
+          imageUrl = await cloudinary.uploadPostImage(selectedFile, entityId)
+          break
+        case "notification":
+          imageUrl = await cloudinary.uploadNotificationImage(selectedFile, entityId)
+          break
+        case "user":
+          imageUrl = await cloudinary.uploadUserPhoto(selectedFile, entityId)
+          break
+        default:
+          throw new Error("Invalid upload type")
+      }
+
+      onUpload(imageUrl)
+      setSelectedFile(null)
+      setCompletedCrop(undefined)
+    } catch (error) {
+      console.error("Upload error:", error)
+      alert("حدث خطأ في رفع الصورة")
+    } finally {
+      setUploading(false)
+    }
   }
 
   const handleCropConfirm = async () => {
@@ -357,7 +395,6 @@ export function ImageUpload({
                 onChange={setCrop}
                 onComplete={handleCropComplete}
                 aspect={1}
-                circularCrop
               >
                 <img
                   ref={imgRef}
@@ -371,7 +408,7 @@ export function ImageUpload({
           </div>
           <DialogFooter>
             <Button onClick={() => setCropModalOpen(false)} variant="outline">إلغاء</Button>
-            <Button onClick={handleCropConfirm} disabled={!completedCrop} variant="outline">تخطي القص</Button>
+            <Button onClick={handleSkipCrop} variant="outline">تخطي القص</Button>
             <Button onClick={handleCropConfirm} disabled={!completedCrop}>تأكيد</Button>
           </DialogFooter>
         </DialogContent>

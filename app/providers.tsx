@@ -53,14 +53,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Set hydrated flag after component mounts to prevent hydration mismatch
     setIsHydrated(true)
 
-    // Register service worker for web-push notifications
+    // Register service worker for FCM notifications
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/push-sw.js')
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
         .then((registration) => {
-          console.log('Push Service Worker registered successfully:', registration);
+          console.log('FCM Service Worker registered successfully:', registration);
         })
         .catch((error) => {
-          console.log('Push Service Worker registration failed:', error);
+          console.log('FCM Service Worker registration failed:', error);
         });
     }
 

@@ -33,6 +33,13 @@ export function QRScanner({ onScan, onError, start }: QRScannerProps) {
 
   const startCamera = async () => {
     try {
+      // Check for camera permission explicitly
+      const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName })
+      if (permissionStatus.state === 'denied') {
+        onError?.("تم رفض إذن الوصول للكاميرا. يرجى منح الإذن من إعدادات المتصفح.")
+        return
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment", // Use back camera
