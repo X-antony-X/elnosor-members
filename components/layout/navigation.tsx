@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
@@ -13,12 +13,12 @@ import { cn } from "@/lib/utils"
 const navigationItems = [
   { href: "/dashboard", icon: Home, label: "dashboard" },
   { href: "/profile", icon: User, label: "profile" },
-  { href: "/members", icon: Users, label: "members", adminOnly: true },
-  { href: "/attendance", icon: Calendar, label: "attendance", adminOnly: true },
-  { href: "/posts", icon: FileText, label: "posts", adminOnly: true },
-  { href: "/notifications", icon: Bell, label: "notifications" },
+  { href: "/members", icon: Users, label: "members", permission: "canManageMembers" },
+  { href: "/attendance", icon: Calendar, label: "attendance", permission: "canManageAttendance" },
+  { href: "/posts", icon: FileText, label: "posts", permission: "canManagePosts" },
+  { href: "/notifications", icon: Bell, label: "notifications", permission: "canScheduleNotifications" },
   { href: "/gallery", icon: FileText, label: "gallery" },
-  { href: "/settings", icon: Settings, label: "settings", adminOnly: true },
+  { href: "/settings", icon: Settings, label: "settings", permission: "canManageMembers" },
   { href: "/about", icon: Info, label: "about" },
 ]
 
@@ -34,9 +34,33 @@ const memberNavigationItems = [
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
-  const { role } = useAuth()
+  const { user } = useAuth()
+  const [permissions, setPermissions] = useState<any>(null)
 
-  const items = role === "admin" ? navigationItems : memberNavigationItems
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const token = await user?.getIdToken()
+        const response = await fetch('/api/user/permissions', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setPermissions(data.permissions)
+        }
+      } catch (error) {
+        console.error('Error fetching permissions:', error)
+      }
+    }
+
+    if (user) {
+      fetchPermissions()
+    }
+  }, [user])
+
+  const items = permissions?.role === "admin" ? navigationItems.filter(item => !item.permission || permissions[item.permission]) : memberNavigationItems
 
   return (
     <>
@@ -61,7 +85,7 @@ export function Navigation() {
           <div className=" mt-20 p-6">
             <img src="/images/logo.png" alt="Logo" className="w-25 h-25 rounded-full" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">شباب النسور</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{role === "admin" ? "خادم" : "مخدوم"}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{permissions?.role === "admin" ? "خادم" : "مخدوم"}</p>
           </div>
 
           <nav className="flex-1 px-4 space-y-2">

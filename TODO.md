@@ -81,3 +81,95 @@ Status: Pending
 - Test on different browsers (Chrome, Firefox, Safari).
 - Handle edge cases like permission denied, camera not available, etc.
 - Update TODO.md with completion status after implementing fixes.
+
+# TODO: Move Front-End Role Checks to Back-End
+
+## Overview
+
+Move all front-end role checks like `{role === "admin" && (` to back-end to prevent users from tampering via browser inspect or viewing code on GitHub. This ensures role-based logic is enforced server-side.
+
+## Method
+
+- Replace front-end role checks with API calls that perform role validation server-side.
+- API endpoints will check user role from Firebase Auth custom claims or Firestore, and return appropriate data or permissions.
+- Front-end will render UI based on API responses, not local role state.
+- Use server-side rendering where possible for sensitive pages.
+
+## Plan and Steps
+
+1. **Identify All Role Checks**: Use grep search to find all `role === "admin"` instances (found 61 results across multiple files).
+
+2. **Categorize by Feature**:
+
+   - Navigation: Conditionally show admin/member menu items.
+   - Dashboard: Show admin vs member stats and actions.
+   - Posts: Edit/delete permissions.
+   - Members: Admin management features.
+   - Attendance: Admin controls.
+   - Notifications: Admin scheduling features.
+   - Profile: Edit permissions.
+
+3. **Create API Endpoints**:
+
+   - `/api/user/permissions`: Returns user permissions object based on role.
+   - `/api/dashboard/data`: Returns dashboard data (stats, actions) based on role.
+   - `/api/posts/permissions`: Returns edit/delete permissions for posts/comments.
+   - `/api/navigation/items`: Returns navigation items based on role.
+   - `/api/members/actions`: Returns available member management actions.
+   - `/api/attendance/controls`: Returns attendance controls based on role.
+   - `/api/notifications/features`: Returns notification features based on role.
+
+4. **Update Front-End Components**:
+
+   - Replace role checks with API calls in useEffect or hooks.
+   - Store permissions in state and render conditionally.
+   - Handle loading states while fetching permissions.
+
+5. **Server-Side Role Checking**:
+
+   - In API routes, verify user authentication and role from Firebase.
+   - Return 403 Forbidden if insufficient permissions.
+   - Log security attempts.
+
+6. **Testing**:
+   - Test that admin features are inaccessible to members.
+   - Verify API responses match role.
+   - Check that front-end can't be tampered with.
+
+## Files to Edit
+
+### Core Components
+
+- `components/layout/navigation.tsx`: Navigation items based on role
+- `components/layout/mobile-navigation.tsx`: Mobile nav items
+- `components/auth/role-guard*.tsx`: Role checking logic
+
+### Pages
+
+- `app/dashboard/page.tsx`: Stats and actions
+- `app/posts/page.tsx`: Edit/delete permissions
+- `app/members/page.tsx`: Admin features
+- `app/attendance/page.tsx`: Admin controls
+- `app/notifications/page.tsx`: Admin features
+- `app/profile/page.tsx`: Edit permissions
+- `app/test-role/page.tsx`: Role display
+
+### API Routes (Update existing)
+
+- `app/api/members/route.ts`
+- `app/api/admin/check-role*/route.ts`
+- `app/api/members/[id]/*/route.ts`
+
+### Lib Files
+
+- `lib/auth.ts`: Role resolution
+- `lib/auth-debug.ts`: Debug role checking
+
+Status: Pending
+
+## Additional Notes
+
+- Ensure all API routes use proper authentication middleware.
+- Implement rate limiting on permission checks.
+- Add audit logging for role-based actions.
+- Update after implementing to mark as completed.

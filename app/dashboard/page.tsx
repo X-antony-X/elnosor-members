@@ -73,11 +73,13 @@ const chartVariants = {
 }
 
 export default function DashboardPage() {
-  const { user, role } = useAuth()
+  const { user } = useAuth()
   const isMobile = useIsMobile()
   const [dateRange, setDateRange] = useState<string>("30")
   const [analyticsDateRange, setAnalyticsDateRange] = useState<{ start: Date; end: Date } | undefined>()
   const [showQR, setShowQR] = useState(false)
+  const [dashboardData, setDashboardData] = useState<any>(null)
+  const [loadingDashboard, setLoadingDashboard] = useState(true)
 
   useEffect(() => {
     const days = Number.parseInt(dateRange)
@@ -86,6 +88,31 @@ export default function DashboardPage() {
     start.setDate(start.getDate() - days)
     setAnalyticsDateRange({ start, end })
   }, [dateRange])
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const token = await user?.getIdToken()
+        const response = await fetch('/api/dashboard/data', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setDashboardData(data)
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoadingDashboard(false)
+      }
+    }
+
+    if (user) {
+      fetchDashboardData()
+    }
+  }, [user])
 
   const { analytics, loading } = useAnalytics(analyticsDateRange)
 
@@ -160,7 +187,7 @@ export default function DashboardPage() {
     },
   ]
 
-  if (loading) {
+  if (loading || loadingDashboard) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" />
@@ -168,7 +195,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (role !== "admin") {
+  if (dashboardData?.showMemberActions) {
     // Member view
     return (
       <motion.div
@@ -325,7 +352,7 @@ export default function DashboardPage() {
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {(role === "admin" ? adminStatCards : memberStatCards).map((stat: any, index: number) => {
+        {dashboardData?.stats?.map((stat: any, index: number) => {
           const Icon = stat.icon
           return (
             <motion.div
@@ -614,7 +641,7 @@ export default function DashboardPage() {
         </TabsContent>
       </Tabs>
 
-      {role === "admin" && (
+      {dashboardData?.showAdminActions && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
           <Card glassy>
             <CardHeader>
