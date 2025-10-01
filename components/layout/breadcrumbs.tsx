@@ -72,7 +72,7 @@ export function Breadcrumbs() {
         <div key={breadcrumb.href} className="flex items-center gap-2">
           {index > 0 && <ChevronLeft className="w-4 h-4" />}
           {index === breadcrumbs.length - 1 ? (
-            <span className="text-gray-900 dark:text-white font-medium">{breadcrumb.label}</span>
+            <span className="text-gray-900 dark:text-white font-medium bg-primary/20 px-2 py-1 rounded">{breadcrumb.label}</span>
           ) : (
             <Link href={breadcrumb.href} className="hover:text-gray-900 dark:hover:text-white transition-colors">
               {breadcrumb.label}

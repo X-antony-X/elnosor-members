@@ -33,6 +33,20 @@
       "sizes": "48x48"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "تسجيل حضور مخدوم",
+      "url": "/attendance"
+    },
+    {
+      "name": "ابعت اشعار",
+      "url": "/notifications"
+    },
+    {
+      "name": "Posts",
+      "url": "/posts"
+    }
+  ],
   "categories": [
     "productivity",
     "social"

@@ -10,6 +10,7 @@ import { useAuth } from "@/app/providers"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useAnalytics } from "@/hooks/use-analytics"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import QRCode from "react-qr-code"
 import {
@@ -170,12 +171,12 @@ export default function DashboardPage() {
   if (role !== "admin") {
     // Member view
     return (
-    <motion.div
-      className="p-6 space-y-6 bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
+      <motion.div
+        className="p-6 space-y-6 bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
         <motion.div variants={sectionVariants} transition={{ duration: 0.5 }} className="space-y-2">
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-4">مرحباً، {user?.displayName}</h1>
@@ -251,7 +252,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Quick Actions */}
-          <Card glassy>
+          <Card glassy className={cn(isMobile && "fixed bottom-0 left-0 right-0 rounded-none z-10")}>
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold mb-4 text-center">الإجراءات السريعة</h3>
               <div className="space-y-3">
@@ -301,7 +302,7 @@ export default function DashboardPage() {
   const COLORS = ["#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EF4444", "#06B6D4"]
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>

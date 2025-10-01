@@ -8,6 +8,7 @@ import { InstallPrompt } from "@/components/pwa/install-prompt"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { HydrationSafe } from "@/components/hydration-safe"
 import { OneSignalProvider } from "@/components/onesignal-provider"
+import SplashWrapper from "@/components/splash-wrapper"
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.VERSEL_URL_FULL || 'http://localhost:3000'),
@@ -71,28 +72,30 @@ export default function RootLayout({
       </head>
       <body className="font-arabic" suppressHydrationWarning={true}>
         <div className="background-blur" />
-        <HydrationSafe>
-          <Providers>
-            <OneSignalProvider />
-            <>
-              <Breadcrumbs />
-              {children}
-              <OfflineDetector />
-              <InstallPrompt />
-            </>
-            <Toaster
-              position="top-center"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: "#363636",
-                  color: "#fff",
-                  fontFamily: "Cairo, sans-serif",
-                },
-              }}
-            />
-          </Providers>
-        </HydrationSafe>
+        <SplashWrapper>
+          <HydrationSafe>
+            <Providers>
+              <OneSignalProvider />
+              <>
+                <Breadcrumbs />
+                {children}
+                <OfflineDetector />
+                <InstallPrompt />
+              </>
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: "#363636",
+                    color: "#fff",
+                    fontFamily: "Cairo, sans-serif",
+                  },
+                }}
+              />
+            </Providers>
+          </HydrationSafe>
+        </SplashWrapper>
       </body>
     </html>
   )
