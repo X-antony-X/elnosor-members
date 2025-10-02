@@ -307,6 +307,13 @@ export default function DashboardPage() {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
+                  onClick={() => window.location.href = "/notifications"}
+                >
+                  الإشعارات
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
                   onClick={() => window.location.href = "/settings"}
                 >
                   الإعدادات
@@ -683,6 +690,51 @@ export default function DashboardPage() {
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">إنشاء اجتماعات</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إنشاء اجتماعات الجمعة الأسبوعية</p>
+                </button>
+
+                <button
+                  type="button"
+                  className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => window.location.href = "/profile"}
+                >
+                  <h3 className="font-medium text-gray-900 dark:text-white">الملف الشخصي</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">عرض وتعديل الملف الشخصي</p>
+                </button>
+
+                <button
+                  type="button"
+                  className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => window.location.href = "/posts"}
+                >
+                  <h3 className="font-medium text-gray-900 dark:text-white">البوستات</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إدارة المنشورات والمحتوى</p>
+                </button>
+
+                <button
+                  type="button"
+                  className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => window.location.href = "/gallery"}
+                >
+                  <h3 className="font-medium text-gray-900 dark:text-white">معرض الصور</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">عرض وإدارة الصور</p>
+                </button>
+
+                <button
+                  type="button"
+                  className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => window.location.href = "/settings"}
+                >
+                  <h3 className="font-medium text-gray-900 dark:text-white">الإعدادات</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إعدادات التطبيق والحساب</p>
+                </button>
+
+                <button
+                  type="button"
+                  className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  onClick={() => window.location.href = "/about"}
+                >
+                  <h3 className="font-medium text-gray-900 dark:text-white">عن البرنامج</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">معلومات عن التطبيق</p>
                 </button>
               </div>
             </CardContent>

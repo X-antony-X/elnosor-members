@@ -70,7 +70,7 @@ export function Header({ onMenuToggle, showBackButton = false, title }: HeaderPr
   }
 
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
+    <header className="bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg shadow-lg sticky top-0 z-40 border-b border-white/20 dark:border-black/20">
       <div className="px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Left side - Logo and title */}
@@ -118,25 +118,6 @@ export function Header({ onMenuToggle, showBackButton = false, title }: HeaderPr
 
           {/* Right side - Actions and user info */}
           <div className="flex items-center gap-2 sm:gap-4">
-            {/* Online status indicator */}
-            <div className="hidden sm:block">
-              <OnlineStatusIndicator />
-            </div>
-
-            {/* Notifications button */}
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-              {notificationCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
-                >
-                  {notificationCount > 9 ? "9+" : notificationCount}
-                </motion.span>
-              )}
-            </Button>
-
             {/* User info - Desktop */}
             <div className="hidden md:flex items-center gap-3">
               {user?.photoURL ? (
