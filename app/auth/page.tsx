@@ -233,9 +233,9 @@ export default function AuthPage() {
             <p className="text-gray-600 dark:text-gray-400 mt-2">إدارة الحضور والمشاركة</p>
           </CardHeader>
 
-          <CardContent className="space-y-4">
+        <CardContent className="space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              {/* <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="social" className="flex items-center gap-2">
                   <Smartphone className="w-4 h-4" />
                   حسابات التواصل
@@ -249,7 +249,7 @@ export default function AuthPage() {
                     </Badge>
                   )}
                 </TabsTrigger>
-              </TabsList>
+              </TabsList> */}
 
               <TabsContent value="social" className="space-y-4 mt-6">
                 <Button onClick={handleGoogleSignIn} className="w-full bg-transparent" variant="outline">

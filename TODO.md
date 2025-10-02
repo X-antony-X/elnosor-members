@@ -82,6 +82,83 @@ Status: Pending
 - Handle edge cases like permission denied, camera not available, etc.
 - Update TODO.md with completion status after implementing fixes.
 
+# TODO: Add Permissions and Fix Image Selection Issues
+
+## Overview
+
+Add camera and storage permissions on first app open, and fix image selection issues where crop doesn't move and image doesn't update after save/skip.
+
+## Tasks
+
+### 1. Add Camera Permission Request on First App Open
+
+- **Problem**: Camera permission not requested on app initialization.
+- **Solution**:
+  - Add camera permission request in splash screen or providers.
+  - Show toast explaining the permission is for photo upload.
+  - Request permission using `navigator.mediaDevices.getUserMedia({ video: true })`.
+  - Handle permission denied gracefully.
+
+Status: Completed
+
+### 2. Add Storage Permission Request
+
+- **Problem**: Storage permission not requested for photo selection from gallery.
+- **Solution**:
+  - Request storage permission when selecting from gallery.
+  - Note: Web doesn't have standard storage permission, but handle file access permission.
+  - Show appropriate messages for different browsers.
+
+Status: Pending
+
+### 3. Fix Image Crop Not Moving from Center
+
+- **Problem**: Crop rectangle doesn't move when user tries to drag it.
+- **Solution**:
+  - Check ReactCrop configuration in `components/ui/image-upload.tsx`.
+  - Ensure `onChange` and `onComplete` are properly set.
+  - Test crop dragging functionality.
+
+Status: Completed
+
+### 4. Fix Image Not Updating After Save or Skip Crop
+
+- **Problem**: After selecting image and clicking save or skip crop, image stays as Google image instead of uploaded one.
+- **Root Cause**: State not updating properly or upload failing silently.
+- **Solution**:
+  - Ensure `onUpload` callback updates state correctly in parent component.
+  - Add error handling and user feedback for upload failures.
+  - Check if `uploadedPhotoUrl` is being set and used in form submission.
+  - Verify Cloudinary upload is working and returning valid URL.
+
+Status: Completed
+
+### 5. Test and Validate Fixes
+
+- Test camera permission request on first open.
+- Test storage/file access permission.
+- Test image crop dragging.
+- Test image upload and display after save/skip.
+- Test on different devices and browsers.
+
+Status: Pending
+
+## Files to Edit
+
+- `components/splash-screen.tsx`: Add permission requests.
+- `app/providers.tsx`: Add permission logic.
+- `components/ui/image-upload.tsx`: Fix crop and upload issues.
+- `app/profile/complete/page.tsx`: Ensure state updates correctly.
+
+Status: Pending
+
+## Additional Notes
+
+- Add user-friendly toast messages for permission requests.
+- Handle permission denied cases gracefully.
+- Ensure changes work on both mobile and desktop PWA.
+- Update TODO.md with completion status after implementing fixes.
+
 # TODO: Move Front-End Role Checks to Back-End
 
 ## Overview

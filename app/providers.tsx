@@ -8,7 +8,7 @@ import { onAuthStateChanged } from "firebase/auth"
 import { getUserRole } from "@/lib/auth"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { SplashScreen } from "@/components/ui/splash-screen"
+import SplashScreen from "@/components/splash-screen"
 
 export interface AuthContextType {
   user: User | null
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   role: null,
   token: null,
   loading: true,
-  refreshRole: async () => {},
+  refreshRole: async () => { },
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -116,15 +116,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{ user, role, token, loading, refreshRole }}>
       <ThemeProvider>
         {children}
-        {showSplash && (
-          <SplashScreen
-            duration={3000}
-            onComplete={() => {
-              setShowSplash(false)
-              hasShownSplash.current = true
-            }}
-          />
-        )}
+        {showSplash && (<SplashScreen />)}
       </ThemeProvider>
     </AuthContext.Provider>
   )

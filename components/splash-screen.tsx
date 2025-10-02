@@ -1,8 +1,46 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect } from 'react'
+import toast from 'react-hot-toast'
 
 export default function SplashScreen() {
+  useEffect(() => {
+    // Request camera permission on first app open
+    const requestPermissions = async () => {
+      try {
+        // Request camera permission
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+          stream.getTracks().forEach(track => track.stop()) // Stop immediately after permission granted
+          console.log('Camera permission granted')
+        }
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+          const permission = await Notification.requestPermission()
+          if (permission === 'granted') {
+            console.log('Notification permission granted')
+          }
+        }
+      } catch (error) {
+        console.log('Permission request failed:', error)
+        // Show toast explaining permissions
+        setTimeout(() => {
+          toast('البرنامج يحتاج إذن الكاميرا والإشعارات لرفع الصور وإرسال التنبيهات', {
+            duration: 5000,
+            icon: 'ℹ️',
+          })
+        }, 2000)
+      }
+    }
+
+    // Delay permission request to ensure user interaction
+    const timer = setTimeout(requestPermissions, 1000)
+
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 dark:bg-black/10 backdrop-blur-sm">
       <style jsx>{`

@@ -5,7 +5,7 @@ interface SplashScreenProps {
   duration?: number
 }
 
-export function SplashScreen({ onComplete, duration = 3000 }: SplashScreenProps) {
+export function SplashScreenColored({ onComplete, duration = 3000 }: SplashScreenProps) {
   const [show, setShow] = useState(true)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 

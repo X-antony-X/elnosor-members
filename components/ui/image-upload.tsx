@@ -14,6 +14,7 @@ import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import ReactCrop, { type Crop as CropType, centerCrop, makeAspectCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
+import toast from "react-hot-toast"
 
 interface ImageUploadProps {
   onUpload: (url: string) => void
@@ -114,16 +115,16 @@ export function ImageUpload({
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget
-    const crop = centerCrop(
-      makeAspectCrop(
-        {
-          unit: 'px',
-          width: Math.min(width, height) * 0.8,
-        },
-        1, // aspect ratio 1:1 for square
-        width,
-        height
-      ),
+    // Allow free cropping, not forced to center
+    const crop = makeAspectCrop(
+      {
+        unit: '%',
+        width: 80,
+        height: 80,
+        x: 10,
+        y: 10,
+      },
+      1, // aspect ratio 1:1 for square
       width,
       height
     )
@@ -142,6 +143,7 @@ export function ImageUpload({
     setUploading(true)
 
     try {
+      console.log("Starting upload for type:", uploadType, "entityId:", entityId)
       let imageUrl: string
 
       switch (uploadType) {
@@ -161,12 +163,14 @@ export function ImageUpload({
           throw new Error("Invalid upload type")
       }
 
+      console.log("Upload successful, URL:", imageUrl)
       onUpload(imageUrl)
       setSelectedFile(null)
       setCompletedCrop(undefined)
+      toast.success("تم رفع الصورة بنجاح")
     } catch (error) {
       console.error("Upload error:", error)
-      alert("حدث خطأ في رفع الصورة")
+      toast.error("حدث خطأ في رفع الصورة")
     } finally {
       setUploading(false)
     }
@@ -179,6 +183,7 @@ export function ImageUpload({
     setUploading(true)
 
     try {
+      console.log("Starting cropped upload for type:", uploadType, "entityId:", entityId)
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
       if (!ctx) throw new Error('Canvas context not available')
@@ -226,13 +231,15 @@ export function ImageUpload({
             throw new Error("Invalid upload type")
         }
 
+        console.log("Cropped upload successful, URL:", imageUrl)
         onUpload(imageUrl)
         setSelectedFile(null)
         setCompletedCrop(undefined)
+        toast.success("تم رفع الصورة المقصوصة بنجاح")
       }, selectedFile.type)
     } catch (error) {
       console.error("Upload error:", error)
-      alert("حدث خطأ في رفع الصورة")
+      toast.error("حدث خطأ في رفع الصورة")
     } finally {
       setUploading(false)
     }

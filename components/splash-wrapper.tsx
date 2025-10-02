@@ -9,7 +9,7 @@ export default function SplashWrapper({ children }: { children: React.ReactNode 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false)
-    }, 2800) // 2 seconds
+    }, 2800)
 
     return () => clearTimeout(timer)
   }, [])

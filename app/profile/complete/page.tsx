@@ -361,7 +361,10 @@ export default function ProfileCompletePage() {
                       uploadType="member"
                       entityId={user?.uid || ""}
                       currentImage={uploadedPhotoUrl || user?.photoURL || ""}
-                      onUpload={(url) => setUploadedPhotoUrl(url)}
+                      onUpload={(url) => {
+                        console.log("Image uploaded, URL:", url)
+                        setUploadedPhotoUrl(url)
+                      }}
                       showSourceSelector={true}
                     />
                   </div>
