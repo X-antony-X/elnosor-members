@@ -73,6 +73,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
           setRole(userRole)
           const idToken = await user.getIdToken()
           setToken(idToken)
+
+          // Request permissions after user is authenticated (non-blocking)
+          setTimeout(() => {
+            requestOptionalPermissions()
+          }, 2000)
         } catch (error) {
           console.error("Error getting user role:", error)
           setRole("member") // Default fallback
@@ -88,6 +93,32 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     return () => unsubscribe()
   }, [])
+
+  // Request optional permissions (camera and notifications) - non-blocking
+  const requestOptionalPermissions = async () => {
+    try {
+      // Request camera permission
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+        stream.getTracks().forEach(track => track.stop()) // Stop immediately after permission granted
+        console.log('Camera permission granted')
+      }
+    } catch (error) {
+      console.log('Camera permission not granted - app will work without camera features')
+    }
+
+    try {
+      // Request notification permission
+      if ('Notification' in window && Notification.permission === 'default') {
+        const permission = await Notification.requestPermission()
+        if (permission === 'granted') {
+          console.log('Notification permission granted')
+        }
+      }
+    } catch (error) {
+      console.log('Notification permission not granted - app will work without notifications')
+    }
+  }
 
   useEffect(() => {
     if (isHydrated && !loading && !hasShownSplash.current && !showSplash) {

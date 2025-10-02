@@ -94,10 +94,10 @@ Add camera and storage permissions on first app open, and fix image selection is
 
 - **Problem**: Camera permission not requested on app initialization.
 - **Solution**:
-  - Add camera permission request in splash screen or providers.
-  - Show toast explaining the permission is for photo upload.
+  - Add camera permission request in providers after user authentication (non-blocking).
   - Request permission using `navigator.mediaDevices.getUserMedia({ video: true })`.
-  - Handle permission denied gracefully.
+  - Handle permission denied gracefully - app works normally without permissions.
+  - Also request notification permission for push notifications.
 
 Status: Completed
 
