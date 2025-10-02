@@ -661,8 +661,8 @@ export default function DashboardPage() {
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                   onClick={() => window.location.href = "/members"}
                 >
-                  <h3 className="font-medium text-gray-900 dark:text-white">إضافة مخدوم جديد</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إضافة مخدوم جديد إلى الخدمة</p>
+                  <h3 className="font-medium text-gray-900 dark:text-white">المخدومين</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">بيانات المخدوم وإضافة مخدوم وتعديل بياناته</p>
                 </button>
 
                 <button
@@ -671,7 +671,7 @@ export default function DashboardPage() {
                   onClick={() => window.location.href = "/attendance"}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">تسجيل الحضور</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">تسجيل حضور الاجتماع الحالي</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">تسجيل حضور الاجتماع</p>
                 </button>
 
                 <button
@@ -687,9 +687,11 @@ export default function DashboardPage() {
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                   onClick={() => window.location.href = "/admin/meeting-generator"}
+                  disabled
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">إنشاء اجتماعات</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إنشاء اجتماعات الجمعة الأسبوعية</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">قافلة علشان مش اي حد يستخدمة</p>
                 </button>
 
                 <button
@@ -707,7 +709,7 @@ export default function DashboardPage() {
                   onClick={() => window.location.href = "/posts"}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">البوستات</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إدارة المنشورات والمحتوى</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">تنزيل وإدارة المنشورات والمحتوى</p>
                 </button>
 
                 <button
@@ -716,7 +718,7 @@ export default function DashboardPage() {
                   onClick={() => window.location.href = "/gallery"}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">معرض الصور</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">عرض وإدارة الصور</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">عرض الصور</p>
                 </button>
 
                 <button

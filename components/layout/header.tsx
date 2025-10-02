@@ -70,16 +70,11 @@ export function Header({ onMenuToggle, showBackButton = false, title }: HeaderPr
   }
 
   return (
-    <header className="bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg shadow-lg sticky top-0 z-40 border-b border-white/20 dark:border-black/20">
+    <header className="bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] sticky top-0 z-40 border-b border-white/20 dark:border-black/20">
       <div className="px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Left side - Logo and title */}
           <div className="flex items-center gap-3">
-            {/* Mobile menu button */}
-            <Button variant="ghost" size="sm" className="lg:hidden" onClick={onMenuToggle}>
-              <Menu className="h-5 w-5" />
-            </Button>
-
             {/* Back button for detailed pages */}
             {showBackButton && (
               <Button variant="ghost" size="sm" onClick={handleBack} className="text-gray-600 dark:text-gray-400">
