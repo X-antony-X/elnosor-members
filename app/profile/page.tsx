@@ -38,67 +38,76 @@ export default function MemberProfilePage() {
     const fetchMemberData = async () => {
       setLoading(true)
       try {
-        // Try to load from cache first if offline
-        const isOnline = navigator.onLine
+        // Always try to load from cache first for instant offline access
         let cachedMember = null
-        if (!isOnline) {
-          try {
-            const cached = localStorage.getItem(`member-profile-${user.uid}`)
-            if (cached) {
-              cachedMember = JSON.parse(cached)
-              // Convert dates back
-              cachedMember.createdAt = new Date(cachedMember.createdAt)
-              cachedMember.updatedAt = new Date(cachedMember.updatedAt)
-              setMember(cachedMember)
-              setEditData(cachedMember)
-              setLoading(false)
-              return
-            }
-          } catch (cacheError) {
-            console.error("Error loading from cache:", cacheError)
+        try {
+          const cached = localStorage.getItem(`member-profile-${user.uid}`)
+          if (cached) {
+            cachedMember = JSON.parse(cached)
+            // Convert dates back
+            cachedMember.createdAt = new Date(cachedMember.createdAt)
+            cachedMember.updatedAt = new Date(cachedMember.updatedAt)
+            setMember(cachedMember)
+            setEditData(cachedMember)
+            // Continue to fetch fresh data in background if online
           }
+        } catch (cacheError) {
+          console.error("Error loading from cache:", cacheError)
         }
 
-        const { doc, getDoc } = await import("firebase/firestore")
-        const { db } = await import("@/lib/firebase")
-        const docRef = doc(db, "members", user.uid)
-        const memberDoc = await getDoc(docRef)
+        const isOnline = navigator.onLine
 
-        if (memberDoc.exists()) {
-          const memberData = {
-            id: memberDoc.id,
-            ...memberDoc.data(),
-            createdAt: memberDoc.data().createdAt?.toDate() || new Date(),
-            updatedAt: memberDoc.data().updatedAt?.toDate() || new Date(),
-          } as Member
+        if (isOnline) {
+          // Fetch fresh data from server
+          const { doc, getDoc } = await import("firebase/firestore")
+          const { db } = await import("@/lib/firebase")
+          const docRef = doc(db, "members", user.uid)
+          const memberDoc = await getDoc(docRef)
 
-          // Generate attendance code if missing
-          if (!memberData.attendanceCode) {
+          if (memberDoc.exists()) {
+            const memberData = {
+              id: memberDoc.id,
+              ...memberDoc.data(),
+              createdAt: memberDoc.data().createdAt?.toDate() || new Date(),
+              updatedAt: memberDoc.data().updatedAt?.toDate() || new Date(),
+            } as Member
+
+            // Generate attendance code if missing
+            if (!memberData.attendanceCode) {
+              try {
+                const code = await generateUniqueAttendanceCode()
+                await firestoreHelpers.updateMember(memberDoc.id, { attendanceCode: code })
+                memberData.attendanceCode = code
+              } catch (error) {
+                console.error("Error generating attendance code:", error)
+                toast.error("خطأ في إنشاء كود الحضور")
+              }
+            }
+
+            setMember(memberData)
+            setEditData(memberData)
+
+            // Update cache with fresh data
             try {
-              const code = await generateUniqueAttendanceCode()
-              await firestoreHelpers.updateMember(memberDoc.id, { attendanceCode: code })
-              memberData.attendanceCode = code
-            } catch (error) {
-              console.error("Error generating attendance code:", error)
-              toast.error("خطأ في إنشاء كود الحضور")
+              localStorage.setItem(`member-profile-${user.uid}`, JSON.stringify(memberData))
+            } catch (cacheError) {
+              console.error("Error caching member data:", cacheError)
+            }
+          } else {
+            // If no document exists and no cache, show error
+            if (!cachedMember) {
+              toast.error("لم يتم العثور على بيانات المخدوم")
             }
           }
-
-          setMember(memberData)
-          setEditData(memberData)
-
-          // Cache the member data for offline use
-          try {
-            localStorage.setItem(`member-profile-${user.uid}`, JSON.stringify(memberData))
-          } catch (cacheError) {
-            console.error("Error caching member data:", cacheError)
-          }
         } else {
-          toast.error("لم يتم العثور على بيانات المخدوم")
+          // Offline - if no cached data, show offline message
+          if (!cachedMember) {
+            toast.error("أنت غير متصل بالإنترنت ولا توجد بيانات محفوظة محلياً")
+          }
         }
       } catch (error) {
         console.error("Error fetching member data:", error)
-        // If online fetch failed and no cache, show error
+        // If error and no cached data, show error
         if (!member) {
           toast.error("حدث خطأ في تحميل البيانات")
         }

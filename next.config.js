@@ -3,35 +3,48 @@ const withPWA = require("next-pwa")({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
+  sw: "custom-sw.js", // Use custom service worker
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/firestore\.googleapis\.com/,
-      handler: "NetworkFirst",
+      handler: "StaleWhileRevalidate", // Changed to allow offline access
       options: {
         cacheName: "firestore-cache",
         expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          maxEntries: 100, // Increased entries
+          maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year for offline access
         },
       },
     },
     {
       urlPattern: /^https:\/\/firebase\.googleapis\.com/,
-      handler: "NetworkFirst",
+      handler: "StaleWhileRevalidate",
       options: {
         cacheName: "firebase-cache",
         expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60,
+          maxEntries: 100,
+          maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
         },
       },
     },
+    // Cache profile and member data for offline access
+    {
+      urlPattern: /\/api\/member|\/api\/members/,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "member-data-cache",
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+        },
+        networkTimeoutSeconds: 10, // Fallback to cache after 10 seconds
+      },
+    },
   ],
-})
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -63,11 +76,10 @@ const nextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
-
         ],
       },
-    ]
+    ];
   },
-}
+};
 
-module.exports = withPWA(nextConfig)
+module.exports = withPWA(nextConfig);

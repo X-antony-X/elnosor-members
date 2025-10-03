@@ -2,9 +2,11 @@ name: Send Scheduled Notifications
 
 on:
   schedule:
-    - cron: '*/11 10-21 * * *'  # Every 11 minutes from 10 AM to 9:55 PM
-    - cron: '0 22 * * *'  # At 10 PM
-  workflow_dispatch:  # Allow manual trigger
+    # كل 11 دقيقة من 10 صباحًا لحد 9:59 مساءً بتوقيت مصر (7 صباحًا - 18:59 UTC)
+    - cron: "*/11 7-18 * * *"
+    # مرة بالضبط عند الساعة 10 مساءً بتوقيت مصر (19:00 UTC)
+    - cron: "0 19 * * *"
+  workflow_dispatch: # تشغيل يدوي
 
 jobs:
   send-notifications:
@@ -17,8 +19,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci

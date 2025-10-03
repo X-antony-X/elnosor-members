@@ -53,16 +53,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Set hydrated flag after component mounts to prevent hydration mismatch
     setIsHydrated(true)
 
-    // Register service worker for FCM notifications
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then((registration) => {
-          console.log('FCM Service Worker registered successfully:', registration);
-        })
-        .catch((error) => {
-          console.log('FCM Service Worker registration failed:', error);
-        });
-    }
+    // Service worker is registered by next-pwa, no need to register manually
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
@@ -94,7 +85,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return () => unsubscribe()
   }, [])
 
-  // Request optional permissions (camera and notifications) - non-blocking
+  // Request optional permissions (camera only - notifications handled by OneSignal) - non-blocking
   const requestOptionalPermissions = async () => {
     try {
       // Request camera permission
@@ -105,18 +96,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.log('Camera permission not granted - app will work without camera features')
-    }
-
-    try {
-      // Request notification permission
-      if ('Notification' in window && Notification.permission === 'default') {
-        const permission = await Notification.requestPermission()
-        if (permission === 'granted') {
-          console.log('Notification permission granted')
-        }
-      }
-    } catch (error) {
-      console.log('Notification permission not granted - app will work without notifications')
     }
   }
 

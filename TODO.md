@@ -1,3 +1,53 @@
+# TODO: PWA Background Sync and Offline Support
+
+## Overview
+
+Implement background synchronization and update capabilities for the PWA, and ensure offline functionality for the profile page and app navigation.
+
+## Tasks
+
+### 1. Implement Background Sync for PWA Updates
+
+- **Problem**: No background sync for app updates and data synchronization.
+- **Solution**:
+  - Create custom service worker with background sync API.
+  - Add periodic sync for checking updates.
+  - Implement sync event handlers for data updates.
+  - Add API endpoints for update checking.
+
+Status: Completed
+
+### 2. Extend Offline Caching for 1 Year
+
+- **Problem**: Limited offline caching duration (24 hours).
+- **Solution**:
+  - Change Firestore/Firebase caching to StaleWhileRevalidate.
+  - Extend cache expiration to 1 year for member data.
+  - Add member data specific caching rules.
+  - Cache static assets for longer periods.
+
+Status: Completed
+
+### 3. Enhance Profile Page Offline Functionality
+
+- **Problem**: Profile page requires network for initial load.
+- **Solution**:
+  - Always load from localStorage cache first for instant access.
+  - Fetch fresh data in background when online.
+  - Show cached data immediately when offline.
+  - Better error handling for offline scenarios.
+
+Status: Completed
+
+### 4. Test Offline Functionality
+
+- Test profile page works offline after first load.
+- Test app navigation works offline.
+- Test background sync triggers updates.
+- Test cache expiration and refresh.
+
+Status: Pending
+
 # TODO: Fix Push Notifications and QR Scanner Issues
 
 ## Overview
