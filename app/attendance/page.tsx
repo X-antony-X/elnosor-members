@@ -23,6 +23,7 @@ import toast from "react-hot-toast"
 import { useMembers, useAttendance, firestoreHelpers } from "@/hooks/use-firestore"
 import { useOfflineStorage } from "@/hooks/use-offline-storage"
 import { validateQRSignature } from "@/lib/utils"
+import * as QRCode from "qrcode.react"
 
 export default function AttendancePage() {
   const { user, role } = useAuth()
@@ -35,7 +36,7 @@ export default function AttendancePage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [showScanner, setShowScanner] = useState(false)
   const [scannerLoading, setScannerLoading] = useState(false)
-  let html5QrcodeScanner: Html5QrcodeScanner | null = null
+  const html5QrcodeScannerRef = useRef<Html5QrcodeScanner | null>(null)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [exportDateRange, setExportDateRange] = useState({
     startDate: "",
@@ -43,6 +44,8 @@ export default function AttendancePage() {
     reportType: "detailed" as "detailed" | "summary" | "comprehensive",
   })
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown')
+  const [storagePermission, setStoragePermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown')
+  const [notificationPermission, setNotificationPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown')
   const scannerRef = useRef<HTMLDivElement>(null)
   const [manualCode, setManualCode] = useState("")
   const [showManualDialog, setShowManualDialog] = useState(false)
@@ -61,11 +64,13 @@ export default function AttendancePage() {
 
     if (!isHttps) {
       setCameraPermission('denied')
+      setStoragePermission('denied')
+      setNotificationPermission('denied')
       console.warn('Camera access requires HTTPS. Please run the app over HTTPS for camera functionality.')
       return
     }
 
-    // Actively request camera permission on load to trigger prompt if needed
+    // Permission request functions
     const requestCameraPermission = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
@@ -74,34 +79,107 @@ export default function AttendancePage() {
       } catch (error: any) {
         if (error.name === 'NotAllowedError') {
           setCameraPermission('denied')
+          toast.error('تم رفض إذن الكاميرا')
         } else {
           setCameraPermission('prompt')
+          toast.error('يرجى السماح بإذن الكاميرا')
         }
       }
     }
 
-    // Check camera permission using Permissions API if available
-    if (navigator.permissions) {
-      navigator.permissions.query({ name: 'camera' as PermissionName }).then((result) => {
-        setCameraPermission(result.state)
-        if (result.state === 'prompt') {
-          requestCameraPermission()
-        }
-        result.addEventListener('change', () => {
-          setCameraPermission(result.state)
-          if (result.state === 'prompt') {
-            requestCameraPermission()
+    const requestStoragePermission = async () => {
+      try {
+        if (navigator.storage && navigator.storage.persist) {
+          const isPersisted = await navigator.storage.persisted()
+          if (!isPersisted) {
+            const persisted = await navigator.storage.persist()
+            setStoragePermission(persisted ? 'granted' : 'denied')
+            if (!persisted) {
+              toast.error('تم رفض إذن التخزين الدائم')
+            }
+          } else {
+            setStoragePermission('granted')
           }
-        })
-      }).catch((error) => {
-        console.error('Error checking camera permission:', error)
-        // Fallback to actively request permission
-        requestCameraPermission()
-      })
-    } else {
-      // If Permissions API not supported, actively request permission
-      requestCameraPermission()
+        } else {
+          setStoragePermission('prompt')
+          toast.error('إذن التخزين غير مدعوم في هذا المتصفح')
+        }
+      } catch (error) {
+        setStoragePermission('denied')
+        toast.error('خطأ في طلب إذن التخزين')
+      }
     }
+
+    const requestNotificationPermission = async () => {
+      try {
+          if ('Notification' in window) {
+            const permission = Notification.permission
+            setNotificationPermission(permission as 'granted' | 'denied' | 'prompt')
+            if (permission === 'default') {
+              const newPermission = await Notification.requestPermission()
+              setNotificationPermission(newPermission as 'granted' | 'denied' | 'prompt')
+              if (newPermission === 'denied') {
+                toast.error('تم رفض إذن الإشعارات')
+              }
+            }
+          } else {
+            setNotificationPermission('denied')
+            toast.error('الإشعارات غير مدعومة في هذا المتصفح')
+          }
+        } catch (error) {
+          setNotificationPermission('denied')
+          toast.error('خطأ في طلب إذن الإشعارات')
+        }
+      }
+
+    // Check and request permissions using Permissions API if available
+    const checkAndRequestPermissions = async () => {
+      if (navigator.permissions) {
+        try {
+          const cameraStatus = await navigator.permissions.query({ name: 'camera' as PermissionName })
+          setCameraPermission(cameraStatus.state)
+          if (cameraStatus.state === 'prompt') {
+            await requestCameraPermission()
+          }
+          cameraStatus.addEventListener('change', async () => {
+            setCameraPermission(cameraStatus.state)
+            if (cameraStatus.state === 'prompt') {
+              await requestCameraPermission()
+            }
+          })
+        } catch (error) {
+          console.error('Error checking camera permission:', error)
+          await requestCameraPermission()
+        }
+
+        // Storage permission does not have Permissions API support, so request directly
+        await requestStoragePermission()
+
+        try {
+          const notificationStatus = await navigator.permissions.query({ name: 'notifications' as PermissionName })
+          setNotificationPermission(notificationStatus.state)
+          if (notificationStatus.state === 'prompt') {
+            await requestNotificationPermission()
+          }
+          notificationStatus.addEventListener('change', async () => {
+            setNotificationPermission(notificationStatus.state)
+            if (notificationStatus.state === 'prompt') {
+              await requestNotificationPermission()
+            }
+          })
+        } catch (error) {
+          console.error('Error checking notification permission:', error)
+          await requestNotificationPermission()
+        }
+      } else {
+        // If Permissions API not supported, actively request all permissions
+        await requestCameraPermission()
+        await requestStoragePermission()
+        await requestNotificationPermission()
+      }
+    }
+
+    checkAndRequestPermissions()
   }, [user, router])
 
   const formatLateness = (minutes: number) => {
@@ -269,19 +347,38 @@ export default function AttendancePage() {
     member.fullName.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const startScanner = () => {
-    if (html5QrcodeScanner) {
-      html5QrcodeScanner.clear().catch(console.error)
+  const startScanner = async () => {
+    // Re-request camera permission if denied or prompt before starting scanner
+    if (cameraPermission === 'denied' || cameraPermission === 'prompt') {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+        setCameraPermission('granted')
+        stream.getTracks().forEach(track => track.stop())
+      } catch (error: any) {
+        if (error.name === 'NotAllowedError') {
+          setCameraPermission('denied')
+          toast.error('تم رفض إذن الكاميرا')
+          return
+        } else {
+          setCameraPermission('prompt')
+          toast.error('يرجى السماح بإذن الكاميرا')
+          return
+        }
+      }
     }
-    html5QrcodeScanner = new Html5QrcodeScanner(
+
+    if (html5QrcodeScannerRef.current) {
+      html5QrcodeScannerRef.current.clear().catch(console.error)
+    }
+    html5QrcodeScannerRef.current = new Html5QrcodeScanner(
       "reader",
       { fps: 10, qrbox: { width: 250, height: 250 } },
       false
     )
-    html5QrcodeScanner.render(
+    html5QrcodeScannerRef.current.render(
       (decodedText) => {
         handleQRScan(decodedText)
-        html5QrcodeScanner?.clear().catch(console.error)
+        html5QrcodeScannerRef.current?.clear().catch(console.error)
       },
       (errorMessage: string) => {
         console.error("QR Scan error:", errorMessage)
@@ -377,19 +474,26 @@ export default function AttendancePage() {
               </Dialog>
 
               <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={async () => {
-                if (cameraPermission === 'denied') {
-                  toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.')
-                  return
+                // Re-request camera permission if denied or prompt
+                if (cameraPermission !== 'granted') {
+                  try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+                    setCameraPermission('granted')
+                    stream.getTracks().forEach(track => track.stop())
+                  } catch (error: any) {
+                    if (error.name === 'NotAllowedError') {
+                      setCameraPermission('denied')
+                      toast.error('تم رفض إذن الكاميرا')
+                      return
+                    } else {
+                      setCameraPermission('prompt')
+                      toast.error('يرجى السماح بإذن الكاميرا')
+                      return
+                    }
+                  }
                 }
-                try {
-                  // Actively request camera permission on button click to trigger prompt if needed
-                  const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-                  stream.getTracks().forEach(track => track.stop())
-                  setShowScanner(true)
-                  setTimeout(startScanner, 100)
-                } catch (error) {
-                  toast.error('تعذر الوصول إلى الكاميرا. يرجى التحقق من الأذونات.')
-                }
+                setShowScanner(true)
+                setTimeout(startScanner, 100)
               }} disabled={cameraPermission === 'denied'}>
                 <span role="img" aria-label="scan">📷</span> مسح QR
               </button>
@@ -399,19 +503,26 @@ export default function AttendancePage() {
               </button>
 
               <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={async () => {
-                if (cameraPermission === 'denied') {
-                  toast.error('الكاميرا غير متاحة. يرجى التأكد من تشغيل التطبيق عبر HTTPS ومنح إذن الوصول للكاميرا.')
-                  return
+                // Re-request camera permission if denied or prompt
+                if (cameraPermission !== 'granted') {
+                  try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+                    setCameraPermission('granted')
+                    stream.getTracks().forEach(track => track.stop())
+                  } catch (error: any) {
+                    if (error.name === 'NotAllowedError') {
+                      setCameraPermission('denied')
+                      toast.error('تم رفض إذن الكاميرا')
+                      return
+                    } else {
+                      setCameraPermission('prompt')
+                      toast.error('يرجى السماح بإذن الكاميرا')
+                      return
+                    }
+                  }
                 }
-                try {
-                  // Actively request camera permission on button click to trigger prompt if needed
-                  const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-                  stream.getTracks().forEach(track => track.stop())
-                  setShowNumberScanner(true)
-                  setTimeout(() => setStartNumberScanner(true), 100)
-                } catch (error) {
-                  toast.error('تعذر الوصول إلى الكاميرا. يرجى التحقق من الأذونات.')
-                }
+                setShowNumberScanner(true)
+                setTimeout(() => setStartNumberScanner(true), 100)
               }} disabled={cameraPermission === 'denied'}>
                 <span role="img" aria-label="number-scan">🔢</span> مسح رقم الكود
               </button>
@@ -701,7 +812,7 @@ export default function AttendancePage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={showScanner} onOpenChange={(open) => { setShowScanner(open); if (!open && html5QrcodeScanner) html5QrcodeScanner.clear().catch(console.error); }}>
+      <Dialog open={showScanner} onOpenChange={(open) => { setShowScanner(open); if (!open && html5QrcodeScannerRef.current) html5QrcodeScannerRef.current.clear().catch(console.error); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

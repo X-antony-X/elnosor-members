@@ -700,7 +700,7 @@ export default function DashboardPage() {
                   onClick={() => window.location.href = "/profile"}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">الملف الشخصي</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">عرض وتعديل الملف الشخصي</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">البيانات والكود الشخصي</p>
                 </button>
 
                 <button
