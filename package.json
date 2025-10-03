@@ -1,6 +1,6 @@
 {
   "name": "member-elnosor",
-  "version": "1.0.8",
+  "version": "1.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
