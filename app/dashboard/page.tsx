@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Users, Calendar, TrendingUp, BarChart3, LucidePieChart, Activity, Target, QrCode } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -74,6 +75,7 @@ const chartVariants = {
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const router = useRouter()
   const isMobile = useIsMobile()
   const [dateRange, setDateRange] = useState<string>("30")
   const [analyticsDateRange, setAnalyticsDateRange] = useState<{ start: Date; end: Date } | undefined>()
@@ -205,9 +207,23 @@ export default function DashboardPage() {
         variants={containerVariants}
       >
         <motion.div variants={sectionVariants} transition={{ duration: 0.5 }} className="space-y-2">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-4">مرحباً، {user?.displayName}</h1>
-            <p className="mb-6 text-gray-600 dark:text-gray-400">إحصائياتي الشخصية</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-4">مرحباً، {user?.displayName}</h1>
+              <p className="text-gray-600 dark:text-gray-400">إحصائياتي الشخصية</p>
+            </div>
+
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">آخر 7 أيام</SelectItem>
+                <SelectItem value="30">آخر 30 يوم</SelectItem>
+                <SelectItem value="90">آخر 3 أشهر</SelectItem>
+                <SelectItem value="365">آخر سنة</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </motion.div>
 
@@ -279,49 +295,49 @@ export default function DashboardPage() {
           </Card>
 
           {/* Quick Actions */}
-          <Card glassy className={cn(isMobile && "fixed bottom-0 left-0 right-0 rounded-none z-10")}>
+          <Card glassy>
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold mb-4 text-center">الإجراءات السريعة</h3>
               <div className="space-y-3">
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.location.href = "/profile"}
+                  onClick={() => router.push("/profile")}
                 >
                   الملف الشخصي
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.location.href = "/gallery"}
+                  onClick={() => router.push("/gallery")}
                 >
                   معرض الصور
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.location.href = "/posts"}
+                  onClick={() => router.push("/posts")}
                 >
                   البوستات
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.location.href = "/notifications"}
+                  onClick={() => router.push("/notifications")}
                 >
                   الإشعارات
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.location.href = "/settings"}
+                  onClick={() => router.push("/settings")}
                 >
                   الإعدادات
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.location.href = "/about"}
+                  onClick={() => router.push("/about")}
                 >
                   عن البرنامج
                 </Button>
@@ -659,7 +675,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = "/members"}
+                  onClick={() => router.push("/members")}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">المخدومين</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">بيانات المخدوم وإضافة مخدوم وتعديل بياناته</p>
@@ -668,7 +684,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = "/attendance"}
+                  onClick={() => router.push("/attendance")}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">تسجيل الحضور</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">تسجيل حضور الاجتماع</p>
@@ -677,7 +693,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = "/notifications"}
+                  onClick={() => router.push("/notifications")}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">إرسال إشعار</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إرسال إشعار لجميع المخدومين</p>
@@ -686,7 +702,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = "/admin/meeting-generator"}
+                  onClick={() => router.push("/admin/meeting-generator")}
                   disabled
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">إنشاء اجتماعات</h3>
@@ -697,7 +713,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = "/profile"}
+                  onClick={() => router.push("/profile")}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">الملف الشخصي</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">البيانات والكود الشخصي</p>
@@ -706,7 +722,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = "/posts"}
+                  onClick={() => router.push("/posts")}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">البوستات</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">تنزيل وإدارة المنشورات والمحتوى</p>
@@ -715,7 +731,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = "/gallery"}
+                  onClick={() => router.push("/gallery")}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">معرض الصور</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">عرض الصور</p>
@@ -724,7 +740,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = "/settings"}
+                  onClick={() => router.push("/settings")}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">الإعدادات</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">إعدادات التطبيق والحساب</p>
@@ -733,7 +749,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   className="p-4 text-right rounded-lg border border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                  onClick={() => window.location.href = "/about"}
+                  onClick={() => router.push("/about")}
                 >
                   <h3 className="font-medium text-gray-900 dark:text-white">عن البرنامج</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">معلومات عن التطبيق</p>

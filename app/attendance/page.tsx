@@ -112,44 +112,38 @@ export default function AttendancePage() {
 
     const requestNotificationPermission = async () => {
       try {
-          if ('Notification' in window) {
-            const permission = Notification.permission
-            setNotificationPermission(permission as 'granted' | 'denied' | 'prompt')
-            if (permission === 'default') {
-              const newPermission = await Notification.requestPermission()
-              setNotificationPermission(newPermission as 'granted' | 'denied' | 'prompt')
-              if (newPermission === 'denied') {
-                toast.error('تم رفض إذن الإشعارات')
-              }
+        if ('Notification' in window) {
+          const permission = Notification.permission
+          setNotificationPermission(permission as 'granted' | 'denied' | 'prompt')
+          if (permission === 'default') {
+            const newPermission = await Notification.requestPermission()
+            setNotificationPermission(newPermission as 'granted' | 'denied' | 'prompt')
+            if (newPermission === 'denied') {
+              toast.error('تم رفض إذن الإشعارات')
             }
-          } else {
-            setNotificationPermission('denied')
-            toast.error('الإشعارات غير مدعومة في هذا المتصفح')
           }
-        } catch (error) {
+        } else {
           setNotificationPermission('denied')
-          toast.error('خطأ في طلب إذن الإشعارات')
+          toast.error('الإشعارات غير مدعومة في هذا المتصفح')
         }
+      } catch (error) {
+        setNotificationPermission('denied')
+        toast.error('خطأ في طلب إذن الإشعارات')
       }
+    }
 
-    // Check and request permissions using Permissions API if available
-    const checkAndRequestPermissions = async () => {
+    // Check permissions using Permissions API if available
+    const checkPermissions = async () => {
       if (navigator.permissions) {
         try {
           const cameraStatus = await navigator.permissions.query({ name: 'camera' as PermissionName })
           setCameraPermission(cameraStatus.state)
-          if (cameraStatus.state === 'prompt') {
-            await requestCameraPermission()
-          }
-          cameraStatus.addEventListener('change', async () => {
+          cameraStatus.addEventListener('change', () => {
             setCameraPermission(cameraStatus.state)
-            if (cameraStatus.state === 'prompt') {
-              await requestCameraPermission()
-            }
           })
         } catch (error) {
           console.error('Error checking camera permission:', error)
-          await requestCameraPermission()
+          setCameraPermission('unknown')
         }
 
         // Storage permission does not have Permissions API support, so request directly
@@ -158,28 +152,21 @@ export default function AttendancePage() {
         try {
           const notificationStatus = await navigator.permissions.query({ name: 'notifications' as PermissionName })
           setNotificationPermission(notificationStatus.state)
-          if (notificationStatus.state === 'prompt') {
-            await requestNotificationPermission()
-          }
-          notificationStatus.addEventListener('change', async () => {
+          notificationStatus.addEventListener('change', () => {
             setNotificationPermission(notificationStatus.state)
-            if (notificationStatus.state === 'prompt') {
-              await requestNotificationPermission()
-            }
           })
         } catch (error) {
           console.error('Error checking notification permission:', error)
-          await requestNotificationPermission()
+          setNotificationPermission('unknown')
         }
       } else {
-        // If Permissions API not supported, actively request all permissions
-        await requestCameraPermission()
-        await requestStoragePermission()
-        await requestNotificationPermission()
+        setCameraPermission('unknown')
+        setStoragePermission('unknown')
+        setNotificationPermission('unknown')
       }
     }
 
-    checkAndRequestPermissions()
+    checkPermissions()
   }, [user, router])
 
   const formatLateness = (minutes: number) => {
@@ -494,8 +481,10 @@ export default function AttendancePage() {
                 }
                 setShowScanner(true)
                 setTimeout(startScanner, 100)
-              }} disabled={cameraPermission === 'denied'}>
+              }}>
+
                 <span role="img" aria-label="scan">📷</span> مسح QR
+
               </button>
 
               <button type="button" className="border border-gray-600 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded text-sm" onClick={() => setShowManualDialog(true)}>
@@ -523,8 +512,10 @@ export default function AttendancePage() {
                 }
                 setShowNumberScanner(true)
                 setTimeout(() => setStartNumberScanner(true), 100)
-              }} disabled={cameraPermission === 'denied'}>
+              }}>
+
                 <span role="img" aria-label="number-scan">🔢</span> مسح رقم الكود
+
               </button>
             </>
           )}
